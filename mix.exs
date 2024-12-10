@@ -21,7 +21,8 @@ defmodule Clr.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:pegasus, "~> 0.2"}
+      {:pegasus, "~> 0.2"},
+      {:protoss, "~> 0.2"}
     ]
   end
 end

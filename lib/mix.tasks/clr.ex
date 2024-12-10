@@ -18,7 +18,8 @@ defmodule Mix.Tasks.Clr do
   end
 
   def loop(port, count) do
-    if count == 0, do: raise "done"
+    if count == 0, do: raise("done")
+
     receive do
       {^port, {:data, what}} ->
         IO.write(:stdio, what)

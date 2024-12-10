@@ -26,6 +26,6 @@ defmodule ParseAirTest do
     # End Function AIR: start._start
     """
 
-    assert %Function{name: "start._start"} = Air.parse(air) |> dbg(limit: 25)
+    assert %Function{name: "start._start"} = Air.parse(air)
   end
 end
