@@ -7,7 +7,8 @@ defmodule Clr.Air.Instruction do
 
   @callback initialize(list()) :: t
 
-  @modules Map.new(~w[dbg_stmt dbg_arg_inline br dbg_inline_block assembly trap], fn instruction ->
+  @modules Map.new(~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr assembly trap arg ptr_elem_val ptr_add
+                      bitcast alloc store], fn instruction ->
              {String.to_atom(instruction),
               instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
            end)

@@ -1,6 +1,8 @@
 defmodule ParseAirTest do
   use ExUnit.Case, async: true
 
+  import ClrTest.TestAir
+
   alias Clr.Air
   alias Clr.Air.Function
 
@@ -28,4 +30,6 @@ defmodule ParseAirTest do
 
     assert %Function{name: "start._start"} = Air.parse(air)
   end
+
+  test_air "posixCallMainAndExit"
 end
