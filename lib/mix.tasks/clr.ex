@@ -35,6 +35,7 @@ defmodule Mix.Tasks.Clr do
     case string do
       "# Begin Function AIR:" <> _ ->
         update(%{state | state: :in}, string)
+
       _ ->
         %{state | state: :pre, buffer: state.buffer <> string}
     end
@@ -42,6 +43,7 @@ defmodule Mix.Tasks.Clr do
 
   defp update(%{buffer: buffer, state: :in} = state, string) do
     updated = buffer <> string
+
     if updated =~ "# End Function AIR:" do
       updated
       |> String.split("\n")
@@ -50,6 +52,7 @@ defmodule Mix.Tasks.Clr do
         {used, ""} ->
           analyze(used)
           %{state | state: :pre, buffer: ""}
+
         {used, new_buffer} ->
           analyze(used)
           %{state | state: :in, buffer: new_buffer}

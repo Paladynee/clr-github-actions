@@ -32,22 +32,38 @@ defmodule Clr.Air.Parser do
     tag <- '.@' ["] [^"]+ ["]
     tag2 <- name
 
-    instruction <- dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / br / assembly / trap / arg / 
-                   ptr_elem_val / ptr_add / bitcast / alloc / store / unknown_instruction
+    instruction <- dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / br / assembly / trap / 
+                   arg / ptr_elem_val / ptr_add / bitcast / alloc / store / block / loop / load / is_non_null / cond_br /
+                   optional_payload / add / repeat / slice / slice_ptr / struct_field_val / cmp_neq / switch_br / unknown_instruction
+
     dbg_stmt <- 'dbg_stmt(' intrange ')'
-    dbg_inline_block <- 'dbg_inline_block(' name comma space fun comma space block rparen
+    dbg_inline_block <- 'dbg_inline_block(' name comma space fun comma space codeblock ')'
     dbg_arg_inline <- 'dbg_arg_inline(' langle name comma space name rangle comma space dquoted ')'
     dbg_var_val <- 'dbg_var_val(' lineref comma space dquoted ')'
     dbg_var_ptr <- 'dbg_var_ptr(' lineref comma space dquoted ')'
+    dbg_empty_stmt <- 'dbg_empty_stmt()'
     br <- 'br(' lineref comma space name ')'
     assembly <- 'assembly(' name comma space name comma space asm_in comma space asm_in comma space dstring ')'
     trap <- 'trap('')'
     arg <- 'arg(' type comma space dquoted ')'
-    ptr_elem_val <- 'ptr_elem_val(' lineref comma space tag2 ')'
+    ptr_elem_val <- 'ptr_elem_val(' lineref comma space (lineref / tag2) ')'
     ptr_add <- 'ptr_add(' type comma space lineref comma space (lineref / tag2) ')'
     bitcast <- 'bitcast(' type comma space lineref ')'
     alloc <- 'alloc(' type ')'
-    store <- 'store(' lineref comma space tag2 ')'
+    store <- 'store(' lineref comma space (lineref / tag2) ')'
+    block <- 'block(' type comma space codeblock (space lineref)? ')'
+    loop <- 'loop(' type comma space codeblock ')'
+    load <- 'load(' type comma space lineref ')'
+    is_non_null <- 'is_non_null(' lineref ')'
+    cond_br <- 'cond_br(' lineref comma space 'poi' space codeblock comma space 'poi' space codeblock ')'
+    optional_payload <- 'optional_payload(' type comma space lineref ')'
+    add <- 'add(' lineref comma space (lineref / tag2) ')'
+    repeat <- 'repeat(' lineref ')'
+    slice <- 'slice(' type comma space lineref comma space lineref ')'
+    slice_ptr <- 'slice_ptr(' type comma space lineref ')'
+    struct_field_val <- 'struct_field_val(' lineref comma space int ')'
+    cmp_neq <- 'cmp_neq(' lineref comma space int_literal ')'
+    switch_br <- 'switch_br(' lineref (comma space switch_case)* (comma space else_case)? (newline space*)? ')'
 
     # an "in" statement for assembly language
     asm_in <- lbrack name rbrack space 'in' space name space '=' space lparen asmfun rparen
@@ -56,16 +72,20 @@ defmodule Clr.Air.Parser do
     notnewline <- [^\n]*
     unknown_instruction <- name lparen notnewline
 
+    switch_case <- lbrack int_literal (comma space int_literal)* rbrack space arrow space codeblock 
+    else_case <- 'else' space arrow space codeblock
+
     int <- [0-9]+
     intrange <- int colon int
+    int_literal <- langle type comma space int rangle
     fun <- langle 'fn' space lparen name (comma space name)* rparen space 'callconv' lparen tag rparen space name comma space lparen 'function' space quoted rparen rangle
     asmfun <- langle ('*const' space)? 'fn' space typelist space 'callconv' lparen tag2 rparen space name comma space name rangle
 
     typelist <- lparen type* rparen
     type <- '?'? (name / ptr_type)
-    ptr_type <- ('[*]' / '[*:' name ']' / "*") type
+    ptr_type <- ('[*]' / '[*:' name ']' / '[]' / '*') ('const' space)? type
 
-    block <- lbrace newline codeline+ space* rbrace
+    codeblock <- lbrace newline codeline+ space* rbrace
 
     quoted <- singleq name singleq
     dquoted <- doubleq name doubleq
@@ -86,6 +106,7 @@ defmodule Clr.Air.Parser do
     rbrace <- '}'
     lbrack <- '['
     rbrack <- ']'
+    arrow <- '=>'
     newline <- '\s'* '\n'
     """,
     air: [parser: true],
@@ -116,9 +137,11 @@ defmodule Clr.Air.Parser do
     newline: [ignore: true],
     singleq: [ignore: true],
     doubleq: [ignore: true],
+    arrow: [ignore: true],
     notnewline: [collect: true],
     type: [post_traverse: :type],
     int: [collect: true],
+    int_literal: [post_traverse: :int_literal],
     intrange: [post_traverse: :intrange],
     asm_in: [post_traverse: :asm_in],
     asmfun: [post_traverse: :asmfun],
@@ -127,6 +150,7 @@ defmodule Clr.Air.Parser do
     dbg_arg_inline: [post_traverse: {:instruction, [:dbg_arg_inline]}],
     dbg_var_val: [post_traverse: {:instruction, [:dbg_var_val]}],
     dbg_var_ptr: [post_traverse: {:instruction, [:dbg_var_ptr]}],
+    dbg_empty_stmt: [post_traverse: {:instruction, [:dbg_empty_stmt]}],
     br: [post_traverse: {:instruction, [:br]}],
     assembly: [post_traverse: {:instruction, [:assembly]}],
     trap: [post_traverse: {:instruction, [:trap]}],
@@ -136,6 +160,19 @@ defmodule Clr.Air.Parser do
     bitcast: [post_traverse: {:instruction, [:bitcast]}],
     alloc: [post_traverse: {:instruction, [:alloc]}],
     store: [post_traverse: {:instruction, [:store]}],
+    block: [post_traverse: {:instruction, [:block]}],
+    loop: [post_traverse: {:instruction, [:loop]}],
+    load: [post_traverse: {:instruction, [:load]}],
+    is_non_null: [post_traverse: {:instruction, [:is_non_null]}],
+    cond_br: [post_traverse: {:instruction, [:cond_br]}],
+    add: [post_traverse: {:instruction, [:add]}],
+    optional_payload: [post_traverse: {:instruction, [:optional_payload]}],
+    repeat: [post_traverse: {:instruction, [:repeat]}],
+    slice: [post_traverse: {:instruction, [:slice]}],
+    slice_ptr: [post_traverse: {:instruction, [:slice_ptr]}],
+    struct_field_val: [post_traverse: {:instruction, [:struct_field_val]}],
+    switch_br: [post_traverse: {:instruction, [:switch_br]}],
+    cmp_neq: [post_traverse: {:instruction, [:cmp_neq]}],
     unknown_instruction: [post_traverse: :unknown_instruction]
   )
 
@@ -160,11 +197,15 @@ defmodule Clr.Air.Parser do
   end
 
   defp codeline(rest, [code, "=", no, "%"], context, _line, _bytes) do
-    {rest, [String.to_integer(no), false, code], context}
+    {rest, [{String.to_integer(no), false, code}], context}
   end
 
   defp intrange(rest, [left, right], context, _line, _bytes) do
     {rest, [{String.to_integer(left), String.to_integer(right)}], context}
+  end
+
+  defp int_literal(rest, [value, type], context, _line, _bytes) do
+    {rest, [{type, value}], context}
   end
 
   defp function(rest, args, context, _line, _bytes) do
@@ -213,10 +254,19 @@ defmodule Clr.Air.Parser do
   end
 
   defp typefor([name]), do: name
+  defp typefor([name, "const" | rest]) do
+    case typefor([name | rest]) do
+      {:ptr, kind, name} -> {:ptr, kind, name, const: true}
+      {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :const, true)}
+    end
+  end
   defp typefor([name, "?" | rest]), do: typefor([{:optional, name} | rest])
   defp typefor([name, "*" | rest]), do: typefor([{:ptr, :one, name} | rest])
   defp typefor([name, "[*]" | rest]), do: typefor([{:ptr, :many, name} | rest])
-  defp typefor([name, "]", value, "[*:" | rest]), do: typefor([{:ptr, :many, name, sentinel: value} | rest])
+  defp typefor([name, "[]" | rest]), do: typefor([{:ptr, :slice, name} | rest])
+
+  defp typefor([name, "]", value, "[*:" | rest]),
+    do: typefor([{:ptr, :many, name, sentinel: value} | rest])
 
   defp unknown_instruction(_rest, [rest, instruction], _context, _line, _bytes) do
     raise "unknown instruction #{instruction}(#{rest} found"

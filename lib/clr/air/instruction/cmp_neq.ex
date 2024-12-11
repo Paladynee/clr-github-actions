@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Store do
+defmodule Clr.Air.Instruction.CmpNeq do
   @behaviour Clr.Air.Instruction
 
   defstruct [:line, :value, :unused]

@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Trap do
+defmodule Clr.Air.Instruction.DbgEmptyStmt do
   @behaviour Clr.Air.Instruction
 
   defstruct [:unused]

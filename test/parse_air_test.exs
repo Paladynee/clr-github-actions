@@ -7,7 +7,7 @@ defmodule ParseAirTest do
   alias Clr.Air.Function
 
   test "basic air text is a thing" do
-    air = """
+    assert %Function{name: "start._start"} = Air.parse("""
     # Begin Function AIR: start._start:
     # Total AIR+Liveness bytes: 517B
     # AIR Instructions:         17 (153B)
@@ -26,10 +26,27 @@ defmodule ParseAirTest do
       %15!= assembly(void, volatile, [_start] in X = (<*const fn () callconv(.naked) noreturn, start._start>), [posixCallMainAndExit] in X = (<*const fn ([*]usize) callconv(.c) noreturn, start.posixCallMainAndExit>), " .cfi_undefined %%rip\\n xorl %%ebp, %%ebp\\n movq %%rsp, %%rdi\\n andq $-16, %%rsp\\n callq %[posixCallMainAndExit:P]")
       %16!= trap()
     # End Function AIR: start._start
-    """
-
-    assert %Function{name: "start._start"} = Air.parse(air)
+    """)
   end
 
-  test_air "posixCallMainAndExit"
+  test "basic switch" do
+    assert %Function{name: "start._start"} = Air.parse("""
+    # Begin Function AIR: start._start:
+    # Total AIR+Liveness bytes: 517B
+    # AIR Instructions:         17 (153B)
+    # AIR Extra Data:           58 (232B)
+    # Liveness tomb_bits:       16B
+    # Liveness Extra Data:      1 (4B)
+    # Liveness special table:   1 (8B)
+    %109!= block(void, {
+      %144!= switch_br(%104!, [<u64, 5>] => {
+          %120!= br(%109, @Air.Inst.Ref.void_value)
+        }
+      )
+    } %104!)
+    # End Function AIR: start._start
+    """)
+  end
+
+  test_air("posixCallMainAndExit")
 end

@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Bitcast do
+defmodule Clr.Air.Instruction.SlicePtr do
   @behaviour Clr.Air.Instruction
 
   defstruct [:type, :line, :unused]
