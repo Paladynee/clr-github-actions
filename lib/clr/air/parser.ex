@@ -41,34 +41,34 @@ defmodule Clr.Air.Parser do
                    call / unknown_instruction
 
     dbg_stmt <- 'dbg_stmt(' intrange ')'
-    dbg_inline_block <- 'dbg_inline_block(' name comma space fun comma space codeblock ')'
-    dbg_arg_inline <- 'dbg_arg_inline(' langle name comma space name rangle comma space dquoted ')'
-    dbg_var_val <- 'dbg_var_val(' lineref comma space dquoted ')'
-    dbg_var_ptr <- 'dbg_var_ptr(' lineref comma space dquoted ')'
+    dbg_inline_block <- 'dbg_inline_block(' name cs fun cs codeblock ')'
+    dbg_arg_inline <- 'dbg_arg_inline(' langle name cs name rangle cs dquoted ')'
+    dbg_var_val <- 'dbg_var_val(' lineref cs dquoted ')'
+    dbg_var_ptr <- 'dbg_var_ptr(' lineref cs dquoted ')'
     dbg_empty_stmt <- 'dbg_empty_stmt()'
-    br <- 'br(' lineref comma space (name / lineref) ')'
-    assembly <- 'assembly(' name comma space name comma space asm_in comma space asm_in comma space dstring ')'
+    br <- 'br(' lineref cs (name / lineref) ')'
+    assembly <- 'assembly(' name cs name cs asm_in cs asm_in cs dstring ')'
     trap <- 'trap('')'
-    arg <- 'arg(' type comma space dquoted ')'
-    ptr_elem_val <- 'ptr_elem_val(' lineref comma space (lineref / name) ')'
-    ptr_add <- 'ptr_add(' type comma space lineref comma space (lineref / name) ')'
-    bitcast <- 'bitcast(' type comma space lineref ')'
+    arg <- 'arg(' type cs dquoted ')'
+    ptr_elem_val <- 'ptr_elem_val(' lineref cs (lineref / name) ')'
+    ptr_add <- 'ptr_add(' type cs lineref cs (lineref / name) ')'
+    bitcast <- 'bitcast(' type cs lineref ')'
     alloc <- 'alloc(' type ')'
-    store <- 'store(' (lineref / literal) comma space (lineref / name) ')'
-    block <- 'block(' type comma space codeblock (space clobbers)? ')'
-    loop <- 'loop(' type comma space codeblock ')'
-    load <- 'load(' type comma space lineref ')'
+    store <- 'store(' (lineref / literal) cs (lineref / name) ')'
+    block <- 'block(' type cs codeblock (space clobbers)? ')'
+    loop <- 'loop(' type cs codeblock ')'
+    load <- 'load(' type cs lineref ')'
     is_non_null <- 'is_non_null(' lineref ')'
-    cond_br <- 'cond_br(' lineref comma space cond_modifier space codeblock comma space cond_modifier space codeblock notnewline # ')'
-    optional_payload <- 'optional_payload(' type comma space lineref ')'
-    add <- 'add(' lineref comma space (lineref / name) ')'
+    cond_br <- 'cond_br(' lineref cs cond_modifier space codeblock cs cond_modifier space codeblock notnewline # ')'
+    optional_payload <- 'optional_payload(' type cs lineref ')'
+    add <- 'add(' lineref cs (lineref / name) ')'
     repeat <- 'repeat(' lineref ')'
-    slice <- 'slice(' type comma space lineref comma space lineref ')'
-    slice_ptr <- 'slice_ptr(' type comma space lineref ')'
-    struct_field_val <- 'struct_field_val(' lineref comma space int ')'
-    cmp_neq <- 'cmp_neq(' lineref comma space int_literal ')'
-    switch_br <- 'switch_br(' lineref (comma space switch_case)* (comma space else_case)? (newline space*)? ')'
-    call <- 'call(' fn_literal comma space lbrack (lineref (comma space lineref)*)? rbrack')'
+    slice <- 'slice(' type cs lineref cs lineref ')'
+    slice_ptr <- 'slice_ptr(' type cs lineref ')'
+    struct_field_val <- 'struct_field_val(' lineref cs int ')'
+    cmp_neq <- 'cmp_neq(' lineref cs int_literal ')'
+    switch_br <- 'switch_br(' lineref (cs switch_case)* (cs else_case)? (newline space*)? ')'
+    call <- 'call(' fn_literal cs lbrack (lineref (cs lineref)*)? rbrack')'
 
     cond_modifier <- 'poi' / 'likely' / 'cold'
 
@@ -79,30 +79,32 @@ defmodule Clr.Air.Parser do
     notnewline <- [^\n]*
     unknown_instruction <- name lparen notnewline
 
-    switch_case <- lbrack int_literal (comma space int_literal)* rbrack space arrow space codeblock 
+    switch_case <- lbrack int_literal (cs int_literal)* rbrack space arrow space codeblock 
     else_case <- 'else' space arrow space codeblock
 
     intrange <- int colon int
     literal <- int_literal / other_literal
-    int_literal <- langle type comma space int rangle
-    fn_literal <- langle fn_type comma space lparen 'function' space quoted rparen rangle
-    other_literal <- langle type comma space name rangle
+    int_literal <- langle type cs int rangle
+    fn_literal <- langle fn_type cs lparen 'function' space quoted rparen rangle
+    other_literal <- langle type cs name rangle
 
     # TODO: build this back into "fn_literal" and type literals.
 
-    fun <- langle 'fn' space lparen name (comma space name)* rparen space 'callconv' lparen tag rparen space name comma space lparen 'function' space quoted rparen rangle
-    asmfun <- langle ('*const' space)? 'fn' space typelist space 'callconv' lparen name rparen space name comma space name rangle
+    fun <- langle 'fn' space lparen name (cs name)* rparen space 'callconv' lparen tag rparen space name cs lparen 'function' space quoted rparen rangle
+    asmfun <- langle ('*const' space)? 'fn' space typelist space 'callconv' lparen name rparen space name cs name rangle
 
     typelist <- lparen type* rparen
     type <- '?'? (name / ptr_type)
     ptr_type <- ('[*]' / '[*:' name ']' / '[]' / '*') ('const' space)? type
-    fn_type <- 'fn' space lparen type (comma space type)* rparen space type
+    fn_type <- 'fn' space lparen type (cs type)* rparen space type
 
     codeblock <- lbrace newline codeline+ space* rbrace
 
     quoted <- singleq name singleq
     dquoted <- doubleq name doubleq
     dstring <- doubleq [^"]* doubleq
+
+    cs <- comma space
 
     # single token categories
 
