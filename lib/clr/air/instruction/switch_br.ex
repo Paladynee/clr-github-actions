@@ -3,16 +3,20 @@ defmodule Clr.Air.Instruction.SwitchBr do
 
   alias Clr.Air.Instruction
 
-  defstruct [:test, :cases, :unused]
+  defstruct [:test, :cases]
 
   def initialize([test | rest]) do
-    %__MODULE__{test: test, cases: get_cases(rest, [{[], []}], :code)} 
+    %__MODULE__{test: test, cases: get_cases(rest, [{[], []}], :code)}
   end
 
-  defguard is_literal(tuple) when tuple_size(tuple) == 2
-  defguard is_line(tuple) when tuple_size(tuple) == 3
+  defguard is_literal(tuple) when is_number(elem(tuple, 1))
 
-  def get_cases([literal | rest], [{head_cases, head_code} | other_branches], :cases) when is_literal(literal) do
+  defguard is_line(tuple)
+           when is_integer(elem(elem(tuple, 0), 0)) and
+                  elem(elem(tuple, 0), 1) in ~w[clobber keep]a
+
+  def get_cases([literal | rest], [{head_cases, head_code} | other_branches], :cases)
+      when is_literal(literal) do
     get_cases(rest, [{[literal | head_cases], head_code} | other_branches], :cases)
   end
 
@@ -28,7 +32,8 @@ defmodule Clr.Air.Instruction.SwitchBr do
     get_cases(rest, [{head_cases, [line]} | other_branches], :code)
   end
 
-  def get_cases([line | rest], [{head_cases, head_code} | other_branches], :code) when is_line(line) do
+  def get_cases([line | rest], [{head_cases, head_code} | other_branches], :code)
+      when is_line(line) do
     get_cases(rest, [{head_cases, [line | head_code]} | other_branches], :code)
   end
 

@@ -3,7 +3,7 @@ defmodule Clr.Air.Instruction.Loop do
 
   alias Clr.Air.Instruction
 
-  defstruct [:type, :code, :unused]
+  defstruct [:type, :code]
 
   def initialize([type | code]) do
     code = Instruction.to_code(code)

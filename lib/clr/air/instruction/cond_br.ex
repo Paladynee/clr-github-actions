@@ -3,7 +3,7 @@ defmodule Clr.Air.Instruction.CondBr do
 
   alias Clr.Air.Instruction
 
-  defstruct [:cond, :true_branch, :false_branch, :unused]
+  defstruct [:cond, :true_branch, :false_branch]
 
   def initialize(args) do
     [false_block, true_block, condition] = split(args, [[]])

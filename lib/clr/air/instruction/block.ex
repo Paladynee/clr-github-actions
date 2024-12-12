@@ -1,21 +1,16 @@
 defmodule Clr.Air.Instruction.Block do
   @behaviour Clr.Air.Instruction
 
-  alias Clr.Air.Instruction
-
-  defstruct [:type, :code, :end, :unused]
+  defstruct [:type, :code]
 
   def initialize([type | code]) do
-    case List.last(code) do
-      {_int, _bool, _instruction} ->
-        code = Instruction.to_code(code)
-        %__MODULE__{type: type, code: code}
-      other ->
-        code = code
-        |> Enum.slice(0..-2//1)
-        |> Instruction.to_code()
-
-        %__MODULE__{type: type, end: other, code: code}
-    end
+    code = Enum.reduce(code, %{}, fn 
+      {:clobber, number}, acc ->
+        Map.update(acc, :clobbers, [number], &[number | &1])
+      {k, v}, acc ->
+        Map.put(acc, k, v)
+    end)
+    
+    %__MODULE__{type: type, code: code}
   end
 end

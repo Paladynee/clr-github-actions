@@ -3,7 +3,7 @@ defmodule Clr.Air.Instruction.Br do
 
   @behaviour Clr.Air.Instruction
 
-  defstruct [:goto, :value, :unused]
+  defstruct [:goto, :value]
 
   def initialize([goto, value]), do: %__MODULE__{goto: goto, value: value}
 end
