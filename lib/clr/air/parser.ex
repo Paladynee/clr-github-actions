@@ -6,7 +6,7 @@ defmodule Clr.Air.Parser do
   alias Clr.Air.Instruction
 
   # import the following "base" parsers
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name space lbrace rbrace newline]a)
+  Clr.Air.import(Clr.Air.Base, ~w[lineref clobbers name space lbrace rbrace newline]a)
   Clr.Air.import(Clr.Air.Instruction, [:instruction])
 
   Pegasus.parser_from_string(
@@ -29,6 +29,7 @@ defmodule Clr.Air.Parser do
 
     code <- codeline+
     codeblock <- lbrace newline codeline+ space* rbrace
+    codeblock_clobbers <- lbrace newline (space* clobbers newline)? codeline+ space* rbrace
     codeline <- space* (lineref '=' space instruction) newline
     """,
     air: [parser: true],
@@ -38,6 +39,7 @@ defmodule Clr.Air.Parser do
     function_meta: [ignore: true],
     function_foot: [post_traverse: :function_foot],
     codeblock: [export: true, post_traverse: :codeblock],
+    codeblock_clobbers: [export: true, post_traverse: :codeblock],
     codeline: [export: true, post_traverse: :codeline]
   )
 

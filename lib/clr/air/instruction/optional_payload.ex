@@ -1,5 +1,18 @@
 defmodule Clr.Air.Instruction.OptionalPayload do
-  defstruct [:type, :line]
+  defstruct [:type, :loc]
 
-  def initialize([type, line]), do: %__MODULE__{type: type, line: line}
+  require Pegasus
+  require Clr.Air
+
+  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+
+  Pegasus.parser_from_string(
+    "optional_payload <- 'optional_payload' lparen type cs lineref rparen",
+    optional_payload: [export: true, post_traverse: :optional_payload]
+  )
+
+  def optional_payload(rest, [loc, type, "optional_payload"], context, _line, _bytes) do
+    {rest, [%__MODULE__{type: type, loc: loc}], context}
+  end
 end

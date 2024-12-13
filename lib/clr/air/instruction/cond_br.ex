@@ -1,24 +1,38 @@
 defmodule Clr.Air.Instruction.CondBr do
-  alias Clr.Air.Instruction
-
   defstruct [:cond, :true_branch, :false_branch]
 
-  def initialize(args) do
-    [false_block, true_block, condition] = split(args, [[]])
+  require Pegasus
+  require Clr.Air
 
-    true_code = Instruction.to_code(true_block)
-    false_code = Instruction.to_code(false_block)
+  Clr.Air.import(Clr.Air.Base, ~w[lineref cs space lparen rparen notnewline]a)
+  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(Clr.Air.Parser, [:codeblock_clobbers])
 
-    %__MODULE__{cond: condition, true_branch: true_code, false_branch: false_code}
-  end
+  Pegasus.parser_from_string(
+    """
+    cond_br <- 'cond_br' lparen lineref cs branch cs branch rparen
 
-  def split([], so_far), do: so_far
+    branch <- branchtype space codeblock_clobbers
+    branchtype <- poi / likely / cold
 
-  def split(["poi" | rest], so_far) do
-    split(rest, [[] | so_far])
-  end
+    poi <- 'poi'
+    likely <- 'likely'
+    cold <- 'cold'
+    """,
+    cond_br: [export: true, post_traverse: :cond_br],
+    poi: [token: :poi],
+    likely: [token: :likely],
+    cold: [token: :cold]
+  )
 
-  def split([head | rest], [head_so_far | rest_so_far]) do
-    split(rest, [[head | head_so_far] | rest_so_far])
+  def cond_br(
+        rest,
+        [false_branch, _false_type, true_branch, _true_type, lineref, "cond_br"],
+        context,
+        _line,
+        _bytes
+      ) do
+    {rest, [%__MODULE__{cond: lineref, true_branch: true_branch, false_branch: false_branch}],
+     context}
   end
 end

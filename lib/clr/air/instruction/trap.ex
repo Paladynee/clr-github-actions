@@ -1,12 +1,9 @@
 defmodule Clr.Air.Instruction.Trap do
-  # represents a `break` statement
+  # represents a `trap` statement
 
   defstruct []
 
   require Pegasus
-  require Clr.Air
-
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
 
   Pegasus.parser_from_string("trap <- 'trap()'", trap: [export: true, post_traverse: :trap])
 

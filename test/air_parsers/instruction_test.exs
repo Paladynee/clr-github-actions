@@ -65,11 +65,37 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Loop
 
     test "loop" do
-      assert %Loop{type: "void"} = Instruction.parse("""
-      loop(void, { 
-        %7!= dbg_stmt(2:13) 
-      })
-      """)
+      assert %Loop{type: "void"} =
+               Instruction.parse("""
+               loop(void, { 
+                 %7!= dbg_stmt(2:13) 
+               })
+               """)
+    end
+
+    alias Clr.Air.Instruction.CondBr
+
+    test "cond_br without clobbers" do
+      assert %CondBr{cond: {104, :clobber}} =
+               Instruction.parse("""
+               cond_br(%104!, poi {
+                 %144!= br(%109, @Air.Inst.Ref.void_value)
+               }, poi {
+                 %144!= br(%109, @Air.Inst.Ref.void_value)
+               })
+               """)
+    end
+
+    test "cond_br with clobbers" do
+      assert %CondBr{true_branch: %{clobbers: [122, 123]}} =
+               Instruction.parse("""
+               cond_br(%104!, poi {
+                 %122! %123!
+                 %144!= br(%109, @Air.Inst.Ref.void_value)
+               }, poi {
+                 %144!= br(%109, @Air.Inst.Ref.void_value)
+               })
+               """)
     end
   end
 
@@ -79,19 +105,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
         %120!= br(%109, @Air.Inst.Ref.void_value)
       }
     )
-    """)
-    |> dbg(limit: 25)
-  end
-
-  test "cond_br" do
-    Instruction.parse("""
-    cond_br(%104!, poi {
-      %122! %123!
-      %144!= br(%109, @Air.Inst.Ref.void_value)
-      }, poi {
-        %144!= br(%109, @Air.Inst.Ref.void_value)
-        })
-      end
     """)
     |> dbg(limit: 25)
   end
@@ -143,25 +156,43 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Load{type: {:ptr, :many, "usize"}, loc: {19, :keep}} =
                Instruction.parse("load([*]usize, %19)")
     end
+
+    alias Clr.Air.Instruction.OptionalPayload
+
+    test "optional_payload" do
+      assert %OptionalPayload{type: "void", loc: {19, :keep}} =
+               Instruction.parse("optional_payload(void, %19)")
+    end
   end
 
   describe "block" do
     alias Clr.Air.Instruction.Block
 
     test "generic" do
-      assert %Block{} = Instruction.parse("""
-      block(void, {
-        %7!= dbg_stmt(2:13)
-      })
-      """)
+      assert %Block{} =
+               Instruction.parse("""
+               block(void, {
+                 %7!= dbg_stmt(2:13)
+               })
+               """)
     end
 
     test "with clobbers" do
-      assert %Block{clobbers: [8, 9]} = Instruction.parse("""
-      block(void, {
-        %7!= dbg_stmt(2:13)
-      } %8! %9!)
-      """)
+      assert %Block{clobbers: [8, 9]} =
+               Instruction.parse("""
+               block(void, {
+                 %7!= dbg_stmt(2:13)
+               } %8! %9!)
+               """)
+    end
+  end
+
+  describe "test operations" do
+    alias Clr.Air.Instruction.IsNonNull
+
+    test "is_non_null" do
+      assert %IsNonNull{line: {19, :keep}} =
+               Instruction.parse("is_non_null(%19)")
     end
   end
 

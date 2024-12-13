@@ -84,10 +84,11 @@ defmodule Clr.Air.Base do
   defp clobber(rest, [line], context, _line, _bytes), do: {rest, [{line, :clobber}], context}
 
   defp clobbers(rest, clobbers, context, _line, _bytes) do
-    clobbers = clobbers
-    |> Enum.map(fn {line, :clobber} -> line end)
-    |> Enum.sort
-    
+    clobbers =
+      clobbers
+      |> Enum.map(fn {line, :clobber} -> line end)
+      |> Enum.sort()
+
     {rest, [{:clobbers, clobbers}], context}
   end
 end

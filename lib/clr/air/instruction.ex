@@ -26,10 +26,12 @@ defmodule Clr.Air.Instruction do
   Pegasus.parser_from_string(
     """
     # TODO: reorganize this by category.
-    instruction <- dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / # dbg_empty_stmt / 
-                   br / assembly / trap / arg / ptr_elem_val / ptr_add / bitcast / alloc / store / block / 
-                   loop / load / 
-                   # is_non_null / cond_br / optional_payload / add / repeat / slice / slice_ptr / 
+    instruction <- dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
+                   br / trap / ptr_elem_val / ptr_add / cond_br /
+                   bitcast / alloc / store / loop / load / optional_payload /
+                   assembly / arg /
+                   block /
+                   is_non_null / #  add / repeat / slice / slice_ptr / 
                    # struct_field_val / cmp_neq / switch_br / call / 
                    unknown_instruction
 
