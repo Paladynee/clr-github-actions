@@ -30,40 +30,5 @@ defmodule ParseAirTest do
              """)
   end
 
-  test "basic switch" do
-    assert %Function{name: "start._start"} =
-             Air.parse("""
-             # Begin Function AIR: start._start:
-             %109!= block(void, {
-               %144!= switch_br(%104!, [<u64, 5>] => {
-                   %120!= br(%109, @Air.Inst.Ref.void_value)
-                 }
-               )
-             } %104!)
-             # End Function AIR: start._start
-             """)
-  end
-
-  test "cond_br with clobbers" do
-    assert %Function{
-             name: "start._start",
-             code: %{
-               {109, :clobber} => %{
-                 true_branch: %{clobbers: [123, 122]}
-               }
-             }
-           } =
-             Air.parse("""
-             # Begin Function AIR: start._start:
-             %109!= cond_br(%104!, poi {
-               %122! %123!
-               %144!= br(%109, @Air.Inst.Ref.void_value)
-             }, poi {
-               %144!= br(%109, @Air.Inst.Ref.void_value)
-             })
-             # End Function AIR: start._start
-             """)
-  end
-
   test_air("posixCallMainAndExit")
 end

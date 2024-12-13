@@ -7,7 +7,7 @@ defmodule Clr.Air.Base do
     """
     # line numbers
     lineref <- clobber / keep
-    clobbers <- clobber (cs clobber)*
+    clobbers <- clobber (space clobber)*
     keep <- percent int space?
     clobber <- percent int bang
 
@@ -48,7 +48,7 @@ defmodule Clr.Air.Base do
     bang <- '!'
     """,
     lineref: [export: true],
-    clobbers: [export: true, tag: true],
+    clobbers: [export: true, post_traverse: :clobbers],
     keep: [post_traverse: :keep],
     clobber: [post_traverse: :clobber],
     int: [export: true, collect: true, post_traverse: :int],
@@ -70,8 +70,9 @@ defmodule Clr.Air.Base do
     rbrace: [ignore: true, export: true],
     lbrack: [ignore: true, export: true],
     rbrack: [ignore: true, export: true],
-    arrow: [ignore: true, export: true],
+    fatarrow: [ignore: true, export: true],
     newline: [ignore: true, export: true],
+    notnewline: [export: true, collect: true],
     percent: [ignore: true],
     bang: [ignore: true]
   )
@@ -81,4 +82,12 @@ defmodule Clr.Air.Base do
   defp keep(rest, [line], context, _line, _bytes), do: {rest, [{line, :keep}], context}
 
   defp clobber(rest, [line], context, _line, _bytes), do: {rest, [{line, :clobber}], context}
+
+  defp clobbers(rest, clobbers, context, _line, _bytes) do
+    clobbers = clobbers
+    |> Enum.map(fn {line, :clobber} -> line end)
+    |> Enum.sort
+    
+    {rest, [{:clobbers, clobbers}], context}
+  end
 end

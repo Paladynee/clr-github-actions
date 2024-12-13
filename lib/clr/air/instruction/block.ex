@@ -1,18 +1,23 @@
 defmodule Clr.Air.Instruction.Block do
-  @behaviour Clr.Air.Instruction
+  defstruct [:type, :code, clobbers: []]
 
-  defstruct [:type, :code]
+  require Pegasus
+  require Clr.Air
 
-  def initialize([type | code]) do
-    code =
-      Enum.reduce(code, %{}, fn
-        {:clobber, number}, acc ->
-          Map.update(acc, :clobbers, [number], &[number | &1])
+  Clr.Air.import(Clr.Air.Base, ~w[clobbers cs space lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(Clr.Air.Parser, [:codeblock])
 
-        {k, v}, acc ->
-          Map.put(acc, k, v)
-      end)
+  Pegasus.parser_from_string(
+    "block <- 'block' lparen type cs codeblock (space clobbers)? rparen",
+    block: [export: true, post_traverse: :block]
+  )
 
-    %__MODULE__{type: type, code: code}
+  def block(rest, [codeblock, type, "block"], context, _line, _bytes) do
+    {rest, [%__MODULE__{type: type, code: codeblock}], context}
+  end
+
+  def block(rest, [{:clobbers, clobbers}, codeblock, type, "block"], context, _line, _bytes) do
+    {rest, [%__MODULE__{type: type, code: codeblock, clobbers: clobbers}], context}
   end
 end

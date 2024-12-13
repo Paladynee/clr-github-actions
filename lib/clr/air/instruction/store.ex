@@ -1,7 +1,18 @@
 defmodule Clr.Air.Instruction.Store do
-  @behaviour Clr.Air.Instruction
+  defstruct [:loc, :val]
 
-  defstruct [:line, :value]
+  require Pegasus
+  require Clr.Air
 
-  def initialize([line, value]), do: %__MODULE__{line: line, value: value}
+  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+
+  Pegasus.parser_from_string(
+    "store <- 'store' lparen (lineref / literal) cs (lineref / name) rparen",
+    store: [export: true, post_traverse: :store]
+  )
+
+  def store(rest, [value, loc, "store"], context, _line, _bytes) do
+    {rest, [%__MODULE__{val: value, loc: loc}], context}
+  end
 end

@@ -6,16 +6,8 @@ defmodule Clr.Air.Parser do
   alias Clr.Air.Instruction
 
   # import the following "base" parsers
-  Clr.Air.import(
-    Clr.Air.Base,
-    ~w[name space newline]a
-  )
-
-  # import the "instruction" parser
-  Clr.Air.import(
-    Clr.Air.Instruction,
-    ~w[codeline]a
-  )
+  Clr.Air.import(Clr.Air.Base, ~w[lineref name space lbrace rbrace newline]a)
+  Clr.Air.import(Clr.Air.Instruction, [:instruction])
 
   Pegasus.parser_from_string(
     """
@@ -36,6 +28,8 @@ defmodule Clr.Air.Parser do
     function_meta_info <- [^\n]+
 
     code <- codeline+
+    codeblock <- lbrace newline codeline+ space* rbrace
+    codeline <- space* (lineref '=' space instruction) newline
     """,
     air: [parser: true],
     init: [post_traverse: :init],
@@ -43,6 +37,8 @@ defmodule Clr.Air.Parser do
     function_head: [post_traverse: :function_head],
     function_meta: [ignore: true],
     function_foot: [post_traverse: :function_foot],
+    codeblock: [export: true, post_traverse: :codeblock],
+    codeline: [export: true, post_traverse: :codeline]
   )
 
   defp init(rest, _, _context, _line, _bytes) do
@@ -62,8 +58,14 @@ defmodule Clr.Air.Parser do
   end
 
   defp function(rest, args, context, _line, _bytes) do
-    {rest, [], %{context | code: Instruction.to_code(args)}}
+    {rest, [], %{context | code: Map.new(args)}}
   end
+
+  defp codeline(rest, [instruction, "=", lineref], context, _line, _bytes) do
+    {rest, [{lineref, instruction}], context}
+  end
+
+  defp codeblock(rest, args, context, _line, _bytes), do: {rest, [Map.new(args)], context}
 
   def parse(string) do
     case air(string) do

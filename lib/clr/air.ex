@@ -8,7 +8,13 @@ defmodule Clr.Air do
       require NimbleParsec
 
       for symbol <- symbols do
-        NimbleParsec.defparsecp(symbol, NimbleParsec.parsec({module, symbol}))
+        case symbol do
+          {here, there} ->
+            NimbleParsec.defparsecp(here, NimbleParsec.parsec({module, there}))
+
+          _same ->
+            NimbleParsec.defparsecp(symbol, NimbleParsec.parsec({module, symbol}))
+        end
       end
     end
   end

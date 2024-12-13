@@ -1,6 +1,4 @@
 defmodule Clr.Air.Instruction.StructFieldVal do
-  @behaviour Clr.Air.Instruction
-
   defstruct [:src, :index]
 
   def initialize([src, index]), do: %__MODULE__{src: src, index: index}

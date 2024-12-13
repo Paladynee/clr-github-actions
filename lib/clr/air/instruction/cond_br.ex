@@ -1,6 +1,4 @@
 defmodule Clr.Air.Instruction.CondBr do
-  @behaviour Clr.Air.Instruction
-
   alias Clr.Air.Instruction
 
   defstruct [:cond, :true_branch, :false_branch]

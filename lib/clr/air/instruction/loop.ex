@@ -1,13 +1,19 @@
 defmodule Clr.Air.Instruction.Loop do
-  @behaviour Clr.Air.Instruction
-
-  alias Clr.Air.Instruction
-
   defstruct [:type, :code]
 
-  def initialize([type | code]) do
-    code = Instruction.to_code(code)
+  require Pegasus
+  require Clr.Air
 
-    %__MODULE__{type: type, code: code}
+  Clr.Air.import(Clr.Air.Base, ~w[cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+
+  Pegasus.parser_from_string(
+    "loop <- 'loop' lparen type cs codeblock rparen",
+    loop: [export: true, post_traverse: :loop]
+  )
+
+  def loop(rest, [codeblock, type, "loop"], context, _line, _bytes) do
+    {rest, [%__MODULE__{type: type, code: codeblock}], context}
   end
 end

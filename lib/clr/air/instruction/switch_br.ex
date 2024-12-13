@@ -1,6 +1,4 @@
 defmodule Clr.Air.Instruction.SwitchBr do
-  @behaviour Clr.Air.Instruction
-
   alias Clr.Air.Instruction
 
   defstruct [:test, :cases]
