@@ -5,10 +5,25 @@ defmodule Clr.Air.Base do
 
   Pegasus.parser_from_string(
     """
+    # line numbers
+    lineref <- clobber / keep
+    clobbers <- clobber (cs clobber)*
+    keep <- percent int space?
+    clobber <- percent int bang
+
+    int <- [0-9]+
+
+    # strings and names
+    squoted <- singleq name singleq
+    dquoted <- doubleq name doubleq
+    dstring <- doubleq [^"]* doubleq
+
     name <- [0-9a-zA-Z._@] +
 
+    # this is convenient because it occurs all over the place
     cs <- comma space
 
+    # basic tokens
     singleq <- [']
     doubleq <- ["]
     comma <- ','
@@ -22,10 +37,25 @@ defmodule Clr.Air.Base do
     rbrace <- '}'
     lbrack <- '['
     rbrack <- ']'
-    arrow <- '=>'
+    fatarrow <- '=>'
     newline <- '\s'* '\n'
+
+    # debug
+    notnewline <- [^\n]*
+
+    # private non-exported tokens.
+    percent <- '%'
+    bang <- '!'
     """,
+    lineref: [export: true],
+    clobbers: [export: true, tag: true],
+    keep: [post_traverse: :keep],
+    clobber: [post_traverse: :clobber],
+    int: [export: true, collect: true, post_traverse: :int],
     name: [export: true, collect: true],
+    squoted: [export: true],
+    dquoted: [export: true],
+    dstring: [export: true, collect: true],
     cs: [ignore: true, export: true],
     singleq: [ignore: true, export: true],
     doubleq: [ignore: true, export: true],
@@ -41,6 +71,14 @@ defmodule Clr.Air.Base do
     lbrack: [ignore: true, export: true],
     rbrack: [ignore: true, export: true],
     arrow: [ignore: true, export: true],
-    newline: [ignore: true, export: true]
+    newline: [ignore: true, export: true],
+    percent: [ignore: true],
+    bang: [ignore: true]
   )
+
+  defp int(rest, [value], context, _line, _bytes), do: {rest, [String.to_integer(value)], context}
+
+  defp keep(rest, [line], context, _line, _bytes), do: {rest, [{line, :keep}], context}
+
+  defp clobber(rest, [line], context, _line, _bytes), do: {rest, [{line, :clobber}], context}
 end

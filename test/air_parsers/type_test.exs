@@ -44,4 +44,22 @@ defmodule ClrTest.Air.TypeTest do
       assert [{:ptr, :slice, "i32", const: true}] = Type.parse("[]const i32")
     end
   end
+
+  describe "optional pointer types" do
+    test "single pointer" do
+      assert [{:ptr, :one, "i32", optional: true}] = Type.parse("?*i32")
+    end
+
+    test "const pointer" do
+      assert [{:ptr, :one, "i32", opts}] = Type.parse("?*const i32")
+      assert opts[:optional]
+      assert opts[:const]
+    end
+  end
+
+  test "optional generic type" do
+    assert [{:optional, "i32"}] = Type.parse("?i32")
+  end
+
+  test "function types"
 end
