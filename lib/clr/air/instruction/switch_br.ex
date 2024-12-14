@@ -1,41 +1,42 @@
 defmodule Clr.Air.Instruction.SwitchBr do
-  alias Clr.Air.Instruction
-
   defstruct [:test, :cases]
 
-  def initialize([test | rest]) do
-    %__MODULE__{test: test, cases: get_cases(rest, [{[], []}], :code)}
+  require Pegasus
+  require Clr.Air
+
+  Clr.Air.import(
+    Clr.Air.Base,
+    ~w[lineref name cs space lparen rparen lbrack rbrack fatarrow newline]a
+  )
+
+  Clr.Air.import(Clr.Air.Type, ~w[type fn_literal int_literal]a)
+
+  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+
+  Pegasus.parser_from_string(
+    """
+    switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
+
+    switch_case <- lbrack int_literal (cs int_literal)* rbrack space fatarrow space codeblock 
+    else_case <- 'else' space fatarrow space codeblock
+    """,
+    switch_br: [export: true, post_traverse: :switch_br],
+    switch_case: [post_traverse: :switch_case],
+    else_case: [post_traverse: :else_case]
+  )
+
+  defp switch_br(rest, args, context, _line, _bytes) do
+    case Enum.reverse(args) do
+      ["switch_br", test | cases] ->
+        {rest, [%__MODULE__{test: test, cases: Map.new(cases)}], context}
+    end
   end
 
-  defguard is_literal(tuple) when is_number(elem(tuple, 1))
-
-  defguard is_line(tuple)
-           when is_integer(elem(elem(tuple, 0), 0)) and
-                  elem(elem(tuple, 0), 1) in ~w[clobber keep]a
-
-  def get_cases([literal | rest], [{head_cases, head_code} | other_branches], :cases)
-      when is_literal(literal) do
-    get_cases(rest, [{[literal | head_cases], head_code} | other_branches], :cases)
+  defp switch_case(rest, [codeblock | compares], context, _line, _bytes) do
+    {rest, [{compares, codeblock}], context}
   end
 
-  def get_cases([literal | rest], other_branches, :code) when is_literal(literal) do
-    get_cases(rest, [{[literal], []} | other_branches], :cases)
-  end
-
-  def get_cases(["else" | rest], other_branches, :code) do
-    get_cases(rest, [{:else, []} | other_branches], :cases)
-  end
-
-  def get_cases([line | rest], [{head_cases, []} | other_branches], :cases) when is_line(line) do
-    get_cases(rest, [{head_cases, [line]} | other_branches], :code)
-  end
-
-  def get_cases([line | rest], [{head_cases, head_code} | other_branches], :code)
-      when is_line(line) do
-    get_cases(rest, [{head_cases, [line | head_code]} | other_branches], :code)
-  end
-
-  def get_cases([], all_branches, :code) do
-    Enum.map(all_branches, fn {cases, code} -> {cases, Instruction.to_code(code)} end)
+  defp else_case(rest, [codeblock, "else"], context, _line, _bytes) do
+    {rest, [{:else, codeblock}], context}
   end
 end

@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.SlicePtr do
+defmodule Clr.Air.Instruction.SliceLen do
   defstruct [:type, :src]
 
   require Pegasus
@@ -9,11 +9,11 @@ defmodule Clr.Air.Instruction.SlicePtr do
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
 
   Pegasus.parser_from_string(
-    "slice_ptr <- 'slice_ptr' lparen type cs lineref rparen",
-    slice_ptr: [export: true, post_traverse: :slice_ptr]
+    "slice_len <- 'slice_len' lparen type cs lineref rparen",
+    slice_len: [export: true, post_traverse: :slice_len]
   )
 
-  defp slice_ptr(rest, [src, type, "slice_ptr"], context, _line, _bytes) do
+  defp slice_len(rest, [src, type, "slice_len"], context, _line, _bytes) do
     {rest, [%__MODULE__{type: type, src: src}], context}
   end
 end

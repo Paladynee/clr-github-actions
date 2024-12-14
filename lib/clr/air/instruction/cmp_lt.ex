@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.CmpNeq do
+defmodule Clr.Air.Instruction.CmpLt do
   defstruct [:lhs, :rhs]
 
   require Pegasus
@@ -8,11 +8,11 @@ defmodule Clr.Air.Instruction.CmpNeq do
   Clr.Air.import(Clr.Air.Type, [:int_literal])
 
   Pegasus.parser_from_string(
-    "cmp_neq <- 'cmp_neq' lparen lineref cs int_literal rparen",
-    cmp_neq: [export: true, post_traverse: :cmp_neq]
+    "cmp_lt <- 'cmp_lt' lparen lineref cs (lineref / int_literal) rparen",
+    cmp_lt: [export: true, post_traverse: :cmp_lt]
   )
 
-  def cmp_neq(rest, [rhs, lhs, "cmp_neq"], context, _line, _bytes) do
+  def cmp_lt(rest, [rhs, lhs, "cmp_lt"], context, _line, _bytes) do
     {rest, [%__MODULE__{lhs: lhs, rhs: rhs}], context}
   end
 end

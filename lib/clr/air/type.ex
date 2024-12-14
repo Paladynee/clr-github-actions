@@ -14,7 +14,11 @@ defmodule Clr.Air.Type do
     int_literal <- langle type cs int rangle
     fn_literal <- langle fn_type cs fn_value rangle
     fn_value <- (lparen function space squoted rparen) / name
-    other_literal <- langle type cs name rangle
+    other_literal <- langle type cs convertible rangle
+    convertible <- as / name
+    as <- '@as' lparen ptr_type cs value rparen
+    value <- ptrcast / name
+    ptrcast <- '@ptrCast' lparen name rparen
 
     # full type things
     typelist <- lparen (type (cs type)*)? rparen
@@ -42,8 +46,12 @@ defmodule Clr.Air.Type do
     int_literal: [export: true, post_traverse: :int_literal],
     fn_literal: [export: true, post_traverse: :fn_literal],
     other_literal: [export: true, post_traverse: :other_literal],
+    # literal toolbox
+    as: [post_traverse: :as],
+    ptrcast: [post_traverse: :ptrcast],
     type: [export: true, parser: true, post_traverse: :type],
     typelist: [export: true],
+    ptr_type: [post_traverse: :ptr_type],
     fn_type: [export: true, post_traverse: :fn_type],
     const: [token: :const],
     function: [token: :function],
@@ -70,10 +78,28 @@ defmodule Clr.Air.Type do
     {rest, [{:literal, type, value}], context}
   end
 
+  defp as(rest, [value, type, "@as"], context, _line, _bytes) do
+    {rest, [{:as, type, value}], context}
+  end
+
+  defp ptrcast(rest, [name, "@ptrCast"], context, _line, _bytes) do
+    {rest, [{:ptrcast, name}], context}
+  end
+
   # TYPE post-traversals
 
-  defp type(rest, typeargs, context, _line, _bytes) do
-    {rest, [typefor(typeargs)], context}
+  defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
+
+  defp type(rest, [{:ptr, kind, type}, "?"], context, _line, _bytes) do
+    {rest, [{:ptr, kind, type, optional: true}], context}
+  end
+
+  defp type(rest, [{:ptr, kind, type, opts}, "?"], context, _line, _bytes) do
+    {rest, [{:ptr, kind, type, Keyword.put(opts, :optional, true)}], context}
+  end
+
+  defp type(rest, [type, "?"], context, _line, _bytes) do
+    {rest, [{:optional, type}], context}
   end
 
   defp fn_type(rest, [return_type | args_rest], context, _line, _bytes) do
@@ -91,34 +117,28 @@ defmodule Clr.Air.Type do
     end
   end
 
-  defp typefor([name]), do: name
+  defp ptr_type(rest, args, context, _, _) do
+    {rest, [ptrfor(args)], context}
+  end
 
-  defp typefor([name, :const | rest]) do
-    case typefor([name | rest]) do
+  defp ptrfor([type, "*"]), do: {:ptr, :one, type}
+  defp ptrfor([type, "[*]"]), do: {:ptr, :many, type}
+  defp ptrfor([type, "[]"]), do: {:ptr, :slice, type}
+
+  defp ptrfor([type, "]", sentinel, "[*:"]) do
+    {:ptr, :many, type, sentinel: sentinel}
+  end
+
+  defp ptrfor([type, "]", sentinel, "[:"]) do
+    {:ptr, :slice, type, sentinel: sentinel}
+  end
+
+  defp ptrfor([type, :const | qualifiers]) do
+    case ptrfor([type | qualifiers]) do
       {:ptr, kind, name} -> {:ptr, kind, name, const: true}
       {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :const, true)}
     end
   end
-
-  # optional pointers get the optional modifiers
-  defp typefor([{:ptr, count, name}, "?" | rest]),
-    do: typefor([{:ptr, count, name, optional: true} | rest])
-
-  defp typefor([{:ptr, count, name, opts}, "?" | rest]),
-    do: typefor([{:ptr, count, name, Keyword.put(opts, :optional, true)} | rest])
-
-  # optional anything else is a union
-  defp typefor([name, "?" | rest]), do: typefor([{:optional, name} | rest])
-
-  defp typefor([name, "*" | rest]), do: typefor([{:ptr, :one, name} | rest])
-  defp typefor([name, "[*]" | rest]), do: typefor([{:ptr, :many, name} | rest])
-  defp typefor([name, "[]" | rest]), do: typefor([{:ptr, :slice, name} | rest])
-
-  defp typefor([name, "]", value, "[*:" | rest]),
-    do: typefor([{:ptr, :many, name, sentinel: value} | rest])
-
-  defp typefor([name, "]", value, "[:" | rest]),
-    do: typefor([{:ptr, :slice, name, sentinel: value} | rest])
 
   # function post-traversals
 

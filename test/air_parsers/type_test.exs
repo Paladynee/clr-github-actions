@@ -55,10 +55,20 @@ defmodule ClrTest.Air.TypeTest do
       assert opts[:optional]
       assert opts[:const]
     end
+
+    test "pointer to a function" do
+      assert {:ptr, :many, {:fn, [], "void", [callconv: :c]}} =
+               Type.parse("[*]*const fn () callconv(.c) void")
+    end
   end
 
   test "optional generic type" do
     assert {:optional, "i32"} = Type.parse("?i32")
+  end
+
+  test "function pointer type with callconv" do
+    assert {:ptr, :many, {:fn, [], "void", [callconv: :c]}} =
+             Type.parse("[*]*const fn () callconv(.c) void")
   end
 
   test "function type with callconv" do

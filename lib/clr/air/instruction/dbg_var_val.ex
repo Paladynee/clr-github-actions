@@ -5,9 +5,10 @@ defmodule Clr.Air.Instruction.DbgVarVal do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs dquoted lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, [:literal])
 
   Pegasus.parser_from_string(
-    "dbg_var_val <- 'dbg_var_val' lparen lineref cs dquoted rparen",
+    "dbg_var_val <- 'dbg_var_val' lparen (lineref / literal) cs dquoted rparen",
     dbg_var_val: [export: true, post_traverse: :dbg_var_val]
   )
 

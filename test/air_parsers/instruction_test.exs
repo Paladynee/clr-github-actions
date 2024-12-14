@@ -24,6 +24,15 @@ defmodule ClrTest.AirParsers.InstructionTest do
                """)
     end
 
+    test "dbg_inline_block with clobbers" do
+      assert %DbgInlineBlock{} =
+               Instruction.parse("""
+               dbg_inline_block(void, <fn (usize, [*][*:0]u8, [][*:0]u8) callconv(.@"inline") u8, (function 'callMainWithArgs')>, {
+                 %240!= dbg_arg_inline(%2, "argc")
+               } %8! %2! %54!)
+               """)
+    end
+
     alias Clr.Air.Instruction.DbgArgInline
 
     test "dbg_arg_inline" do
@@ -36,6 +45,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "dbg_var_val" do
       assert %DbgVarVal{line: {0, :keep}, val: "argc"} =
                Instruction.parse(~S/dbg_var_val(%0, "argc")/)
+
+      # more complex case
+
+      assert %DbgVarVal{} =
+               Instruction.parse(
+                 ~S/dbg_var_val(<?[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_start))>, "opt_init_array_start")/
+               )
     end
 
     alias Clr.Air.Instruction.DbgVarPtr
@@ -97,16 +113,45 @@ defmodule ClrTest.AirParsers.InstructionTest do
                })
                """)
     end
-  end
 
-  test "basic switch" do
-    Instruction.parse("""
-    switch_br(%104!, [<u64, 5>] => {
-        %120!= br(%109, @Air.Inst.Ref.void_value)
-      }
-    )
-    """)
-    |> dbg(limit: 25)
+    alias Clr.Air.Instruction.Repeat
+
+    test "repeat" do
+      assert %Repeat{goto: {23, :keep}} =
+               Instruction.parse("repeat(%23)")
+    end
+
+    alias Clr.Air.Instruction.SwitchBr
+
+    test "basic switch" do
+      assert %SwitchBr{test: {104, :clobber}} =
+               Instruction.parse("""
+               switch_br(%104!, [<u64, 5>] => {
+                   %120!= br(%109, @Air.Inst.Ref.void_value)
+                 }
+               )
+               """)
+    end
+
+    alias Clr.Air.Instruction.Call
+
+    test "call" do
+      assert %Call{
+               fn: {:literal, {:fn, _, _, _}, {:function, "initStatic"}},
+               args: [{74, :keep}]
+             } =
+               Instruction.parse(
+                 "call(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+               )
+
+      assert %Call{fn: {10, :keep}, args: []} = Instruction.parse("call(%10, [])")
+    end
+
+    alias Clr.Air.Instruction.Unreach
+
+    test "unreach" do
+      assert %Unreach{} = Instruction.parse("unreach()")
+    end
   end
 
   describe "pointer operations" do
@@ -126,6 +171,43 @@ defmodule ClrTest.AirParsers.InstructionTest do
                val: "@Air.Inst.Ref.zero_usize"
              } =
                Instruction.parse("ptr_add([*]usize, %0, @Air.Inst.Ref.zero_usize)")
+    end
+
+    alias Clr.Air.Instruction.Slice
+
+    test "slice" do
+      assert %Slice{type: "usize", src: {0, :keep}, index: {2, :clobber}} =
+               Instruction.parse("slice(usize, %0, %2!)")
+    end
+
+    alias Clr.Air.Instruction.SlicePtr
+
+    test "slice_ptr" do
+      assert %SlicePtr{type: "usize", src: {0, :keep}} =
+               Instruction.parse("slice_ptr(usize, %0)")
+    end
+
+    alias Clr.Air.Instruction.IntFromPtr
+
+    test "int_from_ptr" do
+      assert %IntFromPtr{val: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, "__init_array_end"}}}} =
+               Instruction.parse(
+                 "int_from_ptr(<[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_end))>)"
+               )
+    end
+
+    alias Clr.Air.Instruction.SliceLen
+
+    test "slice_len" do
+      assert %SliceLen{type: "usize", src: {0, :keep}} =
+               Instruction.parse("slice_len(usize, %0)")
+    end
+
+    alias Clr.Air.Instruction.SliceElemVal
+
+    test "slice_elem_val" do
+      assert %SliceElemVal{src: {0, :keep}, index: {2, :clobber}} =
+               Instruction.parse("slice_elem_val(%0, %2!)")
     end
   end
 
@@ -163,6 +245,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %OptionalPayload{type: "void", loc: {19, :keep}} =
                Instruction.parse("optional_payload(void, %19)")
     end
+
+    alias Clr.Air.Instruction.StructFieldVal
+
+    test "struct_field_val" do
+      assert %StructFieldVal{src: {93, :clobber}, index: 0} =
+               Instruction.parse("struct_field_val(%93!, 0)")
+    end
+
+    alias Clr.Air.Instruction.StoreSafe
+
+    test "store_safe" do
+      assert %StoreSafe{val: "@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
+               Instruction.parse("store_safe(%19, @Air.Inst.Ref.zero_usize)")
+    end
   end
 
   describe "block" do
@@ -193,6 +289,50 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "is_non_null" do
       assert %IsNonNull{line: {19, :keep}} =
                Instruction.parse("is_non_null(%19)")
+    end
+
+    alias Clr.Air.Instruction.CmpNeq
+
+    test "cmp_neq" do
+      assert %CmpNeq{lhs: {95, :clobber}, rhs: {:literal, "u64", 0}} =
+               Instruction.parse("cmp_neq(%95!, <u64, 0>)")
+    end
+
+    alias Clr.Air.Instruction.CmpLt
+
+    test "cmp_lt" do
+      assert %CmpLt{lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_lt(%95!, %96!)")
+    end
+
+    alias Clr.Air.Instruction.CmpLte
+
+    test "cmp_lte" do
+      assert %CmpLte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_lte(%95!, %96!)")
+    end
+  end
+
+  describe "math operations" do
+    alias Clr.Air.Instruction.Add
+
+    test "add" do
+      assert %Add{lhs: {19, :keep}, rhs: "@Air.Inst.Ref.one_usize"} =
+               Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    alias Clr.Air.Instruction.SubWrap
+
+    test "sub_wrap" do
+      assert %SubWrap{lhs: {206, :clobber}, rhs: {207, :clobber}} =
+               Instruction.parse("sub_wrap(%206!, %207!)")
+    end
+
+    alias Clr.Air.Instruction.DivExact
+
+    test "div_exact" do
+      assert %DivExact{lhs: {206, :clobber}, rhs: {:literal, "usize", 8}} =
+               Instruction.parse("div_exact(%206!, <usize, 8>)")
     end
   end
 

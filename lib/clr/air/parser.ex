@@ -3,7 +3,6 @@ defmodule Clr.Air.Parser do
   require Clr.Air
 
   alias Clr.Air.Function
-  alias Clr.Air.Instruction
 
   # import the following "base" parsers
   Clr.Air.import(Clr.Air.Base, ~w[lineref clobbers name space lbrace rbrace newline]a)

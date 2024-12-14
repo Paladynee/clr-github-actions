@@ -1,7 +1,24 @@
 defmodule Clr.Air.Instruction.Call do
-  defstruct [:type, :function, :args]
+  defstruct [:fn, :args]
 
-  def initialize([{type, {:function, function}} | args]) do
-    %__MODULE__{type: type, function: function, args: args}
+  require Pegasus
+  require Clr.Air
+
+  Clr.Air.import(Clr.Air.Base, ~w[name cs lineref lparen rparen lbrack rbrack]a)
+  Clr.Air.import(Clr.Air.Type, [:fn_literal])
+
+  Pegasus.parser_from_string(
+    """
+    call <- 'call' lparen (fn_literal / lineref) cs lbrack (arg (cs arg)*)? rbrack rparen
+    arg <- lineref / name
+    """,
+    call: [export: true, post_traverse: :call]
+  )
+
+  def call(rest, args, context, _, _) do
+    case Enum.reverse(args) do
+      ["call", fun | args] ->
+        {rest, [%__MODULE__{fn: fun, args: args}], context}
+    end
   end
 end

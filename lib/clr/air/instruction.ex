@@ -2,7 +2,8 @@ defmodule Clr.Air.Instruction do
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
                 arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload add cond_br block 
-                repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call],
+                repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr sub_wrap div_exact
+                slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -26,13 +27,23 @@ defmodule Clr.Air.Instruction do
   Pegasus.parser_from_string(
     """
     # TODO: reorganize this by category.
-    instruction <- dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
-                   br / trap / ptr_elem_val / ptr_add / cond_br /
-                   bitcast / alloc / store / loop / load / optional_payload /
-                   assembly / arg /
-                   block /
-                   is_non_null / #  add / repeat / slice / slice_ptr / 
-                   # struct_field_val / cmp_neq / switch_br / call / 
+    instruction <- # debug
+                   dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
+                   # control flow
+                   br / trap / cond_br / repeat / switch_br / call / unreach /
+                   # pointer operations
+                   ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
+                   # memory operations
+                   bitcast / alloc / store / loop / load / optional_payload / struct_field_val /
+                   store_safe / 
+                   int_from_ptr / 
+                   # test
+                   is_non_null / cmp_neq / cmp_lt / cmp_lte /
+                   # math
+                   add / sub_wrap / div_exact /
+                   # etc
+                   assembly / arg / block /
+                   # debug 
                    unknown_instruction
 
     # for debugging

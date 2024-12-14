@@ -30,5 +30,5 @@ defmodule ParseAirTest do
              """)
   end
 
-  test_air("posixCallMainAndExit")
+  test_air("posixCallMainAndExit", "start.posixCallMainAndExit")
 end
