@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.CondBr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs space lparen rparen notnewline]a)
+  Clr.Air.import(Clr.Air.Base, ~w[lineref cs space lparen rparen]a)
   Clr.Air.import(Clr.Air.Type, [:type])
   Clr.Air.import(Clr.Air.Parser, [:codeblock_clobbers])
 

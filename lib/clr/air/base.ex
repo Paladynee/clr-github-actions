@@ -16,14 +16,18 @@ defmodule Clr.Air.Base do
     dquoted <- doubleq name doubleq
     dstring <- doubleq [^"]* doubleq
 
-    name <- ('@' / '.')? indexed_identifier ('.' indexed_identifier)*
+    name <- at_name / enum_literal / basic_name
+    at_name <- '@' basic_name
+    enum_literal <- ('.' basic_name) / special_enum_literal
+    special_enum_literal <- '.@"' [^"]+ '"'
+    basic_name <- indexed_identifier ('.' indexed_identifier)*
     indexed_identifier <- identifier_part (index)*
     index <- '[' int ']'
     identifier_part <- alpha alnum*
     alpha <- [a-zA-Z_]
     alnum <-[a-zA-Z0-9_]
 
-    int <- [0-9]+
+    int <- '-'? [0-9]+
 
     # this is convenient because it occurs all over the place
     cs <- comma space
@@ -58,6 +62,7 @@ defmodule Clr.Air.Base do
     clobber: [post_traverse: :clobber],
     int: [export: true, collect: true, post_traverse: :int],
     name: [export: true, collect: true],
+    enum_literal: [export: true, collect: true],
     squoted: [export: true],
     dquoted: [export: true],
     dstring: [export: true, collect: true],

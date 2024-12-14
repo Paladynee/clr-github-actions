@@ -9,6 +9,10 @@ defmodule ClrTest.Air.LiteralTest do
     assert {:literal, "usize", 8} = Type.parse_literal("<usize, 8>")
   end
 
+  test "negative integer literal" do
+    assert {:literal, "usize", -8} = Type.parse_literal("<usize, -8>")
+  end
+
   test "generic function literal" do
     assert {:literal, {:fn, [{:ptr, :slice, "elf.Elf64_Phdr"}], "void", []},
             {:function, "initStatic"}} =
@@ -32,6 +36,13 @@ defmodule ClrTest.Air.LiteralTest do
             {:function, "callMainWithArgs"}} =
              Type.parse_literal(
                "<fn (usize, [*][*:0]u8, [][*:0]u8) callconv(.@\"inline\") u8, (function 'callMainWithArgs')>"
+             )
+  end
+
+  test "map literal" do
+    assert {:literal, "os.linux.MAP__struct_2035", {:map, _}} =
+             Type.parse_literal(
+               "<os.linux.MAP__struct_2035, .{ .TYPE = .PRIVATE, .FIXED = false, .ANONYMOUS = true, .@\"32BIT\" = false, ._7 = 0, .GROWSDOWN = false, ._9 = 0, .DENYWRITE = false, .EXECUTABLE = false, .LOCKED = false, .NORESERVE = false, .POPULATE = false, .NONBLOCK = false, .STACK = false, .HUGETLB = false, .SYNC = false, .FIXED_NOREPLACE = false, ._21 = 0, .UNINITIALIZED = false, .@\"_\" = 0 }>"
              )
   end
 end

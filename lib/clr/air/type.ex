@@ -4,21 +4,28 @@ defmodule Clr.Air.Type do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[int name squoted space comma cs lparen rparen langle rangle notnewline]a
+    ~w[int name enum_literal squoted space comma cs lparen rparen langle rangle rbrace lbrace notnewline]a
   )
 
   Pegasus.parser_from_string(
     """
     # literals are type + value
-    literal <- int_literal / fn_literal / other_literal
+    literal <- int_literal / fn_literal / map_literal / other_literal
     int_literal <- langle type cs int rangle
     fn_literal <- langle fn_type cs fn_value rangle
     fn_value <- (lparen function space squoted rparen) / name
+    map_literal <- langle name cs map_value rangle
     other_literal <- langle type cs convertible rangle
     convertible <- as / name
     as <- '@as' lparen ptr_type cs value rparen
     value <- ptrcast / name
     ptrcast <- '@ptrCast' lparen name rparen
+
+    map_value <- '.{ ' map_kv (', ' map_kv)* ' }'
+    map_kv <- enum_literal ' = ' map_v
+    map_v <- name / number
+
+    number <- [0-9]+
 
     # full type things
     typelist <- lparen (type (cs type)*)? rparen
@@ -51,6 +58,7 @@ defmodule Clr.Air.Type do
     int_literal: [export: true, post_traverse: :int_literal],
     fn_literal: [export: true, post_traverse: :fn_literal],
     other_literal: [export: true, post_traverse: :other_literal],
+    map_literal: [export: true, post_traverse: :map_literal],
     # literal toolbox
     as: [post_traverse: :as],
     ptrcast: [post_traverse: :ptrcast],
@@ -67,7 +75,8 @@ defmodule Clr.Air.Type do
     c: [token: :c],
     naked: [token: :naked],
     function: [token: :function],
-    align: [token: :align]
+    align: [token: :align],
+    map_value: [collect: true]
   )
 
   defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) do
@@ -80,6 +89,10 @@ defmodule Clr.Air.Type do
 
   defp fn_literal(rest, [name, type], context, _line, _bytes) do
     {rest, [{:literal, type, name}], context}
+  end
+
+  defp map_literal(rest, [literal, type], context, _line, _bytes) do
+    {rest, [{:literal, type, {:map, literal}}], context}
   end
 
   defp other_literal(rest, [value, type], context, _line, _bytes) do
