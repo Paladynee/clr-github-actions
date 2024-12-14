@@ -11,14 +11,19 @@ defmodule Clr.Air.Base do
     keep <- percent int space?
     clobber <- percent int bang
 
-    int <- [0-9]+
-
     # strings and names
     squoted <- singleq name singleq
     dquoted <- doubleq name doubleq
     dstring <- doubleq [^"]* doubleq
 
-    name <- [0-9a-zA-Z._@] +
+    name <- ('@' / '.')? indexed_identifier ('.' indexed_identifier)*
+    indexed_identifier <- identifier_part (index)*
+    index <- '[' int ']'
+    identifier_part <- alpha alnum*
+    alpha <- [a-zA-Z_]
+    alnum <-[a-zA-Z0-9_]
+
+    int <- [0-9]+
 
     # this is convenient because it occurs all over the place
     cs <- comma space

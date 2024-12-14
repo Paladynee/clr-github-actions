@@ -23,11 +23,11 @@ defmodule ClrTest.Air.TypeTest do
 
   describe "sentinel pointer types" do
     test "manypointer" do
-      assert {:ptr, :many, "i32", sentinel: "0"} = Type.parse("[*:0]i32")
+      assert {:ptr, :many, "i32", sentinel: 0} = Type.parse("[*:0]i32")
     end
 
     test "slice pointer" do
-      assert {:ptr, :slice, "i32", sentinel: "0"} = Type.parse("[:0]i32")
+      assert {:ptr, :slice, "i32", sentinel: 0} = Type.parse("[:0]i32")
     end
   end
 
@@ -79,5 +79,13 @@ defmodule ClrTest.Air.TypeTest do
   test "const * function type" do
     assert {:fn, [], "noreturn", [callconv: :naked]} =
              Type.parse("*const fn () callconv(.naked) noreturn")
+  end
+
+  test "array type" do
+    assert {:array, 8, "i32"} = Type.parse("[8]i32")
+  end
+
+  test "aligned slice type" do
+    assert {:ptr, :slice, "u8", alignment: 4096} = Type.parse("[]align(4096) u8")
   end
 end

@@ -176,7 +176,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Slice
 
     test "slice" do
-      assert %Slice{type: "usize", src: {0, :keep}, index: {2, :clobber}} =
+      assert %Slice{type: "usize", src: {0, :keep}, len: {2, :clobber}} =
                Instruction.parse("slice(usize, %0, %2!)")
     end
 

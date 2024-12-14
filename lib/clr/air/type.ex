@@ -22,8 +22,9 @@ defmodule Clr.Air.Type do
 
     # full type things
     typelist <- lparen (type (cs type)*)? rparen
-    type <- '?'? (fn_type / ptr_type / name)
-    ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (const space)? type
+    type <- '?'? (fn_type / ptr_type / array_type / name)
+    ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
+    array_type <- '[' int ']' type
 
     # single token words
     const <- 'const'
@@ -32,8 +33,12 @@ defmodule Clr.Air.Type do
     one_ptr <- '*'
     many_ptr <- '[*]'
     slice_ptr <- '[]'
-    sentinel_many_ptr <- '[*:' name ']'
-    sentinel_slice_ptr <- '[:' name ']'
+    sentinel_many_ptr <- '[*:' sentinel ']'
+    sentinel_slice_ptr <- '[:' sentinel ']'
+    alignment <- align lparen int rparen
+    align <- 'align'
+
+    sentinel <- 'null' / '0'
 
     fn_type <- ('*' const space)? 'fn' space typelist (space callconv)? space type
     callconv <- 'callconv' lparen (inline / c / naked) rparen
@@ -51,15 +56,18 @@ defmodule Clr.Air.Type do
     ptrcast: [post_traverse: :ptrcast],
     type: [export: true, parser: true, post_traverse: :type],
     typelist: [export: true],
+    array_type: [post_traverse: :array_type],
     ptr_type: [post_traverse: :ptr_type],
     fn_type: [export: true, post_traverse: :fn_type],
     const: [token: :const],
     function: [token: :function],
     callconv: [post_traverse: :callconv],
+    sentinel: [collect: true, post_traverse: :sentinel],
     inline: [token: :inline],
     c: [token: :c],
     naked: [token: :naked],
-    function: [token: :function]
+    function: [token: :function],
+    align: [token: :align]
   )
 
   defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) do
@@ -102,6 +110,10 @@ defmodule Clr.Air.Type do
     {rest, [{:optional, type}], context}
   end
 
+  defp array_type(rest, [type, "]", int, "["], context, _line, _bytes) do
+    {rest, [{:array, int, type}], context}
+  end
+
   defp fn_type(rest, [return_type | args_rest], context, _line, _bytes) do
     {arg_types, opts} = fn_info(args_rest, [])
     {rest, [{:fn, arg_types, return_type, opts}], context}
@@ -133,11 +145,26 @@ defmodule Clr.Air.Type do
     {:ptr, :slice, type, sentinel: sentinel}
   end
 
+  defp ptrfor([type, alignment, :align | rest]) do
+    case ptrfor([type | rest]) do
+      {:ptr, kind, name} -> {:ptr, kind, name, alignment: alignment}
+      {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :alignment, alignment)}
+    end
+  end
+
   defp ptrfor([type, :const | qualifiers]) do
     case ptrfor([type | qualifiers]) do
       {:ptr, kind, name} -> {:ptr, kind, name, const: true}
       {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :const, true)}
     end
+  end
+
+  defp sentinel(rest, ["null"], context, _line, _bytes) do
+    {rest, [:null], context}
+  end
+
+  defp sentinel(rest, ["0"], context, _line, _bytes) do
+    {rest, [0], context}
   end
 
   # function post-traversals

@@ -14,7 +14,7 @@ defmodule Clr.Air.Parser do
     init <- ''
     air <- init function *
 
-    function <- function_head function_meta* code function_foot
+    function <- newline? function_head function_meta* code function_foot
     function_head <- '# Begin Function AIR:' space name ':' newline
     function_foot <- '# End Function AIR:' space name newline?
     function_meta <- function_meta_title space+ function_meta_info newline

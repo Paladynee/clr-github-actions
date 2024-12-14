@@ -1,5 +1,5 @@
 defmodule Clr.Air.Instruction.Slice do
-  defstruct [:type, :src, :index]
+  defstruct [:type, :src, :len]
 
   require Pegasus
   require Clr.Air
@@ -13,7 +13,7 @@ defmodule Clr.Air.Instruction.Slice do
     slice: [export: true, post_traverse: :slice]
   )
 
-  defp slice(rest, [index, src, type, "slice"], context, _line, _bytes) do
-    {rest, [%__MODULE__{type: type, src: src, index: index}], context}
+  defp slice(rest, [len, src, type, "slice"], context, _line, _bytes) do
+    {rest, [%__MODULE__{type: type, src: src, len: len}], context}
   end
 end

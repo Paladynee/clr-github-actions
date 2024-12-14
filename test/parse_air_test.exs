@@ -30,5 +30,7 @@ defmodule ParseAirTest do
              """)
   end
 
-  test_air("posixCallMainAndExit", "start.posixCallMainAndExit")
+  test_air("start.posixCallMainAndExit")
+
+  test_air("os.linux.tls.initStatic")
 end
