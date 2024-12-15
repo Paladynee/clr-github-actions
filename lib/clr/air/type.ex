@@ -13,7 +13,7 @@ defmodule Clr.Air.Type do
     literal <- int_literal / fn_literal / map_literal / other_literal
     int_literal <- langle type cs (int / sizeof / alignof) rangle
     fn_literal <- langle fn_type cs fn_value rangle
-    fn_value <- (lparen function space squoted rparen) / name
+    fn_value <- builtinfunction / name
     map_literal <- langle type cs map_value rangle
     other_literal <- langle type cs convertible rangle
     convertible <- as / name / stringliteral / structptr
@@ -40,7 +40,18 @@ defmodule Clr.Air.Type do
 
     # full type things
     typelist <- lparen ((noalias space)? type (cs (noalias space)? type)*)? rparen
-    type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? (enum_literal_type / fn_type / ptr_type / array_type / struct_type / name))
+    type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? general_types)
+
+    general_types <- enum_literal_type / function_call_type / fn_type / ptr_type / array_type / struct_type / name
+
+    function_call_type <- name function_call_typelist
+
+    # note that a function call type list is not typelist, it is comma separated, not comma-space separated
+    function_call_typelist <- lparen (function_call_value (comma function_call_value)*)? rparen
+
+    function_call_value <- type / int / builtinfunction
+    builtinfunction <- lparen function space squoted rparen
+
     ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
     array_type <- '[' int ']' type
     enum_literal_type <- '@Type(.enum_literal)'
@@ -86,6 +97,7 @@ defmodule Clr.Air.Type do
     as: [post_traverse: :as],
     ptrcast: [post_traverse: :ptrcast],
     type: [export: true, parser: true, post_traverse: :type],
+    function_call_type: [post_traverse: :function_call_type],
     array_type: [post_traverse: :array_type],
     ptr_type: [post_traverse: :ptr_type],
     fn_type: [export: true, post_traverse: :fn_type],
@@ -110,16 +122,18 @@ defmodule Clr.Air.Type do
     bang: [ignore: true],
     noalias: [token: :noalias],
     sizeof: [post_traverse: :sizeof],
-    alignof: [post_traverse: :alignof]
+    alignof: [post_traverse: :alignof],
+    builtinfunction: [post_traverse: :builtinfunction]
   )
 
-  defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) or is_tuple(value) do
+  defp int_literal(rest, [value, type], context, _line, _bytes)
+       when is_integer(value) or is_tuple(value) do
     {rest, [{:literal, type, value}], context}
   end
 
-  defp fn_literal(rest, [name, :function, type], context, _line, _bytes) do
-    {rest, [{:literal, type, {:function, name}}], context}
-  end
+  #defp fn_literal(rest, [name, :function, type], context, _line, _bytes) do
+  #  {rest, [{:literal, type, {:function, name}}], context}
+  #end
 
   defp fn_literal(rest, [name, type], context, _line, _bytes) do
     {rest, [{:literal, type, name}], context}
@@ -277,5 +291,14 @@ defmodule Clr.Air.Type do
 
   defp alignof(rest, [type, "@alignOf"], context, _line, _bytes) do
     {rest, [{:alignof, type}], context}
+  end
+
+  defp function_call_type(rest, args, context, _line, _bytes) do
+    [call | args] = Enum.reverse(args)
+    {rest, [{:comptime_call, call, args}], context}
+  end
+
+  defp builtinfunction(rest, [name, :function], context, _line, _bytes) do
+    {rest, [{:function, name}], context}
   end
 end

@@ -465,6 +465,22 @@ defmodule ClrTest.AirParsers.InstructionTest do
     end
   end
 
+  describe "atomics" do
+    alias Clr.Air.Instruction.AtomicRmw
+
+    test "atomic_rmw" do
+      assert %AtomicRmw{
+               dst: {:literal, {:ptr, :one, "u8"}, "debug.panicking.raw"},
+               mode: :seq_cst,
+               op: :add,
+               val: "@Air.Inst.Ref.one_u8"
+             } =
+               Instruction.parse(
+                 "atomic_rmw(<*u8, debug.panicking.raw>, @Air.Inst.Ref.one_u8, Add, seq_cst)"
+               )
+    end
+  end
+
   # other instructions
 
   alias Clr.Air.Instruction.Assembly

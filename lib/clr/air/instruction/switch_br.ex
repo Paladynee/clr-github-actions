@@ -17,7 +17,8 @@ defmodule Clr.Air.Instruction.SwitchBr do
     """
     switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
-    switch_case <- lbrack int_literal (cs int_literal)* rbrack space fatarrow space codeblock_clobbers 
+    switch_case <- lbrack case_value (cs case_value)* rbrack space fatarrow space codeblock_clobbers 
+    case_value <- int_literal / name
     else_case <- 'else' space fatarrow space codeblock_clobbers
     """,
     switch_br: [export: true, post_traverse: :switch_br],

@@ -86,7 +86,8 @@ defmodule ClrTest.Air.TypeTest do
              Type.parse("*const fn () callconv(.naked) noreturn")
   end
 
-  test "array type" do{:literal, "usize", {:sizeof, "os.linux.tls.AbiTcb__struct_2928"}}
+  test "array type" do
+    {:literal, "usize", {:sizeof, "os.linux.tls.AbiTcb__struct_2928"}}
     assert {:array, 8, "i32"} = Type.parse("[8]i32")
   end
 
@@ -114,5 +115,13 @@ defmodule ClrTest.Air.TypeTest do
   test "error union type" do
     assert {:errorunion, ["Invalid", "Unexpected"]} =
              Type.parse("error{Unexpected,Invalid}")
+  end
+
+  test "atomic value allowed as function call" do
+    assert {:comptime_call, "atomic.Value", ["u8"]} = Type.parse("atomic.Value(u8)")
+  end
+
+  test "generic comptime call" do
+    assert {:comptime_call, "io.GenericWriter", ["fs.File", {:errorunion, _}, {:function, "write"}]} = Type.parse("io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))")
   end
 end
