@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Clr do
   end
 
   defmodule FunctionScanner do
-    defstruct [active: false, name: nil, so_far: []]
+    defstruct active: false, name: nil, so_far: []
   end
 
   @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
@@ -46,10 +46,11 @@ defmodule Mix.Tasks.Clr do
 
   defp scan_buf(state, string) do
     scan_string = state.buffer <> string
+
     {start, _, so_far} =
       for <<byte <- scan_string>>, reduce: {0, 0, []} do
         {start, this, so_far} when byte == ?\n ->
-          line = :erlang.binary_part(scan_string, start, this - start)
+          line = :erlang.binary_part(scan_string, start, this - start + 1)
           {this + 1, this + 1, [line | so_far]}
 
         {start, this, so_far} ->
@@ -58,15 +59,16 @@ defmodule Mix.Tasks.Clr do
 
     {_, new_buff} = :erlang.split_binary(scan_string, start)
 
-    {Enum.reverse(so_far), %{state | buffer: new_buff}} 
+    {Enum.reverse(so_far), %{state | buffer: new_buff}}
   end
 
   defp cleanup(_), do: :ok
 
   defp scan_function("# Begin Function AIR: " <> name = line, %{active: false} = state) do
-    name = name
-    |> String.split(":")
-    |> List.first()
+    name =
+      name
+      |> String.split(":")
+      |> List.first()
 
     %{state | active: true, so_far: [line], name: name}
   end
@@ -77,10 +79,15 @@ defmodule Mix.Tasks.Clr do
 
   defp scan_function("# End Function AIR: " <> name = line, %{active: true} = state) do
     if String.starts_with?(name, state.name) do
-      Enum.reverse([line | state.so_far]) |> IO.puts()
+      function = Enum.reverse([line | state.so_far])
+
+      IO.puts(function)
+
+      Clr.Air.parse(IO.iodata_to_binary(function))
     else
       Mix.raise("name mismatch (#{name}, #{state.name})")
     end
+
     %FunctionScanner{}
   end
 
@@ -93,7 +100,7 @@ defmodule Mix.Tasks.Clr do
   defp scan_function(empty, %{active: false} = state) when empty in @emptylines, do: state
 
   defp scan_function(line, %{active: false}) do
-    Mix.raise("unexpected line #{inspect line}")
+    Mix.raise("unexpected line #{inspect(line)}")
   end
 
   defp scan_function(line, state) do

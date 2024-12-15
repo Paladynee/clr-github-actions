@@ -5,9 +5,10 @@ defmodule Clr.Air.Instruction.Add do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Type, [:literal])
 
   Pegasus.parser_from_string(
-    "add <- 'add' lparen lineref cs (lineref / name) rparen",
+    "add <- 'add' lparen lineref cs (lineref / name / literal) rparen",
     add: [export: true, post_traverse: :add]
   )
 

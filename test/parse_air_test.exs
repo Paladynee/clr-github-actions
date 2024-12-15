@@ -15,4 +15,6 @@ defmodule ParseAirTest do
   test_air("start.expandStackSize")
 
   test_air("debug.FormattedPanic.startGreaterThanEnd")
+
+  test_air("debug.defaultPanic")
 end

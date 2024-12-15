@@ -57,4 +57,30 @@ defmodule ClrTest.Air.LiteralTest do
     assert {:literal, {:ptr, :slice, "u8", [const: true]}, {:string, "integer overflow", 0..16}} =
              Type.parse_literal("<[]const u8, \"integer overflow\"[0..16]>")
   end
+
+  test "pointer literal with struct dereferencing" do
+    assert {:literal, {:ptr, :one, "os.linux.Sigaction", [const: true]},
+            {
+              :structptr,
+              ".{ .handler = .{ .handler = start.noopSigHandler }, .mask = .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, .flags = 0, .restorer = null }"
+            }} =
+             Type.parse_literal(
+               "<*const os.linux.Sigaction, &.{ .handler = .{ .handler = start.noopSigHandler }, .mask = .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, .flags = 0, .restorer = null }>"
+             )
+  end
+
+  test "strange literal" do
+    assert {:literal, {:ptr, :slice, "u8", [const: true]}, {:structptr, ".{}0..0"}} =
+             Type.parse_literal("<[]const u8, &.{}[0..0]>")
+  end
+
+  test "sizeof allowed in literals" do
+    assert {:literal, "usize", {:sizeof, "os.linux.tls.AbiTcb__struct_2928"}} =
+             Type.parse_literal("<usize, @sizeOf(os.linux.tls.AbiTcb__struct_2928)>")
+  end
+
+  test "alignof allowed in literals" do
+    assert {:literal, "usize", {:alignof, "os.linux.tls.AbiTcb__struct_2928"}} =
+             Type.parse_literal("<usize, @alignOf(os.linux.tls.AbiTcb__struct_2928)>")
+  end
 end

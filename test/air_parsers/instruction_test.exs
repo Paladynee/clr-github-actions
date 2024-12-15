@@ -314,6 +314,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %UnwrapErrunionErr{type: {:errorunion, ["Unexpected"]}, src: {0, :keep}} =
                Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
     end
+
+    alias Clr.Air.Instruction.Intcast
+
+    test "intcast" do
+      assert %Intcast{type: "usize", line: {0, :keep}} =
+               Instruction.parse("intcast(usize, %0)")
+    end
   end
 
   describe "block" do

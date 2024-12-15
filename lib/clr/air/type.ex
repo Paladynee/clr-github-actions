@@ -11,27 +11,35 @@ defmodule Clr.Air.Type do
     """
     # literals are type + value
     literal <- int_literal / fn_literal / map_literal / other_literal
-    int_literal <- langle type cs int rangle
+    int_literal <- langle type cs (int / sizeof / alignof) rangle
     fn_literal <- langle fn_type cs fn_value rangle
     fn_value <- (lparen function space squoted rparen) / name
-    map_literal <- langle name cs map_value rangle
+    map_literal <- langle type cs map_value rangle
     other_literal <- langle type cs convertible rangle
-    convertible <- as / name / stringliteral
+    convertible <- as / name / stringliteral / structptr
     as <- '@as' lparen ptr_type cs value rparen
     value <- ptrcast / name
     ptrcast <- '@ptrCast' lparen name rparen
     stringliteral <- dstring (indices)?
 
     indices <- lbrack int '..' int rbrack
+    sizeof <- '@sizeOf' lparen type rparen
+    alignof <- '@alignOf' lparen type rparen
 
-    map_value <- '.{ ' map_kv (', ' map_kv)* ' }'
+    structptr <- '&' map_value
+
+    map_value <- '.{' (' ' map_part (', ' map_part)* ' ')? '}' index_str?
+    map_part <- map_kv / number
     map_kv <- enum_literal ' = ' map_v
-    map_v <- name / number
+    map_v <- name / number / map_value
 
+    index_str <- lbrack number '..' number rbrack
+
+    # note this doesn't implicitly convert to a number.
     number <- [0-9]+
 
     # full type things
-    typelist <- lparen (type (cs type)*)? rparen
+    typelist <- lparen ((noalias space)? type (cs (noalias space)? type)*)? rparen
     type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? (enum_literal_type / fn_type / ptr_type / array_type / struct_type / name))
     ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
     array_type <- '[' int ']' type
@@ -67,6 +75,7 @@ defmodule Clr.Air.Type do
     errorlist <- lbrace name (comma name)* rbrace
     error <- 'error'
     bang <- '!'
+    noalias <- 'noalias'
     """,
     literal: [export: true, parser: true],
     int_literal: [export: true, post_traverse: :int_literal],
@@ -77,7 +86,6 @@ defmodule Clr.Air.Type do
     as: [post_traverse: :as],
     ptrcast: [post_traverse: :ptrcast],
     type: [export: true, parser: true, post_traverse: :type],
-    typelist: [export: true],
     array_type: [post_traverse: :array_type],
     ptr_type: [post_traverse: :ptr_type],
     fn_type: [export: true, post_traverse: :fn_type],
@@ -98,10 +106,14 @@ defmodule Clr.Air.Type do
     error: [token: :error],
     errorunion_only: [post_traverse: :errorunion_only],
     errorlist: [post_traverse: :errorlist],
-    bang: [ignore: true]
+    structptr: [post_traverse: :structptr],
+    bang: [ignore: true],
+    noalias: [token: :noalias],
+    sizeof: [post_traverse: :sizeof],
+    alignof: [post_traverse: :alignof]
   )
 
-  defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) do
+  defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) or is_tuple(value) do
     {rest, [{:literal, type, value}], context}
   end
 
@@ -166,10 +178,18 @@ defmodule Clr.Air.Type do
 
   defp fn_args(args) do
     case Enum.reverse(args) do
-      ["fn" | args] -> args
-      ["*", :const, "fn" | args] -> args
+      ["fn" | args] -> collect_noalias(args, [])
+      ["*", :const, "fn" | args] -> collect_noalias(args, [])
     end
   end
+
+  defp collect_noalias([:noalias, type | rest], so_far) do
+    collect_noalias(rest, [{:noalias, type} | so_far])
+  end
+
+  defp collect_noalias([head | rest], so_far), do: collect_noalias(rest, [head | so_far])
+
+  defp collect_noalias([], so_far), do: Enum.reverse(so_far)
 
   defp ptr_type(rest, args, context, _, _) do
     {rest, [ptrfor(args)], context}
@@ -245,5 +265,17 @@ defmodule Clr.Air.Type do
 
   defp errorunion_only(rest, [errors, :error], context, _line, _bytes) do
     {rest, [{:errorunion, errors}], context}
+  end
+
+  defp structptr(rest, [value, "&"], context, _line, _bytes) do
+    {rest, [{:structptr, value}], context}
+  end
+
+  defp sizeof(rest, [type, "@sizeOf"], context, _line, _bytes) do
+    {rest, [{:sizeof, type}], context}
+  end
+
+  defp alignof(rest, [type, "@alignOf"], context, _line, _bytes) do
+    {rest, [{:alignof, type}], context}
   end
 end

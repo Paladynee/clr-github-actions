@@ -76,12 +76,17 @@ defmodule ClrTest.Air.TypeTest do
              Type.parse("fn (Target.Cpu.Arch) callconv(.@\"inline\") bool")
   end
 
+  test "function type with noalias" do
+    assert {:fn, [{:noalias, {:ptr, :one, "usize"}}, {:noalias, {:ptr, :one, "u8"}}], "u8", []} =
+             Type.parse("fn (noalias *usize, noalias *u8) u8")
+  end
+
   test "const * function type" do
     assert {:fn, [], "noreturn", [callconv: :naked]} =
              Type.parse("*const fn () callconv(.naked) noreturn")
   end
 
-  test "array type" do
+  test "array type" do{:literal, "usize", {:sizeof, "os.linux.tls.AbiTcb__struct_2928"}}
     assert {:array, 8, "i32"} = Type.parse("[8]i32")
   end
 

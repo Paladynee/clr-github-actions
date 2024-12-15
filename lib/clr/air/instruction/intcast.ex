@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Bitcast do
+defmodule Clr.Air.Instruction.Intcast do
   defstruct [:type, :line]
 
   require Pegasus
@@ -8,11 +8,11 @@ defmodule Clr.Air.Instruction.Bitcast do
   Clr.Air.import(Clr.Air.Type, [:type])
 
   Pegasus.parser_from_string(
-    "bitcast <- 'bitcast' lparen type cs (lineref / name) rparen",
-    bitcast: [export: true, post_traverse: :bitcast]
+    "intcast <- 'intcast' lparen type cs (lineref / name) rparen",
+    intcast: [export: true, post_traverse: :intcast]
   )
 
-  def bitcast(rest, [line, type, "bitcast"], context, _line, _bytes) do
+  def intcast(rest, [line, type, "intcast"], context, _line, _bytes) do
     {rest, [%__MODULE__{type: type, line: line}], context}
   end
 end

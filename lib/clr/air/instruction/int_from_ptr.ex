@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.IntFromPtr do
   Clr.Air.import(Clr.Air.Type, [:literal])
 
   Pegasus.parser_from_string(
-    "int_from_ptr <- 'int_from_ptr' lparen literal rparen",
+    "int_from_ptr <- 'int_from_ptr' lparen (literal / lineref) rparen",
     int_from_ptr: [export: true, post_traverse: :int_from_ptr]
   )
 
