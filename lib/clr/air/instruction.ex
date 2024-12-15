@@ -4,7 +4,8 @@ defmodule Clr.Air.Instruction do
                 arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload add cond_br block 
                 repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr sub_wrap div_exact
                 slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach sub aggregate_init sub_with_overflow
-                cmp_eq add_with_overflow not bit_and ret],
+                cmp_eq add_with_overflow not bit_and ret slice_elem_ptr struct_field_ptr_index_0 struct_field_ptr
+                rem],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -34,6 +35,7 @@ defmodule Clr.Air.Instruction do
                    br / trap / cond_br / repeat / switch_br / call / unreach / ret /
                    # pointer operations
                    ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
+                   slice_elem_ptr / struct_field_ptr_index_0 / struct_field_ptr /
                    # memory operations
                    bitcast / alloc / store / loop / load / optional_payload / struct_field_val /
                    store_safe / aggregate_init /
@@ -42,7 +44,7 @@ defmodule Clr.Air.Instruction do
                    is_non_null / cmp_neq / cmp_lt / cmp_lte / cmp_eq /
                    # math
                    add / sub_wrap / div_exact / sub / sub_with_overflow / add_with_overflow /
-                   not / bit_and /
+                   not / bit_and / rem /
                    # etc
                    assembly / arg / block /
                    # debug 

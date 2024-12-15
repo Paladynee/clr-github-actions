@@ -11,14 +11,14 @@ defmodule Clr.Air.Instruction.SwitchBr do
 
   Clr.Air.import(Clr.Air.Type, ~w[type fn_literal int_literal]a)
 
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+  Clr.Air.import(Clr.Air.Parser, [:codeblock_clobbers])
 
   Pegasus.parser_from_string(
     """
     switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
-    switch_case <- lbrack int_literal (cs int_literal)* rbrack space fatarrow space codeblock 
-    else_case <- 'else' space fatarrow space codeblock
+    switch_case <- lbrack int_literal (cs int_literal)* rbrack space fatarrow space codeblock_clobbers 
+    else_case <- 'else' space fatarrow space codeblock_clobbers
     """,
     switch_br: [export: true, post_traverse: :switch_br],
     switch_case: [post_traverse: :switch_case],

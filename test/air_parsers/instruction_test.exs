@@ -216,6 +216,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %SliceElemVal{src: {0, :keep}, index: {2, :clobber}} =
                Instruction.parse("slice_elem_val(%0, %2!)")
     end
+
+    alias Clr.Air.Instruction.StructFieldPtrIndex0
+
+    test "struct_field_ptr_index_0" do
+      assert %StructFieldPtrIndex0{type: {:ptr, :one, "u32"}, src: {0, :keep}} =
+               Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
+    end
   end
 
   describe "memory operations" do
@@ -388,6 +395,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "bit_and" do
       assert %BitAnd{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("bit_and(%96, %97)")
+    end
+
+    alias Clr.Air.Instruction.Rem
+
+    test "rem" do
+      assert %Rem{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("rem(%96, %97)")
     end
   end
 

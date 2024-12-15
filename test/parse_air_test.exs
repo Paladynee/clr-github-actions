@@ -33,4 +33,6 @@ defmodule ParseAirTest do
   test_air("start.posixCallMainAndExit")
 
   test_air("os.linux.tls.initStatic")
+
+  test_air("start.expandStackSize")
 end
