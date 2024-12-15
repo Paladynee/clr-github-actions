@@ -88,4 +88,16 @@ defmodule ClrTest.Air.TypeTest do
   test "aligned slice type" do
     assert {:ptr, :slice, "u8", alignment: 4096} = Type.parse("[]align(4096) u8")
   end
+
+  test "enum literal type" do
+    assert :enum_literal = Type.parse("@Type(.enum_literal)")
+  end
+
+  describe "comptime" do
+    assert {:comptime, :enum_literal} = Type.parse("comptime @Type(.enum_literal)")
+  end
+
+  describe "anonymous struct type" do
+    assert {:struct, ["u32", "u1"]} = Type.parse("struct { u32, u1 }")
+  end
 end

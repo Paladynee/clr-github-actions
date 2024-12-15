@@ -4,7 +4,7 @@ defmodule Clr.Air.Type do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[int name enum_literal squoted space comma cs lparen rparen langle rangle rbrace lbrace notnewline]a
+    ~w[int name enum_literal squoted space comma cs lparen rparen langle rangle lbrack rbrack lbrace rbrace dstring notnewline]a
   )
 
   Pegasus.parser_from_string(
@@ -16,10 +16,13 @@ defmodule Clr.Air.Type do
     fn_value <- (lparen function space squoted rparen) / name
     map_literal <- langle name cs map_value rangle
     other_literal <- langle type cs convertible rangle
-    convertible <- as / name
+    convertible <- as / name / stringliteral
     as <- '@as' lparen ptr_type cs value rparen
     value <- ptrcast / name
     ptrcast <- '@ptrCast' lparen name rparen
+    stringliteral <- dstring (indices)?
+
+    indices <- lbrack int '..' int rbrack
 
     map_value <- '.{ ' map_kv (', ' map_kv)* ' }'
     map_kv <- enum_literal ' = ' map_v
@@ -29,13 +32,15 @@ defmodule Clr.Air.Type do
 
     # full type things
     typelist <- lparen (type (cs type)*)? rparen
-    type <- '?'? (fn_type / ptr_type / array_type / name)
+    type <- (comptime space)? '?'? (enum_literal_type / fn_type / ptr_type / array_type / struct_type / name)
     ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
     array_type <- '[' int ']' type
+    enum_literal_type <- '@Type(.enum_literal)'
 
     # single token words
     const <- 'const'
     function <- 'function'
+    comptime <- 'comptime'
 
     one_ptr <- '*'
     many_ptr <- '[*]'
@@ -53,6 +58,8 @@ defmodule Clr.Air.Type do
     c <- '.c'
     naked <- '.naked'
     function <- 'function'
+
+    struct_type <- 'struct' space lbrace space type (cs type)* space rbrace
     """,
     literal: [export: true, parser: true],
     int_literal: [export: true, post_traverse: :int_literal],
@@ -71,12 +78,16 @@ defmodule Clr.Air.Type do
     function: [token: :function],
     callconv: [post_traverse: :callconv],
     sentinel: [collect: true, post_traverse: :sentinel],
+    enum_literal_type: [token: :enum_literal],
     inline: [token: :inline],
     c: [token: :c],
     naked: [token: :naked],
     function: [token: :function],
+    comptime: [token: :comptime],
     align: [token: :align],
-    map_value: [collect: true]
+    map_value: [collect: true],
+    struct_type: [post_traverse: :struct_type],
+    stringliteral: [post_traverse: :stringliteral]
   )
 
   defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) do
@@ -110,6 +121,9 @@ defmodule Clr.Air.Type do
   # TYPE post-traversals
 
   defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
+
+  defp type(rest, [type, :comptime], context, _line, _bytes),
+    do: {rest, [comptime: type], context}
 
   defp type(rest, [{:ptr, kind, type}, "?"], context, _line, _bytes) do
     {rest, [{:ptr, kind, type, optional: true}], context}
@@ -178,6 +192,16 @@ defmodule Clr.Air.Type do
 
   defp sentinel(rest, ["0"], context, _line, _bytes) do
     {rest, [0], context}
+  end
+
+  defp struct_type(rest, args, context, _line, _bytes) do
+    case Enum.reverse(args) do
+      ["struct" | types] -> {rest, [{:struct, types}], context}
+    end
+  end
+
+  defp stringliteral(rest, [to, "..", from, string], context, _line, _bytes) do
+    {rest, [{:string, string, from..to}], context}
   end
 
   # function post-traversals

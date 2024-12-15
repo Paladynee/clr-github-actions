@@ -3,7 +3,8 @@ defmodule Clr.Air.Instruction do
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
                 arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload add cond_br block 
                 repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr sub_wrap div_exact
-                slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach sub],
+                slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach sub aggregate_init sub_with_overflow
+                cmp_eq add_with_overflow not bit_and ret],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -30,17 +31,18 @@ defmodule Clr.Air.Instruction do
     instruction <- # debug
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
-                   br / trap / cond_br / repeat / switch_br / call / unreach /
+                   br / trap / cond_br / repeat / switch_br / call / unreach / ret /
                    # pointer operations
                    ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
                    # memory operations
                    bitcast / alloc / store / loop / load / optional_payload / struct_field_val /
-                   store_safe / 
+                   store_safe / aggregate_init /
                    int_from_ptr / 
                    # test
-                   is_non_null / cmp_neq / cmp_lt / cmp_lte /
+                   is_non_null / cmp_neq / cmp_lt / cmp_lte / cmp_eq /
                    # math
-                   add / sub_wrap / div_exact / sub /
+                   add / sub_wrap / div_exact / sub / sub_with_overflow / add_with_overflow /
+                   not / bit_and /
                    # etc
                    assembly / arg / block /
                    # debug 

@@ -152,6 +152,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "unreach" do
       assert %Unreach{} = Instruction.parse("unreach()")
     end
+
+    alias Clr.Air.Instruction.Ret
+
+    test "ret" do
+      assert %Ret{val: "@Air.Inst.Ref.void_value"} =
+               Instruction.parse("ret(@Air.Inst.Ref.void_value)")
+    end
   end
 
   describe "pointer operations" do
@@ -259,6 +266,15 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %StoreSafe{val: "@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
                Instruction.parse("store_safe(%19, @Air.Inst.Ref.zero_usize)")
     end
+
+    alias Clr.Air.Instruction.AggregateInit
+
+    test "aggregate_init" do
+      assert %AggregateInit{} =
+               Instruction.parse(
+                 "aggregate_init(struct { comptime @Type(.enum_literal) = .mmap, comptime usize = 0, usize, comptime usize = 3, comptime u32 = 34, comptime usize = 18446744073709551615, comptime u64 = 0 }, [<@Type(.enum_literal), .mmap>, @Air.Inst.Ref.zero_usize, %44!, <usize, 3>, <u32, 34>, <usize, 18446744073709551615>, <u64, 0>])"
+               )
+    end
   end
 
   describe "block" do
@@ -334,6 +350,45 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %DivExact{lhs: {206, :clobber}, rhs: {:literal, "usize", 8}} =
                Instruction.parse("div_exact(%206!, <usize, 8>)")
     end
+
+    alias Clr.Air.Instruction.SubWithOverflow
+
+    test "sub_with_overflow" do
+      assert %SubWithOverflow{
+               lhs: {96, :keep},
+               rhs: "@Air.Inst.Ref.one_usize",
+               type: {:struct, ["usize", "u1"]}
+             } =
+               Instruction.parse(
+                 "sub_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
+               )
+    end
+
+    alias Clr.Air.Instruction.AddWithOverflow
+
+    test "add_with_overflow" do
+      assert %AddWithOverflow{
+               lhs: {96, :keep},
+               rhs: "@Air.Inst.Ref.one_usize",
+               type: {:struct, ["usize", "u1"]}
+             } =
+               Instruction.parse(
+                 "add_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
+               )
+    end
+
+    alias Clr.Air.Instruction.Not
+
+    test "not" do
+      assert %Not{operand: {96, :keep}, type: "usize"} = Instruction.parse("not(usize, %96)")
+    end
+
+    alias Clr.Air.Instruction.BitAnd
+
+    test "bit_and" do
+      assert %BitAnd{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("bit_and(%96, %97)")
+    end
   end
 
   # other instructions
@@ -344,6 +399,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     assert %Assembly{type: "void"} =
              Instruction.parse(
                ~S/assembly(void, volatile, [_start] in X = (<*const fn () callconv(.naked) noreturn, start._start>), [posixCallMainAndExit] in X = (<*const fn ([*]usize) callconv(.c) noreturn, start.posixCallMainAndExit>), " .cfi_undefined %%rip\n xorl %%ebp, %%ebp\n movq %%rsp, %%rdi\n andq $-16, %%rsp\n callq %[posixCallMainAndExit:P]")/
+             )
+  end
+
+  test "complex assembly" do
+    assert %Assembly{type: "usize", code: "syscall"} =
+             Instruction.parse(
+               ~S/assembly(usize, volatile, [ret] -> ={rax}, [number] in {rax} = (<usize, 9>), [arg1] in {rdi} = (@Air.Inst.Ref.zero_usize), [arg2] in {rsi} = (%59!), [arg3] in {rdx} = (<usize, 3>), [arg4] in {r10} = (<usize, 34>), [arg5] in {r8} = (<usize, 18446744073709551615>), [arg6] in {r9} = (@Air.Inst.Ref.zero_usize), ~{rcx}, ~{r11}, ~{memory}, "syscall")/
              )
   end
 

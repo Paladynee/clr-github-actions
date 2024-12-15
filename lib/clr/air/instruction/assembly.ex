@@ -1,34 +1,67 @@
 defmodule Clr.Air.Instruction.Assembly do
-  defstruct [:type, :in1, :in2, :code]
+  defstruct [:type, :code, clobbers: [], in: [], ->: []]
 
   require Pegasus
   require Clr.Air
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[name cs space lparen rparen lbrack rbrack dstring]a
+    ~w[lineref name cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
   )
 
-  Clr.Air.import(Clr.Air.Type, ~w[type fn_literal]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
 
   Pegasus.parser_from_string(
     """
-    assembly <- 'assembly' lparen type cs asmtype cs asm_in cs asm_in cs dstring rparen
+    assembly <- 'assembly' lparen type cs asmtype (cs directive)* (cs asm_clobber)* cs dstring rparen
     asmtype <- volatile
     volatile <- 'volatile'
 
-    asm_in <- lbrack name rbrack space 'in' space name space '=' space lparen fn_literal rparen
+    directive <- asm_in / asm_assign
+
+    asm_in <- lbrack name rbrack space 'in' space name_or_reg space '=' space lparen (literal / name / lineref) rparen
+
+    asm_assign <- lbrack name rbrack space rarrow space '=' name_or_reg 
+
+    name_or_reg <- (lbrace name rbrace) / name
+
+    rarrow <- '->'
+
+    asm_clobber <- '~' lbrace name rbrace
     """,
     assembly: [export: true, post_traverse: :assembly],
     asm_in: [post_traverse: :asm_in],
+    asm_assign: [post_traverse: :asm_assign],
+    asm_clobber: [post_traverse: :asm_clobber],
     volatile: [token: :volatile]
   )
 
   defp asm_in(rest, [literal, "=", var, "in" | args], context, _line, _bytes) do
-    {rest, [{:in, var, Enum.reverse(args), literal}], context}
+    {rest, [{:in, {var, Enum.reverse(args), literal}}], context}
   end
 
-  defp assembly(rest, [asm, in2, in1, :volatile, type, "assembly"], context, _line, _bytes) do
-    {rest, [%__MODULE__{code: asm, in2: in2, in1: in1, type: type}], context}
+  defp asm_assign(rest, [reg, "=", "->", var], context, _line, _bytes) do
+    {rest, [{:->, {var, reg}}], context}
+  end
+
+  defp asm_clobber(rest, [name, "~"], context, _line, _bytes) do
+    {rest, [{:clobber, name}], context}
+  end
+
+  defp assembly(rest, args, context, _line, _bytes) do
+    result =
+      case Enum.reverse(args) do
+        ["assembly", type, :volatile | rest] ->
+          Enum.reduce(rest, %__MODULE__{type: type}, fn
+            {:in, in_data}, acc -> Map.update!(acc, :in, &[in_data | &1])
+            {:->, to}, acc -> Map.update!(acc, :->, &[to | &1])
+            {:clobber, clobber}, acc -> Map.update!(acc, :clobbers, &[clobber | &1])
+            string, acc when is_binary(string) -> %{acc | code: string}
+          end)
+      end
+      |> Map.update!(:in, &Enum.reverse(&1))
+      |> Map.update!(:->, &Enum.reverse(&1))
+
+    {rest, [result], context}
   end
 end

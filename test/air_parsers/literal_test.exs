@@ -45,4 +45,9 @@ defmodule ClrTest.Air.LiteralTest do
                "<os.linux.MAP__struct_2035, .{ .TYPE = .PRIVATE, .FIXED = false, .ANONYMOUS = true, .@\"32BIT\" = false, ._7 = 0, .GROWSDOWN = false, ._9 = 0, .DENYWRITE = false, .EXECUTABLE = false, .LOCKED = false, .NORESERVE = false, .POPULATE = false, .NONBLOCK = false, .STACK = false, .HUGETLB = false, .SYNC = false, .FIXED_NOREPLACE = false, ._21 = 0, .UNINITIALIZED = false, .@\"_\" = 0 }>"
              )
   end
+
+  test "string literal" do
+    assert {:literal, {:ptr, :slice, "u8", [const: true]}, {:string, "integer overflow", 0..16}} =
+             Type.parse_literal("<[]const u8, \"integer overflow\"[0..16]>")
+  end
 end
