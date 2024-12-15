@@ -234,6 +234,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %StructFieldPtrIndex0{type: {:ptr, :one, "u32"}, src: {0, :keep}} =
                Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
     end
+
+    alias Clr.Air.Instruction.WrapOptional
+
+    test "wrap_optional" do
+      assert %WrapOptional{type: {:optional, "usize"}, src: {0, :keep}} =
+               Instruction.parse("wrap_optional(?usize, %0)")
+    end
   end
 
   describe "memory operations" do

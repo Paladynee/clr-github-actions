@@ -1,11 +1,24 @@
 defmodule Mix.Tasks.Clr do
   use Mix.Task
 
-  defstruct [:port, state: :pre, buffer: ""]
+  defmodule LineScanner do
+    defstruct [:port, buffer: ""]
+  end
+
+  defmodule FunctionScanner do
+    defstruct [active: false, name: nil, so_far: []]
+  end
 
   @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
 
   def run([file]) do
+    file
+    |> initializer
+    |> Stream.resource(&loop/1, &cleanup/1)
+    |> Enum.reduce(%FunctionScanner{}, &scan_function/2)
+  end
+
+  defp initializer(file) do
     port =
       :erlang.open_port({:spawn_executable, @zig}, [
         :binary,
@@ -16,61 +29,74 @@ defmodule Mix.Tasks.Clr do
         args: ~w[run --verbose-air #{file}]
       ])
 
-    loop(%__MODULE__{port: port})
+    fn -> %LineScanner{port: port} end
   end
 
-  def loop(%{port: port} = state) do
+  defp loop(%{port: port} = state) do
     receive do
       {^port, {:data, string}} ->
-        state
-        |> update(string)
-        |> loop()
+        scan_buf(state, string)
 
       {^port, {:exit_status, status}} ->
-        status
+        {[state.buffer <> "\n"], {:halt, status}}
     end
   end
 
-  defp update(%{state: :pre} = state, string) do
-    case string do
-      "# Begin Function AIR:" <> _ ->
-        update(%{state | state: :in}, string)
+  defp loop({:halt, status}), do: {:halt, status}
 
-      _ ->
-        %{state | state: :pre, buffer: state.buffer <> string}
-    end
-  end
+  defp scan_buf(state, string) do
+    scan_string = state.buffer <> string
+    {start, _, so_far} =
+      for <<byte <- scan_string>>, reduce: {0, 0, []} do
+        {start, this, so_far} when byte == ?\n ->
+          line = :erlang.binary_part(scan_string, start, this - start)
+          {this + 1, this + 1, [line | so_far]}
 
-  defp update(%{buffer: buffer, state: :in} = state, string) do
-    updated = buffer <> string
-
-    if updated =~ "# End Function AIR:" do
-      updated
-      |> String.split("\n")
-      |> split_end([])
-      |> case do
-        {used, ""} ->
-          analyze(used)
-          %{state | state: :pre, buffer: ""}
-
-        {used, new_buffer} ->
-          analyze(used)
-          %{state | state: :in, buffer: new_buffer}
+        {start, this, so_far} ->
+          {start, this + 1, so_far}
       end
+
+    {_, new_buff} = :erlang.split_binary(scan_string, start)
+
+    {Enum.reverse(so_far), %{state | buffer: new_buff}} 
+  end
+
+  defp cleanup(_), do: :ok
+
+  defp scan_function("# Begin Function AIR: " <> name = line, %{active: false} = state) do
+    name = name
+    |> String.split(":")
+    |> List.first()
+
+    %{state | active: true, so_far: [line], name: name}
+  end
+
+  defp scan_function("# Begin Function AIR: " <> name, _) do
+    Mix.raise("unexpected start of function #{name}")
+  end
+
+  defp scan_function("# End Function AIR: " <> name = line, %{active: true} = state) do
+    if String.starts_with?(name, state.name) do
+      Enum.reverse([line | state.so_far]) |> IO.puts()
     else
-      %{state | buffer: updated}
+      Mix.raise("name mismatch (#{name}, #{state.name})")
     end
+    %FunctionScanner{}
   end
 
-  defp split_end(["# End Function AIR:" <> _ = first | rest], so_far) do
-    front = Enum.reverse(so_far, [first])
-    {Enum.join(front, "\n"), Enum.join(rest, "\n")}
+  defp scan_function("# End Function AIR: " <> name, _) do
+    Mix.raise("unexpected end of function #{name}")
   end
 
-  defp split_end([head | rest], so_far), do: split_end(rest, [head | so_far])
+  @emptylines ["\n", ""]
 
-  defp analyze(content) do
-    IO.puts(content)
-    Clr.Air.parse(content)
+  defp scan_function(empty, %{active: false} = state) when empty in @emptylines, do: state
+
+  defp scan_function(line, %{active: false}) do
+    Mix.raise("unexpected line #{inspect line}")
+  end
+
+  defp scan_function(line, state) do
+    Map.update!(state, :so_far, &[line | &1])
   end
 end
