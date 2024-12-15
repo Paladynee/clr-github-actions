@@ -93,11 +93,21 @@ defmodule ClrTest.Air.TypeTest do
     assert :enum_literal = Type.parse("@Type(.enum_literal)")
   end
 
-  describe "comptime" do
+  test "comptime" do
     assert {:comptime, :enum_literal} = Type.parse("comptime @Type(.enum_literal)")
   end
 
-  describe "anonymous struct type" do
+  test "anonymous struct type" do
     assert {:struct, ["u32", "u1"]} = Type.parse("struct { u32, u1 }")
+  end
+
+  test "error type" do
+    assert {:errorable, ["Unexpected"], "os.linux.rlimit"} =
+             Type.parse("error{Unexpected}!os.linux.rlimit")
+  end
+
+  test "error union type" do
+    assert {:errorunion, ["Invalid", "Unexpected"]} =
+             Type.parse("error{Unexpected,Invalid}")
   end
 end

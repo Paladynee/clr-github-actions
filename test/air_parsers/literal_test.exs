@@ -39,6 +39,13 @@ defmodule ClrTest.Air.LiteralTest do
              )
   end
 
+  test "function literal with error union type" do
+    assert {:literal, {:fn, _, {:errorable, _, _}, []}, {:function, "getrlimit"}} =
+             Type.parse_literal(
+               "<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>"
+             )
+  end
+
   test "map literal" do
     assert {:literal, "os.linux.MAP__struct_2035", {:map, _}} =
              Type.parse_literal(

@@ -145,6 +145,10 @@ defmodule ClrTest.AirParsers.InstructionTest do
                )
 
       assert %Call{fn: {10, :keep}, args: []} = Instruction.parse("call(%10, [])")
+
+      assert Instruction.parse(
+               "call(<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>, [<os.linux.rlimit_resource__enum_2617, .STACK>])"
+             )
     end
 
     alias Clr.Air.Instruction.Unreach
@@ -158,6 +162,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "ret" do
       assert %Ret{val: "@Air.Inst.Ref.void_value"} =
                Instruction.parse("ret(@Air.Inst.Ref.void_value)")
+    end
+
+    alias Clr.Air.Instruction.RetSafe
+
+    test "ret_safe" do
+      assert %RetSafe{val: "@Air.Inst.Ref.void_value"} =
+               Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
     end
   end
 
@@ -282,6 +293,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
                  "aggregate_init(struct { comptime @Type(.enum_literal) = .mmap, comptime usize = 0, usize, comptime usize = 3, comptime u32 = 34, comptime usize = 18446744073709551615, comptime u64 = 0 }, [<@Type(.enum_literal), .mmap>, @Air.Inst.Ref.zero_usize, %44!, <usize, 3>, <u32, 34>, <usize, 18446744073709551615>, <u64, 0>])"
                )
     end
+
+    alias Clr.Air.Instruction.UnwrapErrunionPayload
+
+    test "unwrap_errunion_payload" do
+      assert %UnwrapErrunionPayload{type: "usize", src: {0, :keep}} =
+               Instruction.parse("unwrap_errunion_payload(usize, %0)")
+    end
+
+    alias Clr.Air.Instruction.UnwrapErrunionErr
+
+    test "unwrap_errunion_err" do
+      assert %UnwrapErrunionErr{type: {:errorunion, ["Unexpected"]}, src: {0, :keep}} =
+               Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
+    end
   end
 
   describe "block" do
@@ -333,6 +358,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "cmp_lte" do
       assert %CmpLte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
                Instruction.parse("cmp_lte(%95!, %96!)")
+    end
+
+    alias Clr.Air.Instruction.IsNonErr
+
+    test "is_non_err" do
+      assert %IsNonErr{line: {19, :keep}} =
+               Instruction.parse("is_non_err(%19)")
+    end
+
+    alias Clr.Air.Instruction.CmpGt
+
+    test "cmp_gt" do
+      assert %CmpGt{lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_gt(%95!, %96!)")
     end
   end
 
@@ -402,6 +441,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "rem" do
       assert %Rem{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("rem(%96, %97)")
+    end
+
+    alias Clr.Air.Instruction.Min
+
+    test "min" do
+      assert %Min{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("min(%96, %97)")
     end
   end
 

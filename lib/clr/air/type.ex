@@ -32,7 +32,7 @@ defmodule Clr.Air.Type do
 
     # full type things
     typelist <- lparen (type (cs type)*)? rparen
-    type <- (comptime space)? '?'? (enum_literal_type / fn_type / ptr_type / array_type / struct_type / name)
+    type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? (enum_literal_type / fn_type / ptr_type / array_type / struct_type / name))
     ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
     array_type <- '[' int ']' type
     enum_literal_type <- '@Type(.enum_literal)'
@@ -60,6 +60,13 @@ defmodule Clr.Air.Type do
     function <- 'function'
 
     struct_type <- 'struct' space lbrace space type (cs type)* space rbrace
+
+    errorable <- errorunion bang
+    errorunion_only <- errorunion
+    errorunion <- error errorlist
+    errorlist <- lbrace name (comma name)* rbrace
+    error <- 'error'
+    bang <- '!'
     """,
     literal: [export: true, parser: true],
     int_literal: [export: true, post_traverse: :int_literal],
@@ -87,7 +94,11 @@ defmodule Clr.Air.Type do
     align: [token: :align],
     map_value: [collect: true],
     struct_type: [post_traverse: :struct_type],
-    stringliteral: [post_traverse: :stringliteral]
+    stringliteral: [post_traverse: :stringliteral],
+    error: [token: :error],
+    errorunion_only: [post_traverse: :errorunion_only],
+    errorlist: [post_traverse: :errorlist],
+    bang: [ignore: true]
   )
 
   defp int_literal(rest, [value, type], context, _line, _bytes) when is_integer(value) do
@@ -121,6 +132,10 @@ defmodule Clr.Air.Type do
   # TYPE post-traversals
 
   defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
+
+  defp type(rest, [type, errorlist, :error], context, _line, _bytes) do
+    {rest, [{:errorable, errorlist, type}], context}
+  end
 
   defp type(rest, [type, :comptime], context, _line, _bytes),
     do: {rest, [comptime: type], context}
@@ -220,5 +235,15 @@ defmodule Clr.Air.Type do
     case literal(str) do
       {:ok, [result], "", _context, _line, _bytes} -> result
     end
+  end
+
+  defp errorlist(rest, errors, context, _line, _bytes) do
+    {rest, [errors], context}
+  end
+
+  defp errorunion_only("!" <> _, _args, _context, _line, _bytes), do: {:error, "unreportable"}
+
+  defp errorunion_only(rest, [errors, :error], context, _line, _bytes) do
+    {rest, [{:errorunion, errors}], context}
   end
 end

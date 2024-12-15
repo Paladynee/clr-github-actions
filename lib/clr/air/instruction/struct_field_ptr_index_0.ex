@@ -1,18 +1,24 @@
 defmodule Clr.Air.Instruction.StructFieldPtrIndex0 do
   defstruct [:type, :src]
-  
+
   require Pegasus
   require Clr.Air
-  
+
   Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  
+
   Pegasus.parser_from_string(
     "struct_field_ptr_index_0 <- 'struct_field_ptr_index_0' lparen type cs (lineref / name) rparen",
     struct_field_ptr_index_0: [export: true, post_traverse: :struct_field_ptr_index_0]
   )
-  
-  def struct_field_ptr_index_0(rest, [op, type, "struct_field_ptr_index_0"], context, _line, _bytes) do
+
+  def struct_field_ptr_index_0(
+        rest,
+        [op, type, "struct_field_ptr_index_0"],
+        context,
+        _line,
+        _bytes
+      ) do
     {rest, [%__MODULE__{src: op, type: type}], context}
   end
 end
