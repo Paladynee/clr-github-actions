@@ -82,7 +82,7 @@ defmodule Clr.Air.Type do
 
     errorable <- errorunion bang
     errorunion_only <- errorunion
-    errorunion <- error errorlist
+    errorunion <- 'anyerror' / error errorlist
     errorlist <- lbrace name (comma name)* rbrace
     error <- 'error'
     bang <- '!'
@@ -131,9 +131,9 @@ defmodule Clr.Air.Type do
     {rest, [{:literal, type, value}], context}
   end
 
-  #defp fn_literal(rest, [name, :function, type], context, _line, _bytes) do
+  # defp fn_literal(rest, [name, :function, type], context, _line, _bytes) do
   #  {rest, [{:literal, type, {:function, name}}], context}
-  #end
+  # end
 
   defp fn_literal(rest, [name, type], context, _line, _bytes) do
     {rest, [{:literal, type, name}], context}
@@ -158,6 +158,10 @@ defmodule Clr.Air.Type do
   # TYPE post-traversals
 
   defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
+
+  defp type(rest, [type, "anyerror"], context, _line, _bytes) do
+    {rest, [{:errorable, :any, type}], context}
+  end
 
   defp type(rest, [type, errorlist, :error], context, _line, _bytes) do
     {rest, [{:errorable, errorlist, type}], context}

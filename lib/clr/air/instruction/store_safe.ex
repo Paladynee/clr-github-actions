@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.StoreSafe do
   Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
 
   Pegasus.parser_from_string(
-    "store_safe <- 'store_safe' lparen (lineref / literal) cs (lineref / name) rparen",
+    "store_safe <- 'store_safe' lparen (lineref / literal) cs (lineref / name / literal) rparen",
     store_safe: [export: true, post_traverse: :store_safe]
   )
 

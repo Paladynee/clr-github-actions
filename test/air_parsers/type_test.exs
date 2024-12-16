@@ -112,6 +112,11 @@ defmodule ClrTest.Air.TypeTest do
              Type.parse("error{Unexpected}!os.linux.rlimit")
   end
 
+  test "anyerror type" do
+    assert {:errorable, :any, "os.linux.rlimit"} =
+             Type.parse("anyerror!os.linux.rlimit")
+  end
+
   test "error union type" do
     assert {:errorunion, ["Invalid", "Unexpected"]} =
              Type.parse("error{Unexpected,Invalid}")
@@ -122,6 +127,10 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "generic comptime call" do
-    assert {:comptime_call, "io.GenericWriter", ["fs.File", {:errorunion, _}, {:function, "write"}]} = Type.parse("io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))")
+    assert {:comptime_call, "io.GenericWriter",
+            ["fs.File", {:errorunion, _}, {:function, "write"}]} =
+             Type.parse(
+               "io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))"
+             )
   end
 end
