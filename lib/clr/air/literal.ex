@@ -14,14 +14,12 @@ defmodule Clr.Air.Literal do
   Pegasus.parser_from_string(
     """
     # literals are type + value
-    literal <- int_literal / fn_literal / map_literal / other_literal
+    literal <- fn_literal / other_literal
 
-    int_literal <- langle type cs (int / sizeof / alignof) rangle
     fn_literal <- langle fn_type cs lvalue rangle
-    map_literal <- langle type cs struct_value rangle
     other_literal <- langle type cs convertible rangle
 
-    convertible <- as / string_value / struct_ptr / lvalue
+    convertible <- int / sizeof / alignof / as / string_value / struct_ptr / struct_value / enum_value / lvalue
 
     as <- '@as' lparen ptr_type cs value rparen
     value <- ptrcast / lvalue
@@ -39,14 +37,18 @@ defmodule Clr.Air.Literal do
     struct_value <- dot lbrace (space struct_part (cs struct_part)* space)? rbrace
     struct_part <- struct_kv / struct_v
     struct_kv <- dot identifier space eq space struct_v
-    struct_v <- struct_value / (dot identifier) / lvalue / int
+    struct_v <- struct_value / enum_value / lvalue / int
+
+    enum_value <- dot lvalue
 
     range <- lbrack int '..' int rbrack
 
     # private
     eq <- "="
     """,
-    literal: [parser: true, export: true, post_traverse: :literal],
+    literal: [parser: true, export: true],
+    fn_literal: [export: true, post_traverse: :literal],
+    other_literal: [export: true, post_traverse: :literal],
     string_value: [post_traverse: :string_value],
     alignof: [post_traverse: :alignof],
     sizeof: [post_traverse: :sizeof],
@@ -55,6 +57,7 @@ defmodule Clr.Air.Literal do
     struct_ptr: [post_traverse: :struct_ptr],
     struct_value: [post_traverse: :struct_value],
     struct_kv: [post_traverse: :struct_kv],
+    enum_value: [post_traverse: :enum_value],
     range: [post_traverse: :range]
   )
 
@@ -95,6 +98,10 @@ defmodule Clr.Air.Literal do
 
   defp struct_kv(rest, [value, "=", key], context, _line, _bytes) do
     {rest, [{key, value}], context}
+  end
+
+  defp enum_value(rest, [value], context, _line, _bytes) do
+    {rest, [{:enum, value}], context}
   end
 
   defp range(rest, [to, "..", from], context, _line, _bytes) do

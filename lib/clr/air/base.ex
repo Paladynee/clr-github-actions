@@ -16,7 +16,7 @@ defmodule Clr.Air.Base do
     dquoted <- doubleq identifier doubleq
     dstring <- doubleq [^"]* doubleq
 
-    identifier <- alpha alnum* / '@' dstring
+    identifier <- ('@'? alpha alnum*) / ('@' dstring)
     alpha <- [a-zA-Z_]
     alnum <- [a-zA-Z0-9_]
 
@@ -87,8 +87,8 @@ defmodule Clr.Air.Base do
 
   defp identifier(rest, args, context, _line, _bytes) do
     case args do
-      [name] -> {rest, [name], context}
-      [name, "@"] -> {rest, [name], context}
+      [identifier] -> {rest, [identifier], context}
+      [identifier, "@"] -> {rest, [identifier], context}
     end
   end
 

@@ -6,7 +6,8 @@ defmodule Clr.Air.Instruction.Slice do
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen langle rangle]a)
 
-  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
 
   Pegasus.parser_from_string(
     "slice <- 'slice' lparen type cs (lineref / literal) cs lineref rparen",

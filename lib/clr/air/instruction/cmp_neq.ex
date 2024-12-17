@@ -5,10 +5,10 @@ defmodule Clr.Air.Instruction.CmpNeq do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:int_literal])
+  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "cmp_neq <- 'cmp_neq' lparen lineref cs int_literal rparen",
+    "cmp_neq <- 'cmp_neq' lparen lineref cs literal rparen",
     cmp_neq: [export: true, post_traverse: :cmp_neq]
   )
 

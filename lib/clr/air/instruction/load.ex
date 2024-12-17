@@ -5,7 +5,8 @@ defmodule Clr.Air.Instruction.Load do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
 
   Pegasus.parser_from_string(
     "load <- 'load' lparen type cs (lineref / literal) rparen",

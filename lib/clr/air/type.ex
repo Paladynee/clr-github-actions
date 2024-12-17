@@ -12,7 +12,6 @@ defmodule Clr.Air.Type do
   Pegasus.parser_from_string(
     """
     # full type things
-    typelist <- lparen ((noalias space)? type (cs (noalias space)? type)*)? rparen
     type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? general_types)
 
     general_types <- enum_literal_type / fn_type / ptr_type / array_type / struct_type / comptime_call_type / lvalue
@@ -31,12 +30,6 @@ defmodule Clr.Air.Type do
     ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
     array_type <- '[' int ']' type
 
-    ## single token words
-    const <- 'const'
-    comptime <- 'comptime'
-    align <- 'align'
-    noalias <- 'noalias'
-
     one_ptr <- '*'
     many_ptr <- '[*]'
     slice_ptr <- '[]'
@@ -47,6 +40,8 @@ defmodule Clr.Air.Type do
     sentinel <- 'null' / '0'
 
     fn_type <- ('*' const space)? 'fn' space typelist (space callconv)? space type
+    typelist <- lparen ((noalias space)? type (cs (noalias space)? type)*)? rparen
+
     callconv <- 'callconv' lparen (inline / c / naked) rparen
     inline <- '.@"inline"'
     c <- '.c'
@@ -57,47 +52,43 @@ defmodule Clr.Air.Type do
     errorunion_only <- errorunion
     errorunion <- 'anyerror' / error errorlist
     errorlist <- lbrace identifier (comma identifier)* rbrace
+
+    ## single token words
+    const <- 'const'
+    comptime <- 'comptime'
+    align <- 'align'
+    noalias <- 'noalias'
     error <- 'error'
     bang <- '!'
     """,
-    literal: [export: true, parser: true],
-    int_literal: [export: true, post_traverse: :int_literal],
-    fn_literal: [export: true, post_traverse: :fn_literal],
-    other_literal: [export: true, post_traverse: :other_literal],
-    map_literal: [export: true, post_traverse: :map_literal],
-    # literal toolbox
-    as: [post_traverse: :as],
-    ptrcast: [post_traverse: :ptrcast],
     type: [export: true, parser: true, post_traverse: :type],
-    function_call_type: [post_traverse: :function_call_type],
-    array_type: [post_traverse: :array_type],
-    ptr_type: [export: true, post_traverse: :ptr_type],
-    fn_type: [export: true, post_traverse: :fn_type],
-    const: [token: :const],
-    function: [token: :function],
-    callconv: [post_traverse: :callconv],
-    sentinel: [collect: true, post_traverse: :sentinel],
     enum_literal_type: [token: :enum_literal],
+    comptime_call_type: [export: true, post_traverse: :comptime_call_type],
+    comptime_call_params: [post_traverse: :comptime_call_params],
+    ptr_type: [export: true, post_traverse: :ptr_type],
+    array_type: [post_traverse: :array_type],
+    fn_type: [export: true, post_traverse: :fn_type],
+    sentinel: [collect: true, post_traverse: :sentinel],
+    callconv: [post_traverse: :callconv],
     inline: [token: :inline],
     c: [token: :c],
     naked: [token: :naked],
     function: [token: :function],
-    comptime: [token: :comptime],
-    align: [token: :align],
     map_value: [collect: true],
     struct_type: [post_traverse: :struct_type],
     stringliteral: [post_traverse: :stringliteral],
-    error: [token: :error],
     errorunion_only: [post_traverse: :errorunion_only],
     errorlist: [post_traverse: :errorlist],
     structptr: [post_traverse: :structptr],
-    bang: [ignore: true],
-    noalias: [token: :noalias],
     sizeof: [post_traverse: :sizeof],
     alignof: [post_traverse: :alignof],
     builtinfunction: [post_traverse: :builtinfunction],
-    comptime_call_type: [export: true, post_traverse: :comptime_call_type],
-    comptime_call_params: [post_traverse: :comptime_call_params]
+    const: [token: :const],
+    comptime: [token: :comptime],
+    align: [token: :align],
+    noalias: [token: :noalias],
+    error: [token: :error],
+    bang: [ignore: true]
   )
 
   # TYPE post-traversals
@@ -218,15 +209,6 @@ defmodule Clr.Air.Type do
 
   defp errorunion_only(rest, [errors, :error], context, _line, _bytes) do
     {rest, [{:errorunion, errors}], context}
-  end
-
-  defp function_call_type(rest, args, context, _line, _bytes) do
-    [call | args] = Enum.reverse(args)
-    {rest, [{:comptime_call, call, args}], context}
-  end
-
-  defp builtinfunction(rest, [name, :function], context, _line, _bytes) do
-    {rest, [{:function, name}], context}
   end
 
   defp comptime_call_type(rest, [args | callname], context, _line, _bytes) do

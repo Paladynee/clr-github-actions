@@ -106,7 +106,7 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "anonymous struct type" do
-    assert {:struct, ["u32", "u1"]} = Type.parse("struct { u32, u1 }")
+    assert {:struct, [~l"u32", ~l"u1"]} = Type.parse("struct { u32, u1 }")
   end
 
   test "error type" do

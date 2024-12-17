@@ -6,10 +6,12 @@ defmodule Clr.Air.Instruction.AggregateInit do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[lineref name int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
+    ~w[lineref int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
   )
 
-  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
 
   Pegasus.parser_from_string(
     """
@@ -19,10 +21,10 @@ defmodule Clr.Air.Instruction.AggregateInit do
 
     initializer <- assigned_type / type
     assigned_type <- type space '=' space value
-    value <- name / int
+    value <- lvalue / int
 
     params <- lbrack param (cs param)* rbrack
-    param <- literal / name / lineref
+    param <- literal / lvalue / lineref
     """,
     aggregate_init: [export: true, post_traverse: :aggregate_init],
     struct_init: [post_traverse: :struct_init],

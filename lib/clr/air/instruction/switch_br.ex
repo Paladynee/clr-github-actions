@@ -9,7 +9,9 @@ defmodule Clr.Air.Instruction.SwitchBr do
     ~w[lineref name cs space lparen rparen lbrack rbrack fatarrow newline]a
   )
 
-  Clr.Air.import(Clr.Air.Type, ~w[type fn_literal int_literal]a)
+  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Clr.Air.import(Clr.Air.Parser, [:codeblock_clobbers])
 
@@ -18,7 +20,7 @@ defmodule Clr.Air.Instruction.SwitchBr do
     switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
     switch_case <- lbrack case_value (cs case_value)* rbrack space fatarrow space codeblock_clobbers 
-    case_value <- int_literal / name
+    case_value <- literal / lvalue
     else_case <- 'else' space fatarrow space codeblock_clobbers
     """,
     switch_br: [export: true, post_traverse: :switch_br],

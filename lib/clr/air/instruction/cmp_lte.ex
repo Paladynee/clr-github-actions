@@ -4,11 +4,12 @@ defmodule Clr.Air.Instruction.CmpLte do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[name lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:int_literal])
+  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "cmp_lte <- 'cmp_lte' lparen (lineref / name) cs (lineref / int_literal) rparen",
+    "cmp_lte <- 'cmp_lte' lparen (lineref / lvalue) cs (lineref / literal) rparen",
     cmp_lte: [export: true, post_traverse: :cmp_lte]
   )
 

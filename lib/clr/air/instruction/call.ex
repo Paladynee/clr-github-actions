@@ -4,13 +4,14 @@ defmodule Clr.Air.Instruction.Call do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[name cs lineref lparen rparen lbrack rbrack]a)
-  Clr.Air.import(Clr.Air.Type, ~w[fn_literal literal]a)
+  Clr.Air.import(Clr.Air.Base, ~w[cs lineref lparen rparen lbrack rbrack]a)
+  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
+  Clr.Air.import(Clr.Air.Literal, ~w[fn_literal literal]a)
 
   Pegasus.parser_from_string(
     """
     call <- 'call' lparen (fn_literal / lineref) cs lbrack (arg (cs arg)*)? rbrack rparen
-    arg <- lineref / literal / name
+    arg <- lineref / literal / lvalue
     """,
     call: [export: true, post_traverse: :call]
   )

@@ -5,7 +5,7 @@ defmodule Clr.Air.Instruction.IntFromPtr do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs dquoted lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:literal])
+  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
     "int_from_ptr <- 'int_from_ptr' lparen (literal / lineref) rparen",

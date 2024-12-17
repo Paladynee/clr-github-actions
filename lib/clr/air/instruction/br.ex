@@ -6,10 +6,11 @@ defmodule Clr.Air.Instruction.Br do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "br <- 'br' lparen lineref cs (name / lineref) rparen",
+    "br <- 'br' lparen lineref cs (lvalue / lineref) rparen",
     br: [export: true, post_traverse: :br]
   )
 

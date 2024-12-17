@@ -30,7 +30,7 @@ defmodule Clr.Air.Lvalue do
 
     function_lvalue <- lparen function space squoted rparen
     struct_deref <- dot basic_lvalue
-    array_deref <- lbrack int rbrack
+    array_deref <- lbrack int rbrack (lbrack int rbrack)*
 
     function <- 'function'
     """,

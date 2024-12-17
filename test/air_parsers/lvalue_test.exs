@@ -15,6 +15,10 @@ defmodule ClrTest.AirParsers.LvalueTest do
     assert {:lvalue, ["foo", 2]} = Clr.Air.Lvalue.parse("foo[2]")
   end
 
+  test "an identifier with multi array dereference is an lvalue" do
+    assert {:lvalue, ["foo", 2, 3]} = Clr.Air.Lvalue.parse("foo[2][3]")
+  end
+
   test "the special (function *) identifier is an lvalue" do
     assert {:function, "write"} = Clr.Air.Lvalue.parse("(function 'write')")
   end

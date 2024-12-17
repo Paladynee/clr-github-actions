@@ -5,7 +5,8 @@ defmodule Clr.Air.Parser do
   alias Clr.Air.Function
 
   # import the following "base" parsers
-  Clr.Air.import(Clr.Air.Base, ~w[lineref clobbers name space lbrace rbrace newline]a)
+  Clr.Air.import(Clr.Air.Base, ~w[lineref clobbers space lbrace rbrace newline]a)
+  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
   Clr.Air.import(Clr.Air.Instruction, [:instruction])
 
   Pegasus.parser_from_string(
@@ -15,8 +16,8 @@ defmodule Clr.Air.Parser do
     air <- init function *
 
     function <- newline? function_head function_meta* code function_foot
-    function_head <- '# Begin Function AIR:' space name ':' newline
-    function_foot <- '# End Function AIR:' space name newline?
+    function_head <- '# Begin Function AIR:' space lvalue ':' newline
+    function_foot <- '# End Function AIR:' space lvalue newline?
     function_meta <- function_meta_title space+ function_meta_info newline
     function_meta_title <- '# Total AIR+Liveness bytes:' / 
       '# AIR Instructions:' / 

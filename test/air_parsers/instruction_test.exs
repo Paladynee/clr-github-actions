@@ -15,7 +15,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "dbg_inline_block" do
       assert %DbgInlineBlock{
-               type: "void",
+               type: ~l"void",
                what: {:literal, {:fn, _, _, _}, {:function, "isRISCV"}},
                code: %{}
              } =
@@ -37,8 +37,8 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     alias Clr.Air.Instruction.DbgArgInline
 
-    test "dbg_arg_inline" do
-      assert %DbgArgInline{val: {:literal, "Target.Cpu.Arch", ".x86_64"}, key: "arch"} =
+     test "dbg_arg_inline" do
+      assert %DbgArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}}, key: "arch"} =
                Instruction.parse("dbg_arg_inline(<Target.Cpu.Arch, .x86_64>, \"arch\")")
     end
 
@@ -69,7 +69,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "br" do
       assert %Br{
-               value: "@Air.Inst.Ref.void_value",
+               value: ~l"@Air.Inst.Ref.void_value",
                goto: {5, :keep}
              } = Instruction.parse("br(%5, @Air.Inst.Ref.void_value)")
     end
@@ -83,7 +83,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Loop
 
     test "loop" do
-      assert %Loop{type: "void"} =
+      assert %Loop{type: ~l"void"} =
                Instruction.parse("""
                loop(void, { 
                  %7!= dbg_stmt(2:13) 
@@ -162,14 +162,14 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Ret
 
     test "ret" do
-      assert %Ret{val: "@Air.Inst.Ref.void_value"} =
+      assert %Ret{val: ~l"@Air.Inst.Ref.void_value"} =
                Instruction.parse("ret(@Air.Inst.Ref.void_value)")
     end
 
     alias Clr.Air.Instruction.RetSafe
 
     test "ret_safe" do
-      assert %RetSafe{val: "@Air.Inst.Ref.void_value"} =
+      assert %RetSafe{val: ~l"@Air.Inst.Ref.void_value"} =
                Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
     end
   end
@@ -178,7 +178,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.PtrElemVal
 
     test "ptr_elem_val" do
-      assert %PtrElemVal{line: {0, :keep}, val: "@Air.Inst.Ref.zero_usize"} =
+      assert %PtrElemVal{line: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_usize"} =
                Instruction.parse("ptr_elem_val(%0, @Air.Inst.Ref.zero_usize)")
     end
 
@@ -186,9 +186,9 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "ptr_add" do
       assert %PtrAdd{
-               type: {:ptr, :many, "usize"},
+               type: {:ptr, :many, ~l"usize"},
                line: {0, :keep},
-               val: "@Air.Inst.Ref.zero_usize"
+               val: ~l"@Air.Inst.Ref.zero_usize"
              } =
                Instruction.parse("ptr_add([*]usize, %0, @Air.Inst.Ref.zero_usize)")
     end
@@ -196,21 +196,21 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Slice
 
     test "slice" do
-      assert %Slice{type: "usize", src: {0, :keep}, len: {2, :clobber}} =
+      assert %Slice{type: ~l"usize", src: {0, :keep}, len: {2, :clobber}} =
                Instruction.parse("slice(usize, %0, %2!)")
     end
 
     alias Clr.Air.Instruction.SlicePtr
 
     test "slice_ptr" do
-      assert %SlicePtr{type: "usize", src: {0, :keep}} =
+      assert %SlicePtr{type: ~l"usize", src: {0, :keep}} =
                Instruction.parse("slice_ptr(usize, %0)")
     end
 
     alias Clr.Air.Instruction.IntFromPtr
 
     test "int_from_ptr" do
-      assert %IntFromPtr{val: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, "__init_array_end"}}}} =
+      assert %IntFromPtr{val: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, ~l"__init_array_end"}}}} =
                Instruction.parse(
                  "int_from_ptr(<[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_end))>)"
                )
@@ -233,14 +233,14 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.StructFieldPtrIndex0
 
     test "struct_field_ptr_index_0" do
-      assert %StructFieldPtrIndex0{type: {:ptr, :one, "u32"}, src: {0, :keep}} =
+      assert %StructFieldPtrIndex0{type: {:ptr, :one, ~l"u32"}, src: {0, :keep}} =
                Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
     end
 
     alias Clr.Air.Instruction.WrapOptional
 
     test "wrap_optional" do
-      assert %WrapOptional{type: {:optional, "usize"}, src: {0, :keep}} =
+      assert %WrapOptional{type: {:optional, ~l"usize"}, src: {0, :keep}} =
                Instruction.parse("wrap_optional(?usize, %0)")
     end
   end
@@ -249,34 +249,34 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Bitcast
 
     test "bitcast" do
-      assert %Bitcast{type: {:ptr, :many, "u8"}, line: {0, :keep}} =
+      assert %Bitcast{type: {:ptr, :many, ~l"u8"}, line: {0, :keep}} =
                Instruction.parse("bitcast([*]u8, %0)")
     end
 
     alias Clr.Air.Instruction.Alloc
 
     test "alloc" do
-      assert %Alloc{type: {:ptr, :one, "usize"}} = Instruction.parse("alloc(*usize)")
+      assert %Alloc{type: {:ptr, :one, ~l"usize"}} = Instruction.parse("alloc(*usize)")
     end
 
     alias Clr.Air.Instruction.Store
 
     test "store" do
-      assert %Store{val: "@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
+      assert %Store{val: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
                Instruction.parse("store(%19, @Air.Inst.Ref.zero_usize)")
     end
 
     alias Clr.Air.Instruction.Load
 
     test "load" do
-      assert %Load{type: {:ptr, :many, "usize"}, loc: {19, :keep}} =
+      assert %Load{type: {:ptr, :many, ~l"usize"}, loc: {19, :keep}} =
                Instruction.parse("load([*]usize, %19)")
     end
 
     alias Clr.Air.Instruction.OptionalPayload
 
     test "optional_payload" do
-      assert %OptionalPayload{type: "void", loc: {19, :keep}} =
+      assert %OptionalPayload{type: ~l"void", loc: {19, :keep}} =
                Instruction.parse("optional_payload(void, %19)")
     end
 
@@ -290,7 +290,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.StoreSafe
 
     test "store_safe" do
-      assert %StoreSafe{val: "@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
+      assert %StoreSafe{val: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
                Instruction.parse("store_safe(%19, @Air.Inst.Ref.zero_usize)")
     end
 
@@ -306,7 +306,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.UnwrapErrunionPayload
 
     test "unwrap_errunion_payload" do
-      assert %UnwrapErrunionPayload{type: "usize", src: {0, :keep}} =
+      assert %UnwrapErrunionPayload{type: ~l"usize", src: {0, :keep}} =
                Instruction.parse("unwrap_errunion_payload(usize, %0)")
     end
 
@@ -358,7 +358,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.CmpNeq
 
     test "cmp_neq" do
-      assert %CmpNeq{lhs: {95, :clobber}, rhs: {:literal, "u64", 0}} =
+      assert %CmpNeq{lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}} =
                Instruction.parse("cmp_neq(%95!, <u64, 0>)")
     end
 
@@ -395,7 +395,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Add
 
     test "add" do
-      assert %Add{lhs: {19, :keep}, rhs: "@Air.Inst.Ref.one_usize"} =
+      assert %Add{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
                Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
     end
 
@@ -409,7 +409,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.DivExact
 
     test "div_exact" do
-      assert %DivExact{lhs: {206, :clobber}, rhs: {:literal, "usize", 8}} =
+      assert %DivExact{lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
                Instruction.parse("div_exact(%206!, <usize, 8>)")
     end
 
@@ -418,8 +418,8 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "sub_with_overflow" do
       assert %SubWithOverflow{
                lhs: {96, :keep},
-               rhs: "@Air.Inst.Ref.one_usize",
-               type: {:struct, ["usize", "u1"]}
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               type: {:struct, [~l"usize", ~l"u1"]}
              } =
                Instruction.parse(
                  "sub_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
@@ -431,8 +431,8 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "add_with_overflow" do
       assert %AddWithOverflow{
                lhs: {96, :keep},
-               rhs: "@Air.Inst.Ref.one_usize",
-               type: {:struct, ["usize", "u1"]}
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               type: {:struct, [~l"usize", ~l"u1"]}
              } =
                Instruction.parse(
                  "add_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
@@ -442,7 +442,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Not
 
     test "not" do
-      assert %Not{operand: {96, :keep}, type: "usize"} = Instruction.parse("not(usize, %96)")
+      assert %Not{operand: {96, :keep}, type: ~l"usize"} = Instruction.parse("not(usize, %96)")
     end
 
     alias Clr.Air.Instruction.BitAnd
@@ -472,10 +472,10 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "atomic_rmw" do
       assert %AtomicRmw{
-               dst: {:literal, {:ptr, :one, "u8"}, "debug.panicking.raw"},
+               dst: {:literal, {:ptr, :one, ~l"u8"}, ~l"debug.panicking.raw"},
                mode: :seq_cst,
                op: :add,
-               val: "@Air.Inst.Ref.one_u8"
+               val: ~l"@Air.Inst.Ref.one_u8"
              } =
                Instruction.parse(
                  "atomic_rmw(<*u8, debug.panicking.raw>, @Air.Inst.Ref.one_u8, Add, seq_cst)"
@@ -488,7 +488,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
   alias Clr.Air.Instruction.Assembly
 
   test "assembly" do
-    assert %Assembly{type: "void"} =
+    assert %Assembly{type: ~l"void"} =
              Instruction.parse(
                ~S/assembly(void, volatile, [_start] in X = (<*const fn () callconv(.naked) noreturn, start._start>), [posixCallMainAndExit] in X = (<*const fn ([*]usize) callconv(.c) noreturn, start.posixCallMainAndExit>), " .cfi_undefined %%rip\n xorl %%ebp, %%ebp\n movq %%rsp, %%rdi\n andq $-16, %%rsp\n callq %[posixCallMainAndExit:P]")/
              )

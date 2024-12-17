@@ -16,7 +16,7 @@ defmodule Clr.Air.Instruction do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[name space lbrace rbrace lparen newline notnewline]a)
+  Clr.Air.import(Clr.Air.Base, ~w[identifier space lbrace rbrace lparen newline notnewline]a)
 
   # import the "codeline" parser
   Clr.Air.import(Clr.Air.Parser, [:codeline])
@@ -53,7 +53,7 @@ defmodule Clr.Air.Instruction do
                    unknown_instruction
 
     # for debugging
-    unknown_instruction <- name lparen notnewline
+    unknown_instruction <- identifier lparen notnewline
     """,
     instruction: [export: true, parser: true],
     unknown_instruction: [post_traverse: :unknown_instruction]
