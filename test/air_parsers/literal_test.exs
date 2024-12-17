@@ -85,6 +85,9 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "dereferenced literal value" do
-    assert {:literal, :foo, :bar} = Type.parse_literal("<*const fn (*const anyopaque, []const u8) anyerror!usize, io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write')).typeErasedWriteFn>")
+    assert {:literal, :foo, :bar} =
+             Type.parse_literal(
+               "<*const fn (*const anyopaque, []const u8) anyerror!usize, io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write')).typeErasedWriteFn>"
+             )
   end
 end

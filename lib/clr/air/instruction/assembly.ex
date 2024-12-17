@@ -10,6 +10,7 @@ defmodule Clr.Air.Instruction.Assembly do
   )
 
   Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
 
   Pegasus.parser_from_string(
     """
@@ -19,15 +20,15 @@ defmodule Clr.Air.Instruction.Assembly do
 
     directive <- asm_in / asm_assign
 
-    asm_in <- lbrack name rbrack space 'in' space name_or_reg space '=' space lparen (literal / name / lineref) rparen
+    asm_in <- lbrack lvalue rbrack space 'in' space name_or_reg space '=' space lparen (literal / lvalue / lineref) rparen
 
-    asm_assign <- lbrack name rbrack space rarrow space '=' name_or_reg 
+    asm_assign <- lbrack lvalue rbrack space rarrow space '=' name_or_reg 
 
-    name_or_reg <- (lbrace name rbrace) / name
+    name_or_reg <- (lbrace lvalue rbrace) / lvalue
 
     rarrow <- '->'
 
-    asm_clobber <- '~' lbrace name rbrace
+    asm_clobber <- '~' lbrace lvalue rbrace
     """,
     assembly: [export: true, post_traverse: :assembly],
     asm_in: [post_traverse: :asm_in],

@@ -3,96 +3,98 @@ defmodule ClrTest.Air.TypeTest do
 
   alias Clr.Air.Type
 
+  import Clr.Air.Lvalue
+
   test "basic type" do
-    assert "i32" = Type.parse("i32")
+    assert ~l"i32" = Type.parse("i32")
   end
 
   describe "basic pointer types" do
     test "single pointer" do
-      assert {:ptr, :one, "i32"} = Type.parse("*i32")
+      assert {:ptr, :one, ~l"i32"} = Type.parse("*i32")
     end
 
     test "many pointer" do
-      assert {:ptr, :many, "i32"} = Type.parse("[*]i32")
+      assert {:ptr, :many, ~l"i32"} = Type.parse("[*]i32")
     end
 
     test "slice pointer" do
-      assert {:ptr, :slice, "i32"} = Type.parse("[]i32")
+      assert {:ptr, :slice, ~l"i32"} = Type.parse("[]i32")
     end
   end
 
   describe "sentinel pointer types" do
     test "manypointer" do
-      assert {:ptr, :many, "i32", sentinel: 0} = Type.parse("[*:0]i32")
+      assert {:ptr, :many, ~l"i32", sentinel: 0} = Type.parse("[*:0]i32")
     end
 
     test "slice pointer" do
-      assert {:ptr, :slice, "i32", sentinel: 0} = Type.parse("[:0]i32")
+      assert {:ptr, :slice, ~l"i32", sentinel: 0} = Type.parse("[:0]i32")
     end
   end
 
   describe "const pointer types" do
     test "single pointer" do
-      assert {:ptr, :one, "i32", const: true} = Type.parse("*const i32")
+      assert {:ptr, :one, ~l"i32", const: true} = Type.parse("*const i32")
     end
 
     test "many pointer" do
-      assert {:ptr, :many, "i32", const: true} = Type.parse("[*]const i32")
+      assert {:ptr, :many, ~l"i32", const: true} = Type.parse("[*]const i32")
     end
 
     test "slice pointer" do
-      assert {:ptr, :slice, "i32", const: true} = Type.parse("[]const i32")
+      assert {:ptr, :slice, ~l"i32", const: true} = Type.parse("[]const i32")
     end
   end
 
   describe "optional pointer types" do
     test "single pointer" do
-      assert {:ptr, :one, "i32", optional: true} = Type.parse("?*i32")
+      assert {:ptr, :one, ~l"i32", optional: true} = Type.parse("?*i32")
     end
 
     test "const pointer" do
-      assert {:ptr, :one, "i32", opts} = Type.parse("?*const i32")
+      assert {:ptr, :one, ~l"i32", opts} = Type.parse("?*const i32")
       assert opts[:optional]
       assert opts[:const]
     end
 
     test "pointer to a function" do
-      assert {:ptr, :many, {:fn, [], "void", [callconv: :c]}} =
+      assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}} =
                Type.parse("[*]*const fn () callconv(.c) void")
     end
   end
 
   test "optional generic type" do
-    assert {:optional, "i32"} = Type.parse("?i32")
+    assert {:optional, ~l"i32"} = Type.parse("?i32")
   end
 
   test "function pointer type with callconv" do
-    assert {:ptr, :many, {:fn, [], "void", [callconv: :c]}} =
+    assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}} =
              Type.parse("[*]*const fn () callconv(.c) void")
   end
 
   test "function type with callconv" do
-    assert {:fn, ["Target.Cpu.Arch"], "bool", [callconv: :inline]} =
+    assert {:fn, [~l"Target.Cpu.Arch"], ~l"bool", [callconv: :inline]} =
              Type.parse("fn (Target.Cpu.Arch) callconv(.@\"inline\") bool")
   end
 
   test "function type with noalias" do
-    assert {:fn, [{:noalias, {:ptr, :one, "usize"}}, {:noalias, {:ptr, :one, "u8"}}], "u8", []} =
+    assert {:fn, [{:noalias, {:ptr, :one, ~l"usize"}}, {:noalias, {:ptr, :one, ~l"u8"}}], ~l"u8",
+            []} =
              Type.parse("fn (noalias *usize, noalias *u8) u8")
   end
 
   test "const * function type" do
-    assert {:fn, [], "noreturn", [callconv: :naked]} =
+    assert {:fn, [], ~l"noreturn", [callconv: :naked]} =
              Type.parse("*const fn () callconv(.naked) noreturn")
   end
 
   test "array type" do
-    {:literal, "usize", {:sizeof, "os.linux.tls.AbiTcb__struct_2928"}}
-    assert {:array, 8, "i32"} = Type.parse("[8]i32")
+    assert {:array, 8, ~l"i32"} = Type.parse("[8]i32")
   end
 
   test "aligned slice type" do
-    assert {:ptr, :slice, "u8", alignment: 4096} = Type.parse("[]align(4096) u8")
+    assert {:ptr, :slice, ~l"u8", alignment: 4096} = Type.parse("[]align(4096) u8")
   end
 
   test "enum literal type" do
@@ -108,12 +110,12 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "error type" do
-    assert {:errorable, ["Unexpected"], "os.linux.rlimit"} =
+    assert {:errorable, ["Unexpected"], ~l"os.linux.rlimit"} =
              Type.parse("error{Unexpected}!os.linux.rlimit")
   end
 
   test "anyerror type" do
-    assert {:errorable, :any, "os.linux.rlimit"} =
+    assert {:errorable, :any, ~l"os.linux.rlimit"} =
              Type.parse("anyerror!os.linux.rlimit")
   end
 
@@ -123,12 +125,12 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "atomic value allowed as function call" do
-    assert {:comptime_call, "atomic.Value", ["u8"]} = Type.parse("atomic.Value(u8)")
+    assert {:comptime_call, ["atomic","Value"], [~l"u8"]} = Type.parse("atomic.Value(u8)")
   end
 
-  test "generic comptime call" do
-    assert {:comptime_call, "io.GenericWriter",
-            ["fs.File", {:errorunion, _}, {:function, "write"}]} =
+  test "generic comptime function call type" do
+    assert {:comptime_call, ["io", "GenericWriter"],
+            [~l"fs.File", {:errorunion, _}, {:function, "write"}]} =
              Type.parse(
                "io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))"
              )

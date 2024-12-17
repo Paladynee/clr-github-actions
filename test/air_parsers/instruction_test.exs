@@ -2,6 +2,8 @@ defmodule ClrTest.AirParsers.InstructionTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
 
+  import Clr.Air.Lvalue
+
   describe "debug instructions" do
     alias Clr.Air.Instruction.DbgStmt
 
@@ -217,7 +219,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.SliceLen
 
     test "slice_len" do
-      assert %SliceLen{type: "usize", src: {0, :keep}} =
+      assert %SliceLen{type: ~l"usize", src: {0, :keep}} =
                Instruction.parse("slice_len(usize, %0)")
     end
 
@@ -318,7 +320,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Intcast
 
     test "intcast" do
-      assert %Intcast{type: "usize", line: {0, :keep}} =
+      assert %Intcast{type: ~l"usize", line: {0, :keep}} =
                Instruction.parse("intcast(usize, %0)")
     end
   end
@@ -493,7 +495,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   test "complex assembly" do
-    assert %Assembly{type: "usize", code: "syscall"} =
+    assert %Assembly{type: ~l"usize", code: "syscall"} =
              Instruction.parse(
                ~S/assembly(usize, volatile, [ret] -> ={rax}, [number] in {rax} = (<usize, 9>), [arg1] in {rdi} = (@Air.Inst.Ref.zero_usize), [arg2] in {rsi} = (%59!), [arg3] in {rdx} = (<usize, 3>), [arg4] in {r10} = (<usize, 34>), [arg5] in {r8} = (<usize, 18446744073709551615>), [arg6] in {r9} = (@Air.Inst.Ref.zero_usize), ~{rcx}, ~{r11}, ~{memory}, "syscall")/
              )
@@ -502,7 +504,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
   alias Clr.Air.Instruction.Arg
 
   test "arg" do
-    assert %Arg{type: {:ptr, :many, "usize"}, name: "argc_argv_ptr"} =
+    assert %Arg{type: {:ptr, :many, ~l"usize"}, name: "argc_argv_ptr"} =
              Instruction.parse(~S/arg([*]usize, "argc_argv_ptr")/)
   end
 end

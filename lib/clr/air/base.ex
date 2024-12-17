@@ -12,20 +12,13 @@ defmodule Clr.Air.Base do
     clobber <- percent int bang
 
     # strings and names
-    squoted <- singleq name singleq
-    dquoted <- doubleq name doubleq
+    squoted <- singleq identifier singleq
+    dquoted <- doubleq identifier doubleq
     dstring <- doubleq [^"]* doubleq
 
-    name <- at_name / enum_literal / basic_name
-    at_name <- '@' basic_name
-    enum_literal <- ('.' basic_name) / special_enum_literal
-    special_enum_literal <- '.@"' [^"]+ '"'
-    basic_name <- indexed_identifier ('.' indexed_identifier)*
-    indexed_identifier <- identifier_part (index)*
-    index <- '[' int ']'
-    identifier_part <- alpha alnum*
+    identifier <- alpha alnum*
     alpha <- [a-zA-Z_]
-    alnum <-[a-zA-Z0-9_]
+    alnum <- [a-zA-Z0-9_]
 
     int <- '-'? [0-9]+
 
@@ -38,6 +31,7 @@ defmodule Clr.Air.Base do
     comma <- ','
     space <- '\s'
     colon <- ':'
+    dot <- '.'
     lparen <- '('
     rparen <- ')'
     langle <- '<'
@@ -60,18 +54,18 @@ defmodule Clr.Air.Base do
     clobbers: [export: true, post_traverse: :clobbers],
     keep: [post_traverse: :keep],
     clobber: [post_traverse: :clobber],
-    int: [export: true, collect: true, post_traverse: :int],
-    name: [export: true, collect: true],
-    enum_literal: [export: true, collect: true],
     squoted: [export: true],
     dquoted: [export: true],
     dstring: [export: true, collect: true],
-    cs: [ignore: true, export: true],
+    identifier: [export: true, collect: true],
+    int: [export: true, collect: true, post_traverse: :int],
+    cs: [export: true],
     singleq: [ignore: true, export: true],
     doubleq: [ignore: true, export: true],
     comma: [ignore: true, export: true],
     space: [ignore: true, export: true],
     colon: [ignore: true, export: true],
+    dot: [ignore: true, export: true],
     lparen: [ignore: true, export: true],
     rparen: [ignore: true, export: true],
     langle: [ignore: true, export: true],
