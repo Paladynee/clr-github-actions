@@ -125,7 +125,7 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "atomic value allowed as function call" do
-    assert {:comptime_call, ["atomic","Value"], [~l"u8"]} = Type.parse("atomic.Value(u8)")
+    assert {:comptime_call, ["atomic", "Value"], [~l"u8"]} = Type.parse("atomic.Value(u8)")
   end
 
   test "generic comptime function call type" do

@@ -16,7 +16,7 @@ defmodule Clr.Air.Base do
     dquoted <- doubleq identifier doubleq
     dstring <- doubleq [^"]* doubleq
 
-    identifier <- alpha alnum*
+    identifier <- alpha alnum* / '@' dstring
     alpha <- [a-zA-Z_]
     alnum <- [a-zA-Z0-9_]
 
@@ -57,7 +57,7 @@ defmodule Clr.Air.Base do
     squoted: [export: true],
     dquoted: [export: true],
     dstring: [export: true, collect: true],
-    identifier: [export: true, collect: true],
+    identifier: [export: true, collect: true, post_traverse: :identifier],
     int: [export: true, collect: true, post_traverse: :int],
     cs: [export: true],
     singleq: [ignore: true, export: true],
@@ -84,6 +84,13 @@ defmodule Clr.Air.Base do
   defp int(rest, [value], context, _line, _bytes), do: {rest, [String.to_integer(value)], context}
 
   defp keep(rest, [line], context, _line, _bytes), do: {rest, [{line, :keep}], context}
+
+  defp identifier(rest, args, context, _line, _bytes) do
+    case args do
+      [name] -> {rest, [name], context}
+      [name, "@"] -> {rest, [name], context}
+    end
+  end
 
   defp clobber(rest, [line], context, _line, _bytes), do: {rest, [{line, :clobber}], context}
 

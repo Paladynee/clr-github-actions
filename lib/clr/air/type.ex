@@ -71,7 +71,7 @@ defmodule Clr.Air.Type do
     type: [export: true, parser: true, post_traverse: :type],
     function_call_type: [post_traverse: :function_call_type],
     array_type: [post_traverse: :array_type],
-    ptr_type: [post_traverse: :ptr_type],
+    ptr_type: [export: true, post_traverse: :ptr_type],
     fn_type: [export: true, post_traverse: :fn_type],
     const: [token: :const],
     function: [token: :function],
