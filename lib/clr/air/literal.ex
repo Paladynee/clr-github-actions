@@ -14,7 +14,7 @@ defmodule Clr.Air.Literal do
   Pegasus.parser_from_string(
     """
     # literals are type + value
-    literal <- fn_literal / other_literal
+    literal <- fn_literal / enum_value / other_literal
 
     fn_literal <- langle fn_type cs lvalue rangle
     other_literal <- langle type cs convertible rangle
@@ -39,9 +39,9 @@ defmodule Clr.Air.Literal do
     struct_kv <- dot identifier space eq space struct_v
     struct_v <- struct_value / enum_value / lvalue / int
 
-    enum_value <- dot lvalue
-
     range <- lbrack int '..' int rbrack
+
+    enum_value <- dot lvalue
 
     # private
     eq <- "="
@@ -57,7 +57,7 @@ defmodule Clr.Air.Literal do
     struct_ptr: [post_traverse: :struct_ptr],
     struct_value: [post_traverse: :struct_value],
     struct_kv: [post_traverse: :struct_kv],
-    enum_value: [post_traverse: :enum_value],
+    enum_value: [export: true, post_traverse: :enum_value],
     range: [post_traverse: :range]
   )
 
