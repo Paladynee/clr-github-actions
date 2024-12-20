@@ -13,16 +13,20 @@ defmodule Clr.Air.Instruction.CondBr do
     cond_br <- 'cond_br' lparen lineref cs branch cs branch rparen
 
     branch <- branchtype space codeblock_clobbers
-    branchtype <- poi / likely / cold
+    branchtype <- likelypoi / coldpoi / likely / cold / poi 
 
     poi <- 'poi'
     likely <- 'likely'
     cold <- 'cold'
+    likelypoi <- 'likely poi'
+    coldpoi <- 'cold poi'
     """,
     cond_br: [export: true, post_traverse: :cond_br],
     poi: [token: :poi],
     likely: [token: :likely],
-    cold: [token: :cold]
+    cold: [token: :cold],
+    likelypoi: [token: :likelypoi],
+    coldpoi: [token: :coldpoi]
   )
 
   def cond_br(

@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.CmpLte do
+defmodule Clr.Air.Instruction.AddWrap do
   defstruct [:lhs, :rhs]
 
   require Pegasus
@@ -9,11 +9,11 @@ defmodule Clr.Air.Instruction.CmpLte do
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "cmp_lte <- 'cmp_lte' lparen (lineref / lvalue / literal) cs (lineref / literal) rparen",
-    cmp_lte: [export: true, post_traverse: :cmp_lte]
+    "add_wrap <- 'add_wrap' lparen lineref cs (lineref / lvalue / literal) rparen",
+    add_wrap: [export: true, post_traverse: :add_wrap]
   )
 
-  def cmp_lte(rest, [rhs, lhs, "cmp_lte"], context, _line, _bytes) do
+  def add_wrap(rest, [rhs, lhs, "add_wrap"], context, _line, _bytes) do
     {rest, [%__MODULE__{lhs: lhs, rhs: rhs}], context}
   end
 end

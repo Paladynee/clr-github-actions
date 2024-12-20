@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.CmpEq do
+defmodule Clr.Air.Instruction.BoolOr do
   defstruct [:lhs, :rhs]
 
   require Pegasus
@@ -9,11 +9,11 @@ defmodule Clr.Air.Instruction.CmpEq do
   Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "cmp_eq <- 'cmp_eq' lparen lineref cs (literal / lvalue) rparen",
-    cmp_eq: [export: true, post_traverse: :cmp_eq]
+    "bool_or <- 'bool_or' lparen lineref cs (lineref / lvalue / literal) rparen",
+    bool_or: [export: true, post_traverse: :bool_or]
   )
 
-  def cmp_eq(rest, [rhs, lhs, "cmp_eq"], context, _line, _bytes) do
+  def bool_or(rest, [rhs, lhs, "bool_or"], context, _line, _bytes) do
     {rest, [%__MODULE__{lhs: lhs, rhs: rhs}], context}
   end
 end

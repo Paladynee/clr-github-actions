@@ -37,7 +37,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     alias Clr.Air.Instruction.DbgArgInline
 
-     test "dbg_arg_inline" do
+    test "dbg_arg_inline" do
       assert %DbgArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}}, key: "arch"} =
                Instruction.parse("dbg_arg_inline(<Target.Cpu.Arch, .x86_64>, \"arch\")")
     end
@@ -171,6 +171,18 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "ret_safe" do
       assert %RetSafe{val: ~l"@Air.Inst.Ref.void_value"} =
                Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
+    end
+
+    alias Clr.Air.Instruction.RetPtr
+
+    test "ret_ptr" do
+      assert %RetPtr{type: {:ptr, :one, ~l"fs.File"}} = Instruction.parse("ret_ptr(*fs.File)")
+    end
+
+    alias Clr.Air.Instruction.RetLoad
+
+    test "ret_load" do
+      assert %RetLoad{val: {19, :keep}} = Instruction.parse("ret_load(%19)")
     end
   end
 
@@ -323,6 +335,47 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Intcast{type: ~l"usize", line: {0, :keep}} =
                Instruction.parse("intcast(usize, %0)")
     end
+
+    alias Clr.Air.Instruction.Memset
+
+    test "memset" do
+      assert %Memset{loc: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
+               Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
+    end
+
+    alias Clr.Air.Instruction.Memcpy
+
+    test "memcpy" do
+      assert %Memcpy{loc: {104, :clobber}, val: {112, :clobber}} =
+               Instruction.parse("memcpy(%104!, %112!)")
+    end
+
+    alias Clr.Air.Instruction.WrapErrunionPayload
+
+    test "wrap_errunion_payload" do
+      assert %WrapErrunionPayload{
+               type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+               src: {16, :clobber}
+             } =
+               Instruction.parse("wrap_errunion_payload(error{Unexpected}!os.linux.rlimit, %16!)")
+    end
+
+    alias Clr.Air.Instruction.WrapErrunionErr
+
+    test "wrap_errunion_err" do
+      assert %WrapErrunionErr{
+               type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+               src: {16, :clobber}
+             } =
+               Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")
+    end
+
+    alias Clr.Air.Instruction.ArrayToSlice
+
+    test "array_to_slice" do
+      assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8"}, src: {13, :clobber}} =
+               Instruction.parse("array_to_slice([]u8, %13!)")
+    end
   end
 
   describe "block" do
@@ -388,6 +441,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "cmp_gt" do
       assert %CmpGt{lhs: {95, :clobber}, rhs: {96, :clobber}} =
                Instruction.parse("cmp_gt(%95!, %96!)")
+    end
+
+    alias Clr.Air.Instruction.CmpGte
+
+    test "cmp_gte" do
+      assert %CmpGte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_gte(%95!, %96!)")
     end
   end
 
@@ -465,6 +525,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Min{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("min(%96, %97)")
     end
+
+    alias Clr.Air.Instruction.AddWrap
+
+    test "add_wrap" do
+      assert %AddWrap{lhs: {206, :clobber}, rhs: {207, :clobber}} =
+               Instruction.parse("add_wrap(%206!, %207!)")
+    end
+
+    alias Clr.Air.Instruction.BoolOr
+
+    test "bool_or" do
+      assert %BoolOr{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("bool_or(%96, %97)")
+    end
   end
 
   describe "atomics" do
@@ -506,5 +580,10 @@ defmodule ClrTest.AirParsers.InstructionTest do
   test "arg" do
     assert %Arg{type: {:ptr, :many, ~l"usize"}, name: "argc_argv_ptr"} =
              Instruction.parse(~S/arg([*]usize, "argc_argv_ptr")/)
+  end
+
+  test "arg without value" do
+    assert %Arg{type: {:ptr, :many, ~l"usize"}, name: nil} =
+             Instruction.parse(~S/arg([*]usize)/)
   end
 end

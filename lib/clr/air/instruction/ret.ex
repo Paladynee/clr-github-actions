@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Ret do
   Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
 
   Pegasus.parser_from_string(
-    "ret <- 'ret' lparen lvalue rparen",
+    "ret <- 'ret' lparen (lvalue / lineref) rparen",
     ret: [export: true, post_traverse: :ret]
   )
 

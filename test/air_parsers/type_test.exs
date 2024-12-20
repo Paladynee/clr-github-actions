@@ -90,7 +90,11 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "array type" do
-    assert {:array, 8, ~l"i32"} = Type.parse("[8]i32")
+    assert {:array, 8, ~l"i32", []} = Type.parse("[8]i32")
+  end
+
+  test "array type with sentinel" do
+    assert {:array, 8, ~l"i32", sentinel: 0} = Type.parse("[8:0]i32")
   end
 
   test "aligned slice type" do
@@ -125,14 +129,33 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "atomic value allowed as function call" do
-    assert {:comptime_call, ["atomic", "Value"], [~l"u8"]} = Type.parse("atomic.Value(u8)")
+    assert {:lvalue, [{:comptime_call, ~l"atomic.Value", [~l"u8"]}]} =
+             Type.parse("atomic.Value(u8)")
   end
 
   test "generic comptime function call type" do
-    assert {:comptime_call, ["io", "GenericWriter"],
-            [~l"fs.File", {:errorunion, _}, {:function, "write"}]} =
+    assert {:lvalue,
+            [
+              {:comptime_call, ~l"io.GenericWriter",
+               [~l"fs.File", {:errorunion, _}, {:function, "write"}]}
+            ]} =
              Type.parse(
                "io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))"
              )
+  end
+
+  test "typeinfo call (call with dereference)" do
+    assert {:lvalue, [{:comptime_call, ~l"@typeInfo", [~l"foo"]}, "child"]} =
+             Type.parse("@typeInfo(foo).child")
+  end
+
+  test "complex generic type" do
+    assert {:lvalue,
+            [
+              {:comptime_call, ~l"@typeInfo",
+               [{:lvalue, [{:comptime_call, ~l"@TypeOf", [~l"fmt.format__anon_3497"]}]}]},
+               "return_type",
+               :unwrap_optional
+            ]} = Type.parse("@typeInfo(@TypeOf(fmt.format__anon_3497)).return_type.?")
   end
 end

@@ -19,13 +19,16 @@ defmodule Clr.Air.Instruction.SwitchBr do
     """
     switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
-    switch_case <- lbrack case_value (cs case_value)* rbrack space fatarrow space codeblock_clobbers 
+    switch_case <- lbrack case_value (cs case_value)* rbrack (space cold)? space fatarrow space codeblock_clobbers 
     case_value <- literal / lvalue
-    else_case <- 'else' space fatarrow space codeblock_clobbers
+    else_case <- 'else' (space cold)? space fatarrow space codeblock_clobbers
+
+    cold <- '.cold'
     """,
     switch_br: [export: true, post_traverse: :switch_br],
     switch_case: [post_traverse: :switch_case],
-    else_case: [post_traverse: :else_case]
+    else_case: [post_traverse: :else_case],
+    cold: [token: :cold]
   )
 
   defp switch_br(rest, args, context, _line, _bytes) do
@@ -35,8 +38,16 @@ defmodule Clr.Air.Instruction.SwitchBr do
     end
   end
 
+  defp switch_case(rest, [codeblock, :cold | compares], context, _line, _bytes) do
+    {rest, [{compares, codeblock}], context}
+  end
+
   defp switch_case(rest, [codeblock | compares], context, _line, _bytes) do
     {rest, [{compares, codeblock}], context}
+  end
+
+  defp else_case(rest, [codeblock, :cold, "else"], context, _line, _bytes) do
+    {rest, [{:else, codeblock}], context}
   end
 
   defp else_case(rest, [codeblock, "else"], context, _line, _bytes) do

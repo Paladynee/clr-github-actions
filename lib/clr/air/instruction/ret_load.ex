@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.RetSafe do
+defmodule Clr.Air.Instruction.RetLoad do
   defstruct [:val]
 
   require Pegasus
@@ -7,14 +7,13 @@ defmodule Clr.Air.Instruction.RetSafe do
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
   Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "ret_safe <- 'ret_safe' lparen (lvalue / lineref / literal) rparen",
-    ret_safe: [export: true, post_traverse: :ret_safe]
+    "ret_load <- 'ret_load' lparen lineref rparen",
+    ret_load: [export: true, post_traverse: :ret_load]
   )
 
-  def ret_safe(rest, [value, "ret_safe"], context, _line, _bytes) do
+  def ret_load(rest, [value, "ret_load"], context, _line, _bytes) do
     {rest, [%__MODULE__{val: value}], context}
   end
 end

@@ -13,7 +13,8 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "literal with an enum literal" do
-    assert {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}} = Literal.parse("<Target.Cpu.Arch, .x86_64>")
+    assert {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}} =
+             Literal.parse("<Target.Cpu.Arch, .x86_64>")
   end
 
   test "generic function literal" do
@@ -56,8 +57,15 @@ defmodule ClrTest.Air.LiteralTest do
              )
   end
 
-  test "string literal" do
-    assert {:literal, {:ptr, :slice, ~l"u8", [const: true]}, {:string, "integer overflow", 0..16}} =
+  test "string literal without index" do
+    assert {:literal, {:ptr, :one, {:array, 15, ~l"u8", sentinel: 0}, [const: true]},
+            {:string, "(msg truncated)"}} =
+             Literal.parse("<*const [15:0]u8, \"(msg truncated)\">")
+  end
+
+  test "string literal with index" do
+    assert {:literal, {:ptr, :slice, ~l"u8", [const: true]},
+            {:substring, "integer overflow", 0..16}} =
              Literal.parse("<[]const u8, \"integer overflow\"[0..16]>")
   end
 
@@ -70,6 +78,12 @@ defmodule ClrTest.Air.LiteralTest do
              Literal.parse(
                "<*const os.linux.Sigaction, &.{ .handler = .{ .handler = start.noopSigHandler }, .mask = .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, .flags = 0, .restorer = null }>"
              )
+  end
+
+  test "literal with at/ptrcast inside the struct" do
+    assert {:literal, ~l"os.linux.Sigaction",
+            {:struct, [{"handler", {:as, {:ptr, :one, ~l"foo"}, {:ptrcast, ~l"debug.foo"}}}]}} =
+             Literal.parse("<os.linux.Sigaction, .{ .handler = @as(*foo, @ptrCast(debug.foo)) }>")
   end
 
   test "strange literal" do
@@ -92,5 +106,10 @@ defmodule ClrTest.Air.LiteralTest do
              Literal.parse(
                "<*const fn (*const anyopaque, []const u8) anyerror!usize, io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write')).typeErasedWriteFn>"
              )
+  end
+
+  test "void value" do
+    assert {:literal, {:errorable, ~w[LimitTooBig PermissionDenied Unexpected], ~l"void"}, :void} =
+             Literal.parse("<error{Unexpected,PermissionDenied,LimitTooBig}!void, {}>")
   end
 end

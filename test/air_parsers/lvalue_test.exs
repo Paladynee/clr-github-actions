@@ -25,24 +25,24 @@ defmodule ClrTest.AirParsers.LvalueTest do
 
   describe "type-returning function call with a dereference" do
     test "called with integer" do
-      assert {:lvalue, [{:comptime_call, ["foo"], [1]}, "bar"]} =
+      assert {:lvalue, [{:comptime_call, ~l"foo", [1]}, "bar"]} =
                Clr.Air.Lvalue.parse("foo(1).bar")
 
-      assert {:lvalue, [{:comptime_call, ["foo", "bar"], [1]}, "bar", "baz"]} =
-               Clr.Air.Lvalue.parse("foo.bar(1).bar.baz")
-
-      assert {:lvalue, [{:comptime_call, ["foo"], [1]}, "bar", "baz"]} =
+      assert {:lvalue, [{:comptime_call, ~l"foo", [1]}, "bar", "baz"]} =
                Clr.Air.Lvalue.parse("foo(1).bar.baz")
+
+      assert {:lvalue, [{:comptime_call, ~l"foo.bar", [1]}, "bar", "baz"]} =
+               Clr.Air.Lvalue.parse("foo.bar(1).bar.baz")
     end
 
     test "called with an lvalue (whih might be a type)" do
-      assert {:lvalue, [{:comptime_call, ["foo"], [~l"foo.bar"]}, "bar"]} =
+      assert {:lvalue, [{:comptime_call, ~l"foo", [~l"foo.bar"]}, "bar"]} =
                Clr.Air.Lvalue.parse("foo(foo.bar).bar")
     end
 
     test "called with multiple parameters" do
       # note that the arguments in the "comptime call" don't have spaces
-      assert {:lvalue, [{:comptime_call, ["foo"], [1, ~l"bar.baz"]}, "bar"]} =
+      assert {:lvalue, [{:comptime_call, ~l"foo", [1, ~l"bar.baz"]}, "bar"]} =
                Clr.Air.Lvalue.parse("foo(1,bar.baz).bar")
     end
   end
