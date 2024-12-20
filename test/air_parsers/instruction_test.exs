@@ -325,7 +325,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.UnwrapErrunionErr
 
     test "unwrap_errunion_err" do
-      assert %UnwrapErrunionErr{type: {:errorunion, ["Unexpected"]}, src: {0, :keep}} =
+      assert %UnwrapErrunionErr{type: {:errorset, ["Unexpected"]}, src: {0, :keep}} =
                Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
     end
 

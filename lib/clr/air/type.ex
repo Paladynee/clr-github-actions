@@ -12,9 +12,12 @@ defmodule Clr.Air.Type do
   Pegasus.parser_from_string(
     """
     # full type things
-    type <- errorunion_only / ((errorunion bang)? (comptime space)? '?'? general_types)
+    type <- (comptime space)? typedecl
+    typedecl <- errorable_types / general_types
+    errorable_types <- error_prefix bang general_types
+    error_prefix <- anyerror / errorunion / lvalue
 
-    general_types <- enum_literal_type / fn_type / ptr_type / array_type / struct_type / lvalue
+    general_types <- '?'? (errorunion / enum_literal_type / fn_type / ptr_type / array_type / struct_type / lvalue)
 
     # special types
     enum_literal_type <- '@Type(.enum_literal)'
@@ -41,7 +44,6 @@ defmodule Clr.Air.Type do
 
     struct_type <- 'struct' space lbrace space type (cs type)* space rbrace
 
-    errorunion_only <- errorunion
     errorunion <- 'anyerror' / error errorlist
     errorlist <- lbrace identifier (comma identifier)* rbrace
 
@@ -51,9 +53,12 @@ defmodule Clr.Air.Type do
     align <- 'align'
     noalias <- 'noalias'
     error <- 'error'
+    anyerror <- 'anyerror'
     bang <- '!'
     """,
     type: [export: true, parser: true, post_traverse: :type],
+    errorable_types: [post_traverse: :errorable_types],
+    general_types: [post_traverse: :general_types],
     enum_literal_type: [token: :enum_literal],
     comptime_call_type: [export: true, post_traverse: :comptime_call_type],
     comptime_call_params: [post_traverse: :comptime_call_params],
@@ -80,34 +85,48 @@ defmodule Clr.Air.Type do
     align: [token: :align],
     noalias: [token: :noalias],
     error: [token: :error],
-    bang: [ignore: true]
+    anyerror: [token: :anyerror],
+    bang: [token: :!]
   )
 
   # TYPE post-traversals
 
   defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
 
-  defp type(rest, [type, "anyerror"], context, _line, _bytes) do
-    {rest, [{:errorable, :any, type}], context}
+  defp type(rest, [type, :comptime], context, _line, _bytes) do
+    {rest, [comptime: type], context}
   end
 
-  defp type(rest, [type, errorlist, :error], context, _line, _bytes) do
-    {rest, [{:errorable, errorlist, type}], context}
+  defp errorable_types(rest, [payload, :!, :anyerror], context, _line, _bytes) do
+    {rest, [{:errorable, :any, payload}], context}
   end
 
-  defp type(rest, [type, :comptime], context, _line, _bytes),
-    do: {rest, [comptime: type], context}
+  defp errorable_types(rest, [payload, :!, errortype], context, _line, _bytes) do
+    {rest, [{:errorable, errortype, payload}], context}
+  end
 
-  defp type(rest, [{:ptr, kind, type}, "?"], context, _line, _bytes) do
+  defp errorable_types(rest, [payload, :!, errorset, :error], context, _line, _bytes) do
+    {rest, [{:errorable, errorset, payload}], context}
+  end
+
+  defp general_types(rest, [errorset, :error], context, _line, _bytes) do
+    {rest, [{:errorset, errorset}], context}
+  end
+
+  defp general_types(rest, [{:ptr, kind, type}, "?"], context, _line, _bytes) do
     {rest, [{:ptr, kind, type, optional: true}], context}
   end
 
-  defp type(rest, [{:ptr, kind, type, opts}, "?"], context, _line, _bytes) do
+  defp general_types(rest, [{:ptr, kind, type, opts}, "?"], context, _line, _bytes) do
     {rest, [{:ptr, kind, type, Keyword.put(opts, :optional, true)}], context}
   end
 
-  defp type(rest, [type, "?"], context, _line, _bytes) do
+  defp general_types(rest, [type, "?"], context, _line, _bytes) do
     {rest, [{:optional, type}], context}
+  end
+
+  defp general_types(rest, [type], context, _line, _bytes) do
+    {rest, [type], context}
   end
 
   defp array_type(rest, [type, "]", sentinel, ":", int, "["], context, _line, _bytes) do
@@ -199,19 +218,5 @@ defmodule Clr.Air.Type do
 
   defp errorlist(rest, errors, context, _line, _bytes) do
     {rest, [errors], context}
-  end
-
-  defp errorunion_only("!" <> _, _args, _context, _line, _bytes), do: {:error, "unreportable"}
-
-  defp errorunion_only(rest, [errors, :error], context, _line, _bytes) do
-    {rest, [{:errorunion, errors}], context}
-  end
-
-  defp comptime_call_type(rest, [args | callname], context, _line, _bytes) do
-    {rest, [{:comptime_call, Enum.reverse(callname), args}], context}
-  end
-
-  defp comptime_call_params(rest, args, context, _line, _bytes) do
-    {rest, [Enum.reverse(args)], context}
   end
 end

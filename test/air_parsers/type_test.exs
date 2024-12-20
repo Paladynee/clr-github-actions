@@ -124,8 +124,13 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "error union type" do
-    assert {:errorunion, ["Invalid", "Unexpected"]} =
+    assert {:errorset, ["Invalid", "Unexpected"]} =
              Type.parse("error{Unexpected,Invalid}")
+  end
+
+  test "lvalue error union type" do
+    assert {:errorable, ~l"foo.bar", ~l"baz"} =
+      Type.parse("foo.bar!baz")
   end
 
   test "atomic value allowed as function call" do
@@ -137,7 +142,7 @@ defmodule ClrTest.Air.TypeTest do
     assert {:lvalue,
             [
               {:comptime_call, ~l"io.GenericWriter",
-               [~l"fs.File", {:errorunion, _}, {:function, "write"}]}
+               [~l"fs.File", {:errorset, _}, {:function, "write"}]}
             ]} =
              Type.parse(
                "io.GenericWriter(fs.File,error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound},(function 'write'))"
