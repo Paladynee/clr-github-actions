@@ -4,7 +4,7 @@ defmodule Clr.Air.Literal do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[identifier int cs space dot lparen rparen langle rangle lbrack rbrack lbrace rbrace squoted dstring]a
+    ~w[identifier int elision cs space dot lparen rparen langle rangle lbrack rbrack lbrace rbrace squoted dstring]a
   )
 
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
@@ -46,7 +46,6 @@ defmodule Clr.Air.Literal do
 
     # private
     eq <- "="
-    elision <- "..."
     """,
     literal: [parser: true, export: true],
     fn_literal: [export: true, post_traverse: :literal],

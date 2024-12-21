@@ -4,7 +4,7 @@ defmodule Clr.Air.Lvalue do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[identifier int cs space comma dot lparen rparen lbrack rbrack lbrace rbrace squoted equals notnewline]a
+    ~w[identifier int null undefined elision cs space comma dot lparen rparen lbrack rbrack lbrace rbrace squoted equals notnewline]a
   )
 
   Clr.Air.import(Clr.Air.Type, [:type])
@@ -32,12 +32,12 @@ defmodule Clr.Air.Lvalue do
 
     # comptime calls
     comptime_call_params <- lparen (comptime_call_param (comma comptime_call_param)*)? rparen
-    comptime_call_param <- int / enum_value / type / comptime_struct / basic_lvalue
+    comptime_call_param <- int / null / undefined / enum_value / type / comptime_struct / basic_lvalue
 
     # maybe unify this with "literal" content
     comptime_struct <- dot lbrace (comptime_struct_fields / comptime_tuple_fields) rbrace
-    comptime_tuple_fields <- (space comptime_call_param (cs comptime_call_param)*)? space
-    comptime_struct_fields <- (space comptime_struct_field (cs comptime_struct_field)*)? space
+    comptime_tuple_fields <- space comptime_call_param (cs comptime_call_param)* (cs elision)? space
+    comptime_struct_fields <- space comptime_struct_field (cs comptime_struct_field)* space
     comptime_struct_field <- dot identifier space equals space comptime_call_param
 
     array_deref <- lbrack int rbrack

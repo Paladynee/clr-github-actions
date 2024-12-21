@@ -43,6 +43,9 @@ defmodule Clr.Air.Base do
     fatarrow <- '=>'
     newline <- '\s'* '\n'
     equals <- "="
+    null <- 'null'
+    undefined <- 'undefined'
+    elision <- "..."
 
     # debug
     notnewline <- [^\n]*
@@ -80,7 +83,10 @@ defmodule Clr.Air.Base do
     notnewline: [export: true, collect: true],
     percent: [ignore: true],
     bang: [ignore: true],
-    equals: [export: true, ignore: true]
+    equals: [export: true, ignore: true],
+    null: [export: true, token: :null],
+    undefined: [export: true, token: :undefined],
+    elision: [export: true, token: :...]
   )
 
   defp int(rest, [value], context, _line, _bytes), do: {rest, [String.to_integer(value)], context}
