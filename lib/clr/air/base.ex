@@ -42,6 +42,7 @@ defmodule Clr.Air.Base do
     rbrack <- ']'
     fatarrow <- '=>'
     newline <- '\s'* '\n'
+    equals <- "="
 
     # debug
     notnewline <- [^\n]*
@@ -78,7 +79,8 @@ defmodule Clr.Air.Base do
     newline: [ignore: true, export: true],
     notnewline: [export: true, collect: true],
     percent: [ignore: true],
-    bang: [ignore: true]
+    bang: [ignore: true],
+    equals: [export: true, ignore: true]
   )
 
   defp int(rest, [value], context, _line, _bytes), do: {rest, [String.to_integer(value)], context}

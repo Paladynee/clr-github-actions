@@ -13,12 +13,12 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "literal with an enum literal" do
-    assert {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}} =
+    assert {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}} =
              Literal.parse("<Target.Cpu.Arch, .x86_64>")
   end
 
   test "generic function literal" do
-    assert {:literal, {:fn, [{:ptr, :slice, ~l"elf.Elf64_Phdr"}], ~l"void", []},
+    assert {:literal, {:fn, [{:ptr, :slice, ~l"elf.Elf64_Phdr", []}], ~l"void", []},
             {:function, "initStatic"}} =
              Literal.parse("<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>")
   end
@@ -82,7 +82,7 @@ defmodule ClrTest.Air.LiteralTest do
 
   test "literal with at/ptrcast inside the struct" do
     assert {:literal, ~l"os.linux.Sigaction",
-            {:struct, [{"handler", {:as, {:ptr, :one, ~l"foo"}, {:ptrcast, ~l"debug.foo"}}}]}} =
+            {:struct, [{"handler", {:as, {:ptr, :one, ~l"foo", []}, {:ptrcast, ~l"debug.foo"}}}]}} =
              Literal.parse("<os.linux.Sigaction, .{ .handler = @as(*foo, @ptrCast(debug.foo)) }>")
   end
 
@@ -114,9 +114,21 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "another function literal" do
-    assert {:literal,
-      {:fn, [~l"io.Writer", {:struct, [~l"u32"]}], {:errorable, _, ~l"void"}, []},
-      {:function, "format__anon_3497"}
-    } = Literal.parse("<fn (io.Writer, struct { u32 }) @typeInfo(@typeInfo(@TypeOf(fmt.format__anon_3497)).@\"fn\".return_type.?).error_union.error_set!void, (function 'format__anon_3497')>")
+    assert {:literal, {:fn, [~l"io.Writer", {:struct, [~l"u32"]}], {:errorable, _, ~l"void"}, []},
+            {:function, "format__anon_3497"}} =
+             Literal.parse(
+               "<fn (io.Writer, struct { u32 }) @typeInfo(@typeInfo(@TypeOf(fmt.format__anon_3497)).@\"fn\".return_type.?).error_union.error_set!void, (function 'format__anon_3497')>"
+             )
+  end
+
+  test "literal with volatile pointer" do
+    assert {:literal, _, {:ptr_deref, _}} =
+             Literal.parse(
+               "<*allowzero volatile u8, @as(*allowzero volatile u8, @ptrFromInt(0)).*>"
+             )
+  end
+
+  test "elided struct literal" do
+    assert {:literal, ~l"debug.SelfInfo.Struct", {:struct, [:...]}} = Literal.parse("<debug.SelfInfo.Struct, .{ ... }>")
   end
 end

@@ -1,5 +1,5 @@
 defmodule Clr.Air.Instruction.AtomicRmw do
-  defstruct [:dst, :val, :op, :mode]
+  defstruct [:loc, :val, :op, :mode]
 
   require Pegasus
   require Clr.Air
@@ -24,7 +24,7 @@ defmodule Clr.Air.Instruction.AtomicRmw do
     seq_cst: [token: :seq_cst]
   )
 
-  def atomic_rmw(rest, [mode, op, val, dst, "atomic_rmw"], context, _line, _bytes) do
-    {rest, [%__MODULE__{mode: mode, op: op, val: val, dst: dst}], context}
+  def atomic_rmw(rest, [mode, op, val, loc, "atomic_rmw"], context, _line, _bytes) do
+    {rest, [%__MODULE__{mode: mode, op: op, loc: loc, val: val}], context}
   end
 end

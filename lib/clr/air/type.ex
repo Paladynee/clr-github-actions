@@ -22,7 +22,7 @@ defmodule Clr.Air.Type do
     # special types
     enum_literal_type <- '@Type(.enum_literal)'
 
-    ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (alignment space)? (const space)? type
+    ptr_type <- (one_ptr / many_ptr / slice_ptr / sentinel_many_ptr / sentinel_slice_ptr) (allowzero space)? (volatile space)? (alignment space)? (const space)? type
     array_type <- '[' int (':' int)? ']' type
 
     one_ptr <- '*'
@@ -48,6 +48,8 @@ defmodule Clr.Air.Type do
     errorlist <- lbrace identifier (comma identifier)* rbrace
 
     ## single token words
+    allowzero <- 'allowzero'
+    volatile <- 'volatile'
     const <- 'const'
     comptime <- 'comptime'
     align <- 'align'
@@ -80,6 +82,8 @@ defmodule Clr.Air.Type do
     sizeof: [post_traverse: :sizeof],
     alignof: [post_traverse: :alignof],
     builtinfunction: [post_traverse: :builtinfunction],
+    allowzero: [token: :allowzero],
+    volatile: [token: :volatile],
     const: [token: :const],
     comptime: [token: :comptime],
     align: [token: :align],
@@ -111,10 +115,6 @@ defmodule Clr.Air.Type do
 
   defp general_types(rest, [errorset, :error], context, _line, _bytes) do
     {rest, [{:errorset, errorset}], context}
-  end
-
-  defp general_types(rest, [{:ptr, kind, type}, "?"], context, _line, _bytes) do
-    {rest, [{:ptr, kind, type, optional: true}], context}
   end
 
   defp general_types(rest, [{:ptr, kind, type, opts}, "?"], context, _line, _bytes) do
@@ -164,9 +164,9 @@ defmodule Clr.Air.Type do
     {rest, [ptrfor(args)], context}
   end
 
-  defp ptrfor([type, "*"]), do: {:ptr, :one, type}
-  defp ptrfor([type, "[*]"]), do: {:ptr, :many, type}
-  defp ptrfor([type, "[]"]), do: {:ptr, :slice, type}
+  defp ptrfor([type, "*"]), do: {:ptr, :one, type, []}
+  defp ptrfor([type, "[*]"]), do: {:ptr, :many, type, []}
+  defp ptrfor([type, "[]"]), do: {:ptr, :slice, type, []}
 
   defp ptrfor([type, "]", sentinel, "[*:"]) do
     {:ptr, :many, type, sentinel: sentinel}
@@ -178,15 +178,25 @@ defmodule Clr.Air.Type do
 
   defp ptrfor([type, alignment, :align | rest]) do
     case ptrfor([type | rest]) do
-      {:ptr, kind, name} -> {:ptr, kind, name, alignment: alignment}
       {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :alignment, alignment)}
     end
   end
 
   defp ptrfor([type, :const | qualifiers]) do
     case ptrfor([type | qualifiers]) do
-      {:ptr, kind, name} -> {:ptr, kind, name, const: true}
       {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :const, true)}
+    end
+  end
+
+  defp ptrfor([type, :volatile | qualifiers]) do
+    case ptrfor([type | qualifiers]) do
+      {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :volatile, true)}
+    end
+  end
+
+  defp ptrfor([type, :allowzero | qualifiers]) do
+    case ptrfor([type | qualifiers]) do
+      {:ptr, kind, name, opts} -> {:ptr, kind, name, Keyword.put(opts, :allowzero, true)}
     end
   end
 

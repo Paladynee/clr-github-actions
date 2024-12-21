@@ -17,4 +17,6 @@ defmodule ParseAirTest do
   test_air("debug.FormattedPanic.startGreaterThanEnd")
 
   test_air("debug.defaultPanic")
+
+  test_air("debug.getSelfDebugInfo")
 end

@@ -21,7 +21,7 @@ defmodule Clr.Air.Literal do
 
     convertible <- int / void / sizeof / alignof / as / string_value / struct_ptr / struct_value / enum_value / lvalue
 
-    as <- '@as' lparen ptr_type cs value rparen
+    as <- '@as' lparen ptr_type cs value rparen (dot "*")?
     value <- ptrcast / lvalue
     ptrcast <- '@ptrCast' lparen lvalue rparen
 
@@ -34,17 +34,19 @@ defmodule Clr.Air.Literal do
 
     struct_ptr <- '&' struct_value range?
 
-    struct_value <- dot lbrace (space struct_part (cs struct_part)* space)? rbrace
+    struct_value <- dot lbrace (space ((struct_part (cs struct_part)*) / elision) space)? rbrace
     struct_part <- struct_kv / convertible
     struct_kv <- dot identifier space eq space convertible
 
     range <- lbrack int '..' int rbrack
 
-    enum_value <- dot lvalue
+    # does this belong here?
+    enum_value <- dot identifier
     void <- '{}'
 
     # private
     eq <- "="
+    elision <- "..."
     """,
     literal: [parser: true, export: true],
     fn_literal: [export: true, post_traverse: :literal],
@@ -59,7 +61,8 @@ defmodule Clr.Air.Literal do
     struct_kv: [post_traverse: :struct_kv],
     enum_value: [export: true, post_traverse: :enum_value],
     range: [post_traverse: :range],
-    void: [token: :void]
+    void: [token: :void],
+    elision: [token: :...]
   )
 
   defp literal(rest, [value, type], context, _line, _bytes) do
@@ -91,6 +94,10 @@ defmodule Clr.Air.Literal do
 
   defp as(rest, [value, type, "@as"], context, _line, _bytes) do
     {rest, [{:as, type, value}], context}
+  end
+
+  defp as(rest, ["*", value, type, "@as"], context, _line, _bytes) do
+    {rest, [{:ptr_deref, {:as, type, value}}], context}
   end
 
   defp ptrcast(rest, [name, "@ptrCast"], context, _line, _bytes) do

@@ -1,5 +1,5 @@
 defmodule Clr.Air.Instruction.DbgInlineBlock do
-  defstruct [:type, :what, :code, :clobbers]
+  defstruct [:type, :what, :code, clobbers: []]
 
   require Pegasus
   require Clr.Air

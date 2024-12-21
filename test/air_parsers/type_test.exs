@@ -11,15 +11,25 @@ defmodule ClrTest.Air.TypeTest do
 
   describe "basic pointer types" do
     test "single pointer" do
-      assert {:ptr, :one, ~l"i32"} = Type.parse("*i32")
+      assert {:ptr, :one, ~l"i32", []} = Type.parse("*i32")
     end
 
     test "many pointer" do
-      assert {:ptr, :many, ~l"i32"} = Type.parse("[*]i32")
+      assert {:ptr, :many, ~l"i32", []} = Type.parse("[*]i32")
     end
 
     test "slice pointer" do
-      assert {:ptr, :slice, ~l"i32"} = Type.parse("[]i32")
+      assert {:ptr, :slice, ~l"i32", []} = Type.parse("[]i32")
+    end
+  end
+
+  describe "special pointer augmentations" do
+    test "allowzero" do
+      assert {:ptr, :one, ~l"i32", allowzero: true} = Type.parse("*allowzero i32")
+    end
+
+    test "volatile" do
+      assert {:ptr, :one, ~l"i32", volatile: true} = Type.parse("*volatile i32")
     end
   end
 
@@ -59,7 +69,7 @@ defmodule ClrTest.Air.TypeTest do
     end
 
     test "pointer to a function" do
-      assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}} =
+      assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}, []} =
                Type.parse("[*]*const fn () callconv(.c) void")
     end
   end
@@ -69,7 +79,7 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "function pointer type with callconv" do
-    assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}} =
+    assert {:ptr, :many, {:fn, [], ~l"void", [callconv: :c]}, []} =
              Type.parse("[*]*const fn () callconv(.c) void")
   end
 
@@ -79,7 +89,8 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "function type with noalias" do
-    assert {:fn, [{:noalias, {:ptr, :one, ~l"usize"}}, {:noalias, {:ptr, :one, ~l"u8"}}], ~l"u8",
+    assert {:fn, [{:noalias, {:ptr, :one, ~l"usize", []}}, {:noalias, {:ptr, :one, ~l"u8", []}}],
+            ~l"u8",
             []} =
              Type.parse("fn (noalias *usize, noalias *u8) u8")
   end
@@ -130,7 +141,7 @@ defmodule ClrTest.Air.TypeTest do
 
   test "lvalue error union type" do
     assert {:errorable, ~l"foo.bar", ~l"baz"} =
-      Type.parse("foo.bar!baz")
+             Type.parse("foo.bar!baz")
   end
 
   test "atomic value allowed as function call" do
@@ -159,8 +170,13 @@ defmodule ClrTest.Air.TypeTest do
             [
               {:comptime_call, ~l"@typeInfo",
                [{:lvalue, [{:comptime_call, ~l"@TypeOf", [~l"fmt.format__anon_3497"]}]}]},
-               "return_type",
-               :unwrap_optional
+              "return_type",
+              :unwrap_optional
             ]} = Type.parse("@typeInfo(@TypeOf(fmt.format__anon_3497)).return_type.?")
+  end
+
+  test "nested pointer type" do
+    assert {:ptr, :many, {:ptr, :many, {:lvalue, ["u8"]}, [sentinel: 0]}, []} =
+             Type.parse("[*][*:0]u8")
   end
 end

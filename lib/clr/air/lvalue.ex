@@ -4,10 +4,12 @@ defmodule Clr.Air.Lvalue do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[identifier int cs space comma dot lparen rparen lbrack rbrack squoted notnewline]a
+    ~w[identifier int cs space comma dot lparen rparen lbrack rbrack lbrace rbrace squoted equals notnewline]a
   )
 
   Clr.Air.import(Clr.Air.Type, [:type])
+
+  Clr.Air.import(Clr.Air.Literal, [:enum_value])
 
   defmacro sigil_l({:<<>>, _, [type]}, _) do
     values = String.split(type, ".")
@@ -21,7 +23,7 @@ defmodule Clr.Air.Lvalue do
     """
     lvalue <- function_lvalue / basic_lvalue
     basic_lvalue <- lvalue_segment (dot lvalue_segment)*
-    lvalue_segment <- (identifier (comptime_call_params)? (array_deref)*) / questionmark
+    lvalue_segment <- star / (identifier (comptime_call_params)? (array_deref)*) / questionmark
 
     # function lvalue is a "special function call" that has been defined at the language
     # level, possibly with os / runtime bindings, e.g. 'resetSegfaultHandler'
@@ -30,12 +32,19 @@ defmodule Clr.Air.Lvalue do
 
     # comptime calls
     comptime_call_params <- lparen (comptime_call_param (comma comptime_call_param)*)? rparen
-    comptime_call_param <- int / type / basic_lvalue
+    comptime_call_param <- int / enum_value / type / comptime_struct / basic_lvalue
+
+    # maybe unify this with "literal" content
+    comptime_struct <- dot lbrace (comptime_struct_fields / comptime_tuple_fields) rbrace
+    comptime_tuple_fields <- (space comptime_call_param (cs comptime_call_param)*)? space
+    comptime_struct_fields <- (space comptime_struct_field (cs comptime_struct_field)*)? space
+    comptime_struct_field <- dot identifier space equals space comptime_call_param
 
     array_deref <- lbrack int rbrack
 
     function <- 'function'
     questionmark <- '?'
+    star <- '*'
     """,
     lvalue: [export: true, parser: true],
     basic_lvalue: [export: true, post_traverse: :basic_lvalue],
@@ -43,9 +52,12 @@ defmodule Clr.Air.Lvalue do
     function_lvalue: [post_traverse: :function_lvalue],
     function: [token: :function],
     comptime_call_params: [post_traverse: :comptime_call_params],
+    comptime_struct_fields: [post_traverse: :comptime_struct_fields],
+    comptime_tuple_fields: [post_traverse: :comptime_tuple_fields],
     array_deref: [post_traverse: :array_deref],
     dot: [ignore: true],
-    questionmark: [token: :unwrap_optional]
+    questionmark: [token: :unwrap_optional],
+    star: [token: :pointer_deref]
   )
 
   defp function_lvalue(rest, [name, :function], context, _line, _bytes) do
@@ -84,9 +96,23 @@ defmodule Clr.Air.Lvalue do
     {rest, [{:call, Enum.reverse(args)}], context}
   end
 
+  defp comptime_struct_fields(rest, fields, context, _line, _bytes) do
+    {rest, [to_map(fields, %{})], context}
+  end
+
+  defp comptime_tuple_fields(rest, fields, context, _line, _bytes) do
+    tuple = fields
+    |> Enum.reverse
+    |> List.to_tuple
+    {rest, [tuple], context}
+  end
+
   defp array_deref(rest, [index], context, _line, _bytes) do
     {rest, [{:array, index}], context}
   end
+
+  defp to_map([value, key | rest], so_far), do: to_map(rest, Map.put(so_far, key, value))
+  defp to_map([], so_far), do: so_far
 
   def parse(string) do
     case lvalue(string) do

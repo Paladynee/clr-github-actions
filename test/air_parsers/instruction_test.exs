@@ -38,7 +38,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.DbgArgInline
 
     test "dbg_arg_inline" do
-      assert %DbgArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, ~l"x86_64"}}, key: "arch"} =
+      assert %DbgArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}}, key: "arch"} =
                Instruction.parse("dbg_arg_inline(<Target.Cpu.Arch, .x86_64>, \"arch\")")
     end
 
@@ -176,13 +176,28 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.RetPtr
 
     test "ret_ptr" do
-      assert %RetPtr{type: {:ptr, :one, ~l"fs.File"}} = Instruction.parse("ret_ptr(*fs.File)")
+      assert %RetPtr{type: {:ptr, :one, ~l"fs.File", []}} = Instruction.parse("ret_ptr(*fs.File)")
     end
 
     alias Clr.Air.Instruction.RetLoad
 
     test "ret_load" do
       assert %RetLoad{val: {19, :keep}} = Instruction.parse("ret_load(%19)")
+    end
+
+    alias Clr.Air.Instruction.Try
+
+    test "try" do
+      assert %Try{loc: {12, :keep}, error_code: %{}, clobbers: [12]} =
+               Instruction.parse("""
+               try(%12, {
+                 %13 = unwrap_errunion_err(error{MissingDebugInfo,UnsupportedOperatingSystem}, %12!)
+                 %14!= dbg_stmt(5:27)
+                 %15 = bitcast(@typeInfo(@typeInfo(@TypeOf(debug.getSelfDebugInfo)).@"fn".return_type.?).error_union.error_set, %13!)
+                 %16 = wrap_errunion_err(@typeInfo(@typeInfo(@TypeOf(debug.getSelfDebugInfo)).@"fn".return_type.?).error_union.error_set!*debug.SelfInfo, %15!)
+                 %17!= ret_safe(%16!)
+               } %12!)
+               """)
     end
   end
 
@@ -194,11 +209,22 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("ptr_elem_val(%0, @Air.Inst.Ref.zero_usize)")
     end
 
+    alias Clr.Air.Instruction.PtrElemPtr
+
+    test "ptr_elem_ptr" do
+      assert %PtrElemPtr{
+               loc: {79, :keep},
+               val: {:literal, ~l"usize", 13},
+               type: {:ptr, :one, {:optional, ~l"debug.Dwarf.Section"}, []}
+             } =
+               Instruction.parse("ptr_elem_ptr(*?debug.Dwarf.Section, %79, <usize, 13>)")
+    end
+
     alias Clr.Air.Instruction.PtrAdd
 
     test "ptr_add" do
       assert %PtrAdd{
-               type: {:ptr, :many, ~l"usize"},
+               type: {:ptr, :many, ~l"usize", []},
                line: {0, :keep},
                val: ~l"@Air.Inst.Ref.zero_usize"
              } =
@@ -245,7 +271,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.StructFieldPtrIndex0
 
     test "struct_field_ptr_index_0" do
-      assert %StructFieldPtrIndex0{type: {:ptr, :one, ~l"u32"}, src: {0, :keep}} =
+      assert %StructFieldPtrIndex0{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}} =
                Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
     end
 
@@ -261,14 +287,14 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Bitcast
 
     test "bitcast" do
-      assert %Bitcast{type: {:ptr, :many, ~l"u8"}, line: {0, :keep}} =
+      assert %Bitcast{type: {:ptr, :many, ~l"u8", []}, line: {0, :keep}} =
                Instruction.parse("bitcast([*]u8, %0)")
     end
 
     alias Clr.Air.Instruction.Alloc
 
     test "alloc" do
-      assert %Alloc{type: {:ptr, :one, ~l"usize"}} = Instruction.parse("alloc(*usize)")
+      assert %Alloc{type: {:ptr, :one, ~l"usize", []}} = Instruction.parse("alloc(*usize)")
     end
 
     alias Clr.Air.Instruction.Store
@@ -281,7 +307,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Load
 
     test "load" do
-      assert %Load{type: {:ptr, :many, ~l"usize"}, loc: {19, :keep}} =
+      assert %Load{type: {:ptr, :many, ~l"usize", []}, loc: {19, :keep}} =
                Instruction.parse("load([*]usize, %19)")
     end
 
@@ -290,6 +316,34 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "optional_payload" do
       assert %OptionalPayload{type: ~l"void", loc: {19, :keep}} =
                Instruction.parse("optional_payload(void, %19)")
+    end
+
+    alias Clr.Air.Instruction.OptionalPayloadPtr
+
+    test "optional_payload_ptr" do
+      assert %OptionalPayloadPtr{
+               type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
+               loc:
+                 {:literal, {:ptr, :one, {:optional, {:lvalue, ["debug", "SelfInfo"]}}, []},
+                  {:lvalue, ["debug", "self_debug_info"]}}
+             } =
+               Instruction.parse(
+                 "optional_payload_ptr(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
+               )
+    end
+
+    alias Clr.Air.Instruction.OptionalPayloadPtrSet
+
+    test "optional_payload_ptr_set" do
+      assert %OptionalPayloadPtrSet{
+               type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
+               loc:
+                 {:literal, {:ptr, :one, {:optional, {:lvalue, ["debug", "SelfInfo"]}}, []},
+                  {:lvalue, ["debug", "self_debug_info"]}}
+             } =
+               Instruction.parse(
+                 "optional_payload_ptr_set(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
+               )
     end
 
     alias Clr.Air.Instruction.StructFieldVal
@@ -373,8 +427,57 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.ArrayToSlice
 
     test "array_to_slice" do
-      assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8"}, src: {13, :clobber}} =
+      assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8", []}, src: {13, :clobber}} =
                Instruction.parse("array_to_slice([]u8, %13!)")
+    end
+
+    alias Clr.Air.Instruction.ArrayElemVal
+
+    test "array_elem_val" do
+      assert %ArrayElemVal{type: {:literal, {:array, 2, _, []}, _}, src: {519, :keep}} =
+               Instruction.parse(
+                 "array_elem_val(<[2]debug.Dwarf.Section.Id, .{ .eh_frame, .debug_frame }>, %519)"
+               )
+    end
+
+    alias Clr.Air.Instruction.SetUnionTag
+
+    test "set_union_tag" do
+      assert %SetUnionTag{loc: {14, :keep}, val: {:literal, _, _}} =
+               Instruction.parse(
+                 "set_union_tag(%14, <@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, .unsigned>)"
+               )
+    end
+
+    alias Clr.Air.Instruction.GetUnionTag
+
+    test "get_union_tag" do
+      assert %GetUnionTag{loc: {298, :keep}, type: {:lvalue, _}} =
+               Instruction.parse(
+                 "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
+               )
+    end
+
+    alias Clr.Air.Instruction.ErrunionPayloadPtrSet
+
+    test "errunion_payload_ptr_set" do
+      assert %ErrunionPayloadPtrSet{
+               type: {:ptr, :one, ~l"debug.Dwarf.EntryHeader", []},
+               loc: {0, :keep}
+             } =
+               Instruction.parse("errunion_payload_ptr_set(*debug.Dwarf.EntryHeader, %0)")
+    end
+
+    alias Clr.Air.Instruction.IntFromBool
+
+    test "int_from_bool" do
+      assert %IntFromBool{val: {218, :clobber}} = Instruction.parse("int_from_bool(%218!)")
+    end
+
+    alias Clr.Air.Instruction.ErrorName
+
+    test "error_name" do
+      assert %ErrorName{val: {39, :clobber}} = Instruction.parse("error_name(%39!)")
     end
   end
 
@@ -406,6 +509,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "is_non_null" do
       assert %IsNonNull{line: {19, :keep}} =
                Instruction.parse("is_non_null(%19)")
+    end
+
+    alias Clr.Air.Instruction.IsNonNullPtr
+
+    test "is_non_null_ptr" do
+      assert %IsNonNullPtr{line: {19, :keep}} =
+               Instruction.parse("is_non_null_ptr(%19)")
     end
 
     alias Clr.Air.Instruction.CmpNeq
@@ -499,6 +609,19 @@ defmodule ClrTest.AirParsers.InstructionTest do
                )
     end
 
+    alias Clr.Air.Instruction.MulWithOverflow
+
+    test "mul_with_overflow" do
+      assert %MulWithOverflow{
+               lhs: {96, :keep},
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               type: {:struct, [~l"usize", ~l"u1"]}
+             } =
+               Instruction.parse(
+                 "mul_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
+               )
+    end
+
     alias Clr.Air.Instruction.Not
 
     test "not" do
@@ -546,13 +669,28 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "atomic_rmw" do
       assert %AtomicRmw{
-               dst: {:literal, {:ptr, :one, ~l"u8"}, ~l"debug.panicking.raw"},
+               loc: {:literal, {:ptr, :one, ~l"u8", []}, ~l"debug.panicking.raw"},
                mode: :seq_cst,
                op: :add,
                val: ~l"@Air.Inst.Ref.one_u8"
              } =
                Instruction.parse(
                  "atomic_rmw(<*u8, debug.panicking.raw>, @Air.Inst.Ref.one_u8, Add, seq_cst)"
+               )
+    end
+
+    alias Clr.Air.Instruction.CmpxchgWeak
+
+    test "cmpxchg_weak" do
+      assert %CmpxchgWeak{
+               loc: {:literal, {:ptr, :one, ~l"bool", []}, ~l"posix.abort.global.abort_entered"},
+               expected: ~l"@Air.Inst.Ref.bool_false",
+               desired: ~l"@Air.Inst.Ref.bool_true",
+               success_mode: :seq_cst,
+               failure_mode: :seq_cst
+             } =
+               Instruction.parse(
+                 "cmpxchg_weak(<*bool, posix.abort.global.abort_entered>, @Air.Inst.Ref.bool_false, @Air.Inst.Ref.bool_true, seq_cst, seq_cst)"
                )
     end
   end
@@ -578,12 +716,19 @@ defmodule ClrTest.AirParsers.InstructionTest do
   alias Clr.Air.Instruction.Arg
 
   test "arg" do
-    assert %Arg{type: {:ptr, :many, ~l"usize"}, name: "argc_argv_ptr"} =
+    assert %Arg{type: {:ptr, :many, ~l"usize", []}, name: "argc_argv_ptr"} =
              Instruction.parse(~S/arg([*]usize, "argc_argv_ptr")/)
   end
 
   test "arg without value" do
-    assert %Arg{type: {:ptr, :many, ~l"usize"}, name: nil} =
+    assert %Arg{type: {:ptr, :many, ~l"usize", []}, name: nil} =
              Instruction.parse(~S/arg([*]usize)/)
+  end
+
+  alias Clr.Air.Instruction.ByteSwap
+
+  test "byte_swap" do
+    assert %ByteSwap{type: ~l"u64", val: {0, :keep}} =
+             Instruction.parse("byte_swap(u64, %0)")
   end
 end

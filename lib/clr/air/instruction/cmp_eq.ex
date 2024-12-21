@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.CmpEq do
   Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "cmp_eq <- 'cmp_eq' lparen lineref cs (literal / lvalue) rparen",
+    "cmp_eq <- 'cmp_eq' lparen lineref cs (literal / lvalue / lineref) rparen",
     cmp_eq: [export: true, post_traverse: :cmp_eq]
   )
 

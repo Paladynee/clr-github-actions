@@ -8,9 +8,10 @@ defmodule Clr.Air.Instruction.Br do
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
+  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "br <- 'br' lparen lineref cs (lvalue / lineref) rparen",
+    "br <- 'br' lparen lineref cs (lvalue / lineref / literal) rparen",
     br: [export: true, post_traverse: :br]
   )
 
