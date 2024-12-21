@@ -106,9 +106,11 @@ defmodule Clr.Air.Lvalue do
   end
 
   defp comptime_tuple_fields(rest, fields, context, _line, _bytes) do
-    tuple = fields
-    |> Enum.reverse
-    |> List.to_tuple
+    tuple =
+      fields
+      |> Enum.reverse()
+      |> List.to_tuple()
+
     {rest, [tuple], context}
   end
 

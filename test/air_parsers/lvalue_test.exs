@@ -57,10 +57,14 @@ defmodule ClrTest.AirParsers.LvalueTest do
   end
 
   test "with a comptime struct as a passed parameter to a function" do
-    assert {:lvalue, [{:comptime_call, _, _}]} = Lvalue.parse("debug.Dwarf.expression.StackMachine(.{ .addr_size = 8, .endian = .little, .call_frame_context = true })")
+    assert {:lvalue, [{:comptime_call, _, _}]} =
+             Lvalue.parse(
+               "debug.Dwarf.expression.StackMachine(.{ .addr_size = 8, .endian = .little, .call_frame_context = true })"
+             )
   end
 
   test "with undefined and elision values in a tuple" do
-    assert {:lvalue, [{:comptime_call, ~l"foo", [{:undefined, :...}]}]} = Lvalue.parse("foo(.{ undefined, ... })")
+    assert {:lvalue, [{:comptime_call, ~l"foo", [{:undefined, :...}]}]} =
+             Lvalue.parse("foo(.{ undefined, ... })")
   end
 end

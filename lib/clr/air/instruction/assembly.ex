@@ -1,12 +1,12 @@
 defmodule Clr.Air.Instruction.Assembly do
-  defstruct [:type, :code, clobbers: [], in: [], ->: []]
+  defstruct [:type, :code, clobbers: [], in: [], out: [], ->: []]
 
   require Pegasus
   require Clr.Air
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[lineref name cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
+    ~w[lineref identifier cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
   )
 
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
@@ -19,27 +19,31 @@ defmodule Clr.Air.Instruction.Assembly do
     asmtype <- volatile
     volatile <- 'volatile'
 
-    directive <- asm_in / asm_assign
+    directive <- asm_io / asm_assign
 
-    asm_in <- lbrack lvalue rbrack space 'in' space name_or_reg space '=' space lparen (literal / lvalue / lineref) rparen
+    asm_io <- lbrack lvalue rbrack space ('in' / 'out') space name_or_reg space '=' space lparen (literal / lvalue / lineref) rparen
 
     asm_assign <- lbrack lvalue rbrack space rarrow space '=' name_or_reg 
 
-    name_or_reg <- (lbrace lvalue rbrace) / lvalue
+    name_or_reg <- '='? (lbrace lvalue rbrace) / lvalue
 
     rarrow <- '->'
 
-    asm_clobber <- '~' lbrace lvalue rbrace
+    asm_clobber <- '~' lbrace identifier rbrace
     """,
     assembly: [export: true, post_traverse: :assembly],
-    asm_in: [post_traverse: :asm_in],
+    asm_io: [post_traverse: :asm_io],
     asm_assign: [post_traverse: :asm_assign],
     asm_clobber: [post_traverse: :asm_clobber],
     volatile: [token: :volatile]
   )
 
-  defp asm_in(rest, [literal, "=", var, "in" | args], context, _line, _bytes) do
+  defp asm_io(rest, [literal, "=", var, "in" | args], context, _line, _bytes) do
     {rest, [{:in, {var, Enum.reverse(args), literal}}], context}
+  end
+
+  defp asm_io(rest, [literal, "=", var, "=", "out" | args], context, _line, _bytes) do
+    {rest, [{:out, {var, Enum.reverse(args), literal}}], context}
   end
 
   defp asm_assign(rest, [reg, "=", "->", var], context, _line, _bytes) do
@@ -56,6 +60,7 @@ defmodule Clr.Air.Instruction.Assembly do
         ["assembly", type, :volatile | rest] ->
           Enum.reduce(rest, %__MODULE__{type: type}, fn
             {:in, in_data}, acc -> Map.update!(acc, :in, &[in_data | &1])
+            {:out, out_data}, acc -> Map.update!(acc, :out, &[out_data | &1])
             {:->, to}, acc -> Map.update!(acc, :->, &[to | &1])
             {:clobber, clobber}, acc -> Map.update!(acc, :clobbers, &[clobber | &1])
             string, acc when is_binary(string) -> %{acc | code: string}

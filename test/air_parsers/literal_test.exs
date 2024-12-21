@@ -128,10 +128,12 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "elided struct literal" do
-    assert {:literal, ~l"debug.SelfInfo.Struct", :...} = Literal.parse("<debug.SelfInfo.Struct, .{ ... }>")
+    assert {:literal, ~l"debug.SelfInfo.Struct", :...} =
+             Literal.parse("<debug.SelfInfo.Struct, .{ ... }>")
   end
 
   test "even longer literal test" do
-    assert {:literal, ~l"Target", {{:enum, "foo"}, :undefined}} = Literal.parse("<Target, .{ .foo, undefined }>")
+    assert {:literal, ~l"Target", {{:enum, "foo"}, :undefined}} =
+             Literal.parse("<Target, .{ .foo, undefined }>")
   end
 end

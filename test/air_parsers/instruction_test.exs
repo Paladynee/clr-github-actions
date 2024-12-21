@@ -713,6 +713,25 @@ defmodule ClrTest.AirParsers.InstructionTest do
              )
   end
 
+  test "assembly, with clobbers and in/outs" do
+    assert %Clr.Air.Instruction.Assembly{
+             type: {:lvalue, ["usize"]},
+             code: " callq %[getContextInternal:P]",
+             clobbers: ["r11", "r10", "r8", "rsi", "rdx", "rcx", "memory", "cc"],
+             in: [
+               {~l"rdi", [~l"_"], {8, :keep}},
+               {~l"X", [~l"getContextInternal"],
+                {:literal, {:fn, [], ~l"usize", [callconv: :naked]},
+                 ~l"os.linux.x86_64.getContextInternal"}}
+             ],
+             out: [{~l"rdi", [~l"_"], {20, :clobber}}],
+             ->: [{~l"_", ~l"rax"}]
+           } =
+             Instruction.parse(
+               ~S/assembly(usize, volatile, [_] -> ={rax}, [_] out ={rdi} = (%20!), [_] in {rdi} = (%8), [getContextInternal] in X = (<*const fn () callconv(.naked) usize, os.linux.x86_64.getContextInternal>), ~{cc}, ~{memory}, ~{rcx}, ~{rdx}, ~{rsi}, ~{r8}, ~{r10}, ~{r11}, " callq %[getContextInternal:P]")/
+             )
+  end
+
   alias Clr.Air.Instruction.Arg
 
   test "arg" do
