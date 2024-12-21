@@ -7,7 +7,7 @@ defmodule Clr.Air.Literal do
     ~w[identifier int elision cs space dot lparen rparen langle rangle lbrack rbrack lbrace rbrace squoted dstring]a
   )
 
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
+  Clr.Air.import(Clr.Air.Lvalue, [:lvalue, :comptime_struct])
 
   Clr.Air.import(Clr.Air.Type, ~w[type fn_type ptr_type]a)
 
@@ -19,24 +19,18 @@ defmodule Clr.Air.Literal do
     fn_literal <- langle fn_type cs lvalue rangle
     other_literal <- langle type cs convertible rangle
 
-    convertible <- int / void / sizeof / alignof / as / string_value / struct_ptr / struct_value / enum_value / lvalue
-
-    as <- '@as' lparen ptr_type cs value rparen (dot "*")?
-    value <- ptrcast / lvalue
-    ptrcast <- '@ptrCast' lparen lvalue rparen
+    convertible <- int / void / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / lvalue
 
     string_value <- dstring (indices)?
     indices <- lbrack int '..' int rbrack
 
     # special builtin functions
+    as <- '@as' lparen ptr_type cs (ptrcast / lvalue) rparen (dot "*")?
+    ptrcast <- '@ptrCast' lparen lvalue rparen
     sizeof <- '@sizeOf' lparen type rparen
     alignof <- '@alignOf' lparen type rparen
 
-    struct_ptr <- '&' struct_value range?
-
-    struct_value <- dot lbrace (space ((struct_part (cs struct_part)*) / elision) space)? rbrace
-    struct_part <- struct_kv / convertible
-    struct_kv <- dot identifier space eq space convertible
+    struct_ptr <- '&' comptime_struct range?
 
     range <- lbrack int '..' int rbrack
 

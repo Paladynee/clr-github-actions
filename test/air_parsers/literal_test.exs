@@ -51,7 +51,7 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "map literal" do
-    assert {:literal, ~l"os.linux.MAP__struct_2035", {:struct, _}} =
+    assert {:literal, ~l"os.linux.MAP__struct_2035", %{"@32BIT" => ~l"false"}} =
              Literal.parse(
                "<os.linux.MAP__struct_2035, .{ .TYPE = .PRIVATE, .FIXED = false, .ANONYMOUS = true, .@\"32BIT\" = false, ._7 = 0, .GROWSDOWN = false, ._9 = 0, .DENYWRITE = false, .EXECUTABLE = false, .LOCKED = false, .NORESERVE = false, .POPULATE = false, .NONBLOCK = false, .STACK = false, .HUGETLB = false, .SYNC = false, .FIXED_NOREPLACE = false, ._21 = 0, .UNINITIALIZED = false, .@\"_\" = 0 }>"
              )
@@ -71,10 +71,7 @@ defmodule ClrTest.Air.LiteralTest do
 
   test "pointer literal with struct dereferencing" do
     assert {:literal, {:ptr, :one, ~l"os.linux.Sigaction", [const: true]},
-            {
-              :structptr,
-              {:struct, _}
-            }} =
+            {:structptr, %{"flags" => 0}}} =
              Literal.parse(
                "<*const os.linux.Sigaction, &.{ .handler = .{ .handler = start.noopSigHandler }, .mask = .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, .flags = 0, .restorer = null }>"
              )
@@ -129,6 +126,10 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "elided struct literal" do
-    assert {:literal, ~l"debug.SelfInfo.Struct", {:struct, [:...]}} = Literal.parse("<debug.SelfInfo.Struct, .{ ... }>")
+    assert {:literal, ~l"debug.SelfInfo.Struct", :...} = Literal.parse("<debug.SelfInfo.Struct, .{ ... }>")
+  end
+
+  test "even longer literal test" do
+    assert {:literal, ~l"Target", {{:enum, "foo"}, :undefined}} = Literal.parse("<Target, .{ .foo, undefined }>")
   end
 end

@@ -35,12 +35,13 @@ defmodule Clr.Air.Lvalue do
     comptime_call_param <- int / null / undefined / enum_value / type / comptime_struct / basic_lvalue
 
     # maybe unify this with "literal" content
-    comptime_struct <- dot lbrace (comptime_struct_fields / comptime_tuple_fields) rbrace
+    comptime_struct <- elided_struct / (dot lbrace (comptime_struct_fields / comptime_tuple_fields) rbrace)
     comptime_tuple_fields <- space comptime_call_param (cs comptime_call_param)* (cs elision)? space
     comptime_struct_fields <- space comptime_struct_field (cs comptime_struct_field)* space
     comptime_struct_field <- dot identifier space equals space comptime_call_param
 
     array_deref <- lbrack int rbrack
+    elided_struct <- '.{ ... }'
 
     function <- 'function'
     questionmark <- '?'
@@ -52,9 +53,11 @@ defmodule Clr.Air.Lvalue do
     function_lvalue: [post_traverse: :function_lvalue],
     function: [token: :function],
     comptime_call_params: [post_traverse: :comptime_call_params],
+    comptime_struct: [export: true],
     comptime_struct_fields: [post_traverse: :comptime_struct_fields],
     comptime_tuple_fields: [post_traverse: :comptime_tuple_fields],
     array_deref: [post_traverse: :array_deref],
+    elided_struct: [token: :...],
     dot: [ignore: true],
     questionmark: [token: :unwrap_optional],
     star: [token: :pointer_deref]
