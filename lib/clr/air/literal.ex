@@ -19,7 +19,7 @@ defmodule Clr.Air.Literal do
     fn_literal <- langle fn_type cs lvalue rangle
     other_literal <- langle type cs convertible rangle
 
-    convertible <- int / void / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / lvalue
+    convertible <- int / void / undefined / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / type
 
     string_value <- dstring (indices)?
     indices <- lbrack int '..' int rbrack
@@ -34,6 +34,8 @@ defmodule Clr.Air.Literal do
 
     range <- lbrack int '..' int rbrack
 
+    undefined <- 'undefined'
+
     # does this belong here?
     enum_value <- dot identifier
     void <- '{}'
@@ -45,6 +47,7 @@ defmodule Clr.Air.Literal do
     fn_literal: [export: true, post_traverse: :literal],
     other_literal: [export: true, post_traverse: :literal],
     string_value: [post_traverse: :string_value],
+    convertible: [export: true],
     alignof: [post_traverse: :alignof],
     sizeof: [post_traverse: :sizeof],
     as: [post_traverse: :as],
@@ -52,6 +55,7 @@ defmodule Clr.Air.Literal do
     struct_ptr: [post_traverse: :struct_ptr],
     struct_value: [post_traverse: :struct_value],
     struct_kv: [post_traverse: :struct_kv],
+    undefined: [token: :undefined],
     enum_value: [export: true, post_traverse: :enum_value],
     range: [post_traverse: :range],
     void: [token: :void],

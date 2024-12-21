@@ -79,13 +79,15 @@ defmodule ClrTest.Air.LiteralTest do
 
   test "literal with at/ptrcast inside the struct" do
     assert {:literal, ~l"os.linux.Sigaction",
-            {:struct, [{"handler", {:as, {:ptr, :one, ~l"foo", []}, {:ptrcast, ~l"debug.foo"}}}]}} =
+            %{"handler" => {:as, {:ptr, :one, ~l"foo", []}, {:ptrcast, ~l"debug.foo"}}}} =
              Literal.parse("<os.linux.Sigaction, .{ .handler = @as(*foo, @ptrCast(debug.foo)) }>")
   end
 
   test "strange literal" do
-    assert {:literal, {:ptr, :slice, ~l"u8", [const: true]}, {:structptr, {:struct, []}, 0..0}} =
+    assert {:literal, {:ptr, :slice, ~l"u8", [const: true]}, {:structptr, empty_map, 0..0}} =
              Literal.parse("<[]const u8, &.{}[0..0]>")
+
+    assert empty_map == %{}
   end
 
   test "sizeof allowed in literals" do
