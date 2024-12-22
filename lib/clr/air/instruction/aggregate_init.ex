@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.AggregateInit do
 
   Pegasus.parser_from_string(
     """
-    aggregate_init <- 'aggregate_init' lparen (struct_init / lvalue) cs params rparen
+    aggregate_init <- 'aggregate_init' lparen (struct_init / lvalue / type) cs params rparen
 
     struct_init <- 'struct' space lbrace space initializer (cs initializer)* space rbrace 
 

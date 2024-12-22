@@ -13,14 +13,16 @@ defmodule Clr.Air.Instruction.AtomicRmw do
     """
     atomic_rmw <- 'atomic_rmw' lparen literal cs lvalue cs op cs mode rparen
 
-    op <- add
+    op <- add / sub
     add <- 'Add'
+    sub <- 'Sub'
 
     mode <- seq_cst
     seq_cst <- 'seq_cst'
     """,
     atomic_rmw: [export: true, post_traverse: :atomic_rmw],
     add: [token: :add],
+    sub: [token: :sub],
     seq_cst: [token: :seq_cst]
   )
 

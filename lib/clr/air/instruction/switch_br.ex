@@ -6,7 +6,7 @@ defmodule Clr.Air.Instruction.SwitchBr do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[lineref name cs space lparen rparen lbrack rbrack fatarrow newline]a
+    ~w[lineref name cs space lparen rparen lbrack rbrack fatarrow newline elision]a
   )
 
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
@@ -19,16 +19,22 @@ defmodule Clr.Air.Instruction.SwitchBr do
     """
     switch_br <- 'switch_br' lparen lineref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
-    switch_case <- lbrack case_value (cs case_value)* rbrack (space cold)? space fatarrow space codeblock_clobbers 
-    case_value <- literal / lvalue
-    else_case <- 'else' (space cold)? space fatarrow space codeblock_clobbers
+    switch_case <- lbrack case_value (cs case_value)* rbrack (space modifier)? space fatarrow space codeblock_clobbers 
+    case_value <- range / literal / lvalue
+    else_case <- 'else' (space modifier)? space fatarrow space codeblock_clobbers
 
+    range <- literal elision literal
+
+    modifier <- cold / unlikely
+
+    unlikely <- '.unlikely'
     cold <- '.cold'
     """,
     switch_br: [export: true, post_traverse: :switch_br],
     switch_case: [post_traverse: :switch_case],
     else_case: [post_traverse: :else_case],
-    cold: [token: :cold]
+    cold: [token: :cold],
+    unlikely: [token: :unlikely]
   )
 
   defp switch_br(rest, args, context, _line, _bytes) do
@@ -38,15 +44,23 @@ defmodule Clr.Air.Instruction.SwitchBr do
     end
   end
 
-  defp switch_case(rest, [codeblock, :cold | compares], context, _line, _bytes) do
+  @modifiers ~w[cold unlikely]a
+
+  defp switch_case(rest, [codeblock, modifier | compares], context, _line, _bytes)
+       when modifier in @modifiers do
     {rest, [{compares, codeblock}], context}
+  end
+
+  defp switch_case(rest, [codeblock, rhs, :..., lhs], context, _line, _bytes) do
+    {rest, [{{:range, lhs, rhs}, codeblock}], context}
   end
 
   defp switch_case(rest, [codeblock | compares], context, _line, _bytes) do
     {rest, [{compares, codeblock}], context}
   end
 
-  defp else_case(rest, [codeblock, :cold, "else"], context, _line, _bytes) do
+  defp else_case(rest, [codeblock, modifier, "else"], context, _line, _bytes)
+       when modifier in @modifiers do
     {rest, [{:else, codeblock}], context}
   end
 

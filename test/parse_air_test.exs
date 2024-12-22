@@ -19,4 +19,6 @@ defmodule ParseAirTest do
   test_air("debug.defaultPanic")
 
   test_air("debug.getSelfDebugInfo")
+
+  test_air("posix.dl_iterate_phdr__anon_4201")
 end

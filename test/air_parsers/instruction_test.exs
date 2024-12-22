@@ -281,6 +281,19 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %WrapOptional{type: {:optional, ~l"usize"}, src: {0, :keep}} =
                Instruction.parse("wrap_optional(?usize, %0)")
     end
+
+    alias Clr.Air.Instruction.FrameAddr
+
+    test "frame_addr" do
+      assert %FrameAddr{} = Instruction.parse("frame_addr()")
+    end
+
+    alias Clr.Air.Instruction.PtrSlicePtrPtr
+
+    test "ptr_slice_ptr_ptr" do
+      assert %PtrSlicePtrPtr{type: {:ptr, :slice, {:ptr, :one, ~l"u8", []}, []}, src: {13, :clobber}} =
+               Instruction.parse("ptr_slice_ptr_ptr([]*u8, %13!)")
+    end
   end
 
   describe "memory operations" do
@@ -390,11 +403,25 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("intcast(usize, %0)")
     end
 
+    alias Clr.Air.Instruction.Trunc
+
+    test "trunc" do
+      assert %Trunc{type: ~l"usize", line: {0, :keep}} =
+               Instruction.parse("trunc(usize, %0)")
+    end
+
     alias Clr.Air.Instruction.Memset
 
     test "memset" do
       assert %Memset{loc: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
                Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
+    end
+
+    alias Clr.Air.Instruction.MemsetSafe
+
+    test "memset_safe" do
+      assert %MemsetSafe{loc: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
+               Instruction.parse("memset_safe(%0, @Air.Inst.Ref.zero_u8)")
     end
 
     alias Clr.Air.Instruction.Memcpy
@@ -569,6 +596,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
     end
 
+    alias Clr.Air.Instruction.Shr
+
+    test "shr" do
+      assert %Shr{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+               Instruction.parse("shr(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    alias Clr.Air.Instruction.Shl
+
+    test "shl" do
+      assert %Shl{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+               Instruction.parse("shl(%19, @Air.Inst.Ref.one_usize)")
+    end
+
     alias Clr.Air.Instruction.SubWrap
 
     test "sub_wrap" do
@@ -576,11 +617,25 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("sub_wrap(%206!, %207!)")
     end
 
+    alias Clr.Air.Instruction.SubSat
+
+    test "sub_sat" do
+      assert %SubSat{lhs: {206, :clobber}, rhs: {207, :clobber}} =
+               Instruction.parse("sub_sat(%206!, %207!)")
+    end
+
     alias Clr.Air.Instruction.DivExact
 
     test "div_exact" do
       assert %DivExact{lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
                Instruction.parse("div_exact(%206!, <usize, 8>)")
+    end
+
+    alias Clr.Air.Instruction.DivTrunc
+
+    test "div_trunc" do
+      assert %DivTrunc{lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
+               Instruction.parse("div_trunc(%206!, <usize, 8>)")
     end
 
     alias Clr.Air.Instruction.SubWithOverflow
@@ -622,6 +677,19 @@ defmodule ClrTest.AirParsers.InstructionTest do
                )
     end
 
+    alias Clr.Air.Instruction.ShlWithOverflow
+
+    test "shl_with_overflow" do
+      assert %ShlWithOverflow{
+               lhs: {96, :keep},
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               type: {:struct, [~l"usize", ~l"u1"]}
+             } =
+               Instruction.parse(
+                 "shl_with_overflow(struct { usize, u1 }, %96, @Air.Inst.Ref.one_usize)"
+               )
+    end
+
     alias Clr.Air.Instruction.Not
 
     test "not" do
@@ -633,6 +701,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "bit_and" do
       assert %BitAnd{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("bit_and(%96, %97)")
+    end
+
+    alias Clr.Air.Instruction.BitOr
+
+    test "bit_or" do
+      assert %BitOr{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("bit_or(%96, %97)")
     end
 
     alias Clr.Air.Instruction.Rem
@@ -691,6 +766,35 @@ defmodule ClrTest.AirParsers.InstructionTest do
              } =
                Instruction.parse(
                  "cmpxchg_weak(<*bool, posix.abort.global.abort_entered>, @Air.Inst.Ref.bool_false, @Air.Inst.Ref.bool_true, seq_cst, seq_cst)"
+               )
+    end
+
+    alias Clr.Air.Instruction.AtomicLoad
+
+    test "atomic_load" do
+      assert %AtomicLoad{loc: {13, :clobber}, mode: :unordered} =
+               Instruction.parse("atomic_load(%13!, unordered)")
+    end
+
+    alias Clr.Air.Instruction.AtomicStoreUnordered
+
+    test "atomic_store_unordered" do
+      assert %AtomicStoreUnordered{loc: {0, :keep}, val: {13, :clobber}, mode: :unordered} =
+               Instruction.parse("atomic_store_unordered(%0, %13!, unordered)")
+    end
+
+    alias Clr.Air.Instruction.CmpxchgStrong
+
+    test "cmpxchg_strong" do
+      assert %CmpxchgStrong{
+                loc: {:literal, {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []}, ~l"heap.next_mmap_addr_hint"},
+                expected: {28, :clobber},
+                desired: {70, :clobber},
+                success_mode: :monotonic,
+                failure_mode: :monotonic
+             } =
+               Instruction.parse(
+                 "cmpxchg_strong(<*?[*]align(4096) u8, heap.next_mmap_addr_hint>, %28!, %70!, monotonic, monotonic)"
                )
     end
   end

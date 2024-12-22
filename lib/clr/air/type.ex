@@ -45,7 +45,7 @@ defmodule Clr.Air.Type do
     struct_type <- 'struct' space lbrace space type (cs type)* space rbrace
 
     errorunion <- 'anyerror' / error errorlist
-    errorlist <- lbrace identifier (comma identifier)* rbrace
+    errorlist <- lbrace (identifier (comma identifier)*)? rbrace
 
     ## single token words
     allowzero <- 'allowzero'

@@ -10,7 +10,8 @@ defmodule Clr.Air.Instruction do
                 wrap_errunion_payload wrap_errunion_err array_to_slice cmp_gte bool_or ret_ptr ret_load cmpxchg_weak
                 struct_field_ptr_index_2 optional_payload_ptr try is_non_null_ptr set_union_tag get_union_tag
                 errunion_payload_ptr_set mul_with_overflow optional_payload_ptr_set array_elem_val ptr_elem_ptr
-                byte_swap int_from_bool error_name],
+                byte_swap int_from_bool error_name sub_sat bit_or trunc is_null shl_with_overflow shr shl div_trunc
+                memset_safe frame_addr atomic_load atomic_store_unordered cmpxchg_strong ptr_slice_ptr_ptr],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -43,23 +44,24 @@ defmodule Clr.Air.Instruction do
                    ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr_index_0 / struct_field_ptr /
                    struct_field_ptr_index_3 / struct_field_ptr_index_1 / struct_field_ptr_index_2 /
-                   ptr_elem_ptr /
+                   ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr /
                    # memory operations
                    bitcast / alloc / store / loop / load / optional_payload / struct_field_val /
                    int_from_ptr / store_safe / aggregate_init / unwrap_errunion_payload / unwrap_errunion_err /
                    wrap_optional / intcast / memset / memcpy / wrap_errunion_payload /
                    wrap_errunion_err / array_to_slice / optional_payload_ptr / set_union_tag /
                    errunion_payload_ptr_set / optional_payload_ptr_set / array_elem_val /
-                   get_union_tag / int_from_bool / error_name /
+                   get_union_tag / int_from_bool / error_name / trunc / memset_safe /
                    # atomic operations
-                   atomic_rmw / cmpxchg_weak /
+                   atomic_rmw / cmpxchg_weak / atomic_load / atomic_store_unordered / cmpxchg_strong /
                    # test
                    is_non_null / cmp_neq / cmp_lt / cmp_lte / cmp_eq / is_non_err / cmp_gt /
-                   is_non_null_ptr /
+                   is_non_null_ptr / is_null /
                    cmp_gte /
                    # math
                    add / sub_wrap / div_exact / sub / sub_with_overflow / add_with_overflow /
-                   not / bit_and / rem / min / add_wrap / bool_or / mul_with_overflow /
+                   not / bit_and / rem / min / add_wrap / bool_or / mul_with_overflow / sub_sat /
+                   bit_or / shl_with_overflow / shr / shl / div_trunc /
                    # etc
                    assembly / arg / block / byte_swap /
                    # debug 
