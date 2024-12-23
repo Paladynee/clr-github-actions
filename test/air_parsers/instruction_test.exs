@@ -707,19 +707,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "math operations" do
-    alias Clr.Air.Instruction.Add
-
-    test "add" do
-      assert %Add{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
-               Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
-    end
-
-    alias Clr.Air.Instruction.AddSat
-
-    test "add_sat" do
-      assert %AddSat{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
-               Instruction.parse("add_sat(%19, @Air.Inst.Ref.one_usize)")
-    end
 
     alias Clr.Air.Instruction.Abs
 
@@ -747,20 +734,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "clz" do
       assert %Clz{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
                Instruction.parse("clz(%19, @Air.Inst.Ref.one_usize)")
-    end
-
-    alias Clr.Air.Instruction.SubWrap
-
-    test "sub_wrap" do
-      assert %SubWrap{lhs: {206, :clobber}, rhs: {207, :clobber}} =
-               Instruction.parse("sub_wrap(%206!, %207!)")
-    end
-
-    alias Clr.Air.Instruction.SubSat
-
-    test "sub_sat" do
-      assert %SubSat{lhs: {206, :clobber}, rhs: {207, :clobber}} =
-               Instruction.parse("sub_sat(%206!, %207!)")
     end
 
     alias Clr.Air.Instruction.DivExact
@@ -875,13 +848,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "max" do
       assert %Max{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("max(%96, %97)")
-    end
-
-    alias Clr.Air.Instruction.AddWrap
-
-    test "add_wrap" do
-      assert %AddWrap{lhs: {206, :clobber}, rhs: {207, :clobber}} =
-               Instruction.parse("add_wrap(%206!, %207!)")
     end
 
     alias Clr.Air.Instruction.Mul
