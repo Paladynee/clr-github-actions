@@ -316,11 +316,26 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("slice_elem_val(%0, %2!)")
     end
 
-    alias Clr.Air.Instruction.StructFieldPtrIndex0
+    alias Clr.Air.Instruction.StructFieldPtrIndex
 
     test "struct_field_ptr_index_0" do
-      assert %StructFieldPtrIndex0{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}} =
+      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 0} =
                Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
+    end
+
+    test "struct_field_ptr_index_1" do
+      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 1} =
+               Instruction.parse("struct_field_ptr_index_1(*u32, %0)")
+    end
+
+    test "struct_field_ptr_index_2" do
+      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 2} =
+               Instruction.parse("struct_field_ptr_index_2(*u32, %0)")
+    end
+
+    test "struct_field_ptr_index_3" do
+      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 3} =
+               Instruction.parse("struct_field_ptr_index_3(*u32, %0)")
     end
 
     alias Clr.Air.Instruction.WrapOptional

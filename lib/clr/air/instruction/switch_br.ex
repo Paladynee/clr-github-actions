@@ -4,12 +4,10 @@ defmodule Clr.Air.Instruction.SwitchBr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(
-    ~w[
+  Clr.Air.import(~w[
       lineref cs space lparen rparen lbrack rbrack fatarrow newline elision
       type literal lvalue codeblock_clobbers
-    ]a
-  )
+    ]a)
 
   Pegasus.parser_from_string(
     """

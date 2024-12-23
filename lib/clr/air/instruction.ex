@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction do
                 arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload add cond_br block 
                 repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr sub_wrap div_exact
                 slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach sub aggregate_init sub_with_overflow
-                cmp_eq add_with_overflow not bit_and ret slice_elem_ptr struct_field_ptr_index_0 struct_field_ptr
+                cmp_eq add_with_overflow not bit_and ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
                 rem is_non_err unwrap_errunion_payload unwrap_errunion_err min cmp_gt ret_safe ret_addr wrap_optional
-                intcast struct_field_ptr_index_3 atomic_rmw struct_field_ptr_index_1 memset memcpy add_wrap
+                intcast atomic_rmw memset memcpy add_wrap
                 wrap_errunion_payload wrap_errunion_err array_to_slice cmp_gte bool_or ret_ptr ret_load cmpxchg_weak
-                struct_field_ptr_index_2 optional_payload_ptr try is_non_null_ptr set_union_tag get_union_tag
+                optional_payload_ptr try is_non_null_ptr set_union_tag get_union_tag
                 errunion_payload_ptr_set mul_with_overflow optional_payload_ptr_set array_elem_val ptr_elem_ptr
                 byte_swap int_from_bool error_name sub_sat bit_or trunc is_null shl_with_overflow shr shl div_trunc
                 memset_safe frame_addr atomic_load atomic_store_unordered cmpxchg_strong ptr_slice_ptr_ptr xor
@@ -23,7 +23,9 @@ defmodule Clr.Air.Instruction do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[codeline lineref lvalue literal identifier space lbrace rbrace lparen newline notnewline]a)
+  Clr.Air.import(
+    ~w[codeline lineref lvalue literal identifier space lbrace rbrace lparen newline notnewline]a
+  )
 
   # import all parsers from their respective modules.
 
@@ -41,8 +43,7 @@ defmodule Clr.Air.Instruction do
                    ret_addr / ret_load / try / try_ptr / try_cold /
                    # pointer operations
                    ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
-                   slice_elem_ptr / struct_field_ptr_index_0 / struct_field_ptr /
-                   struct_field_ptr_index_3 / struct_field_ptr_index_1 / struct_field_ptr_index_2 /
+                   slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
                    ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr / ptr_sub /
                    # memory operations
                    bitcast / alloc / store / loop / load / optional_payload / struct_field_val /

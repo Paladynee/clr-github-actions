@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.TryCold do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import( ~w[lineref clobbers cs space lparen rparen type codeblock_clobbers]a)
+  Clr.Air.import(~w[lineref clobbers cs space lparen rparen type codeblock_clobbers]a)
 
   Pegasus.parser_from_string(
     """
