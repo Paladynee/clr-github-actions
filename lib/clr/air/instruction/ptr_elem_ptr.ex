@@ -10,7 +10,7 @@ defmodule Clr.Air.Instruction.PtrElemPtr do
   Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "ptr_elem_ptr <- 'ptr_elem_ptr' lparen type cs lineref cs (lineref / lvalue / literal) rparen",
+    "ptr_elem_ptr <- 'ptr_elem_ptr' lparen type cs (lineref / literal) cs (lineref / lvalue / literal) rparen",
     ptr_elem_ptr: [export: true, post_traverse: :ptr_elem_ptr]
   )
 

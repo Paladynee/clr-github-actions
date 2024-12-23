@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.CmpLt do
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "cmp_lt <- 'cmp_lt' lparen (lineref / lvalue) cs (lineref / literal) rparen",
+    "cmp_lt <- 'cmp_lt' lparen (lineref / literal / lvalue) cs (lineref / literal / lvalue) rparen",
     cmp_lt: [export: true, post_traverse: :cmp_lt]
   )
 

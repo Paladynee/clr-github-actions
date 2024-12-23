@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.BitOr do
   Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "bit_or <- 'bit_or' lparen lineref cs (lineref / lvalue / literal) rparen",
+    "bit_or <- 'bit_or' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
     bit_or: [export: true, post_traverse: :bit_or]
   )
 

@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.AddWrap do
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "add_wrap <- 'add_wrap' lparen lineref cs (lineref / lvalue / literal) rparen",
+    "add_wrap <- 'add_wrap' lparen (lineref / lvalue /literal) cs (lineref / lvalue / literal) rparen",
     add_wrap: [export: true, post_traverse: :add_wrap]
   )
 

@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Shl do
+defmodule Clr.Air.Instruction.Xor do
   defstruct [:lhs, :rhs]
 
   require Pegasus
@@ -9,11 +9,11 @@ defmodule Clr.Air.Instruction.Shl do
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "shl <- 'shl' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
-    shl: [export: true, post_traverse: :shl]
+    "xor <- 'xor' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",
+    xor: [export: true, post_traverse: :xor]
   )
 
-  def shl(rest, [rhs, lhs, "shl"], context, _line, _bytes) do
+  def xor(rest, [rhs, lhs, "xor"], context, _line, _bytes) do
     {rest, [%__MODULE__{lhs: lhs, rhs: rhs}], context}
   end
 end

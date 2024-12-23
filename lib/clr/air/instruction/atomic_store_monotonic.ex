@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.AtomicStoreUnordered do
+defmodule Clr.Air.Instruction.AtomicStoreMonotonic do
   defstruct [:loc, :val, :mode]
 
   require Pegasus
@@ -11,18 +11,18 @@ defmodule Clr.Air.Instruction.AtomicStoreUnordered do
 
   Pegasus.parser_from_string(
     """
-    atomic_store_unordered <- 'atomic_store_unordered' lparen lineref cs (lineref / literal) cs mode rparen
+    atomic_store_monotonic <- 'atomic_store_monotonic' lparen (lineref / literal) cs (lineref / literal) cs mode rparen
 
-    mode <- unordered
-    unordered <- 'unordered'
+    mode <- monotonic
+    monotonic <- 'monotonic'
     """,
-    atomic_store_unordered: [export: true, post_traverse: :atomic_store_unordered],
-    unordered: [token: :unordered]
+    atomic_store_monotonic: [export: true, post_traverse: :atomic_store_monotonic],
+    monotonic: [token: :monotonic]
   )
 
-  def atomic_store_unordered(
+  def atomic_store_monotonic(
         rest,
-        [mode, val, loc, "atomic_store_unordered"],
+        [mode, val, loc, "atomic_store_monotonic"],
         context,
         _line,
         _bytes

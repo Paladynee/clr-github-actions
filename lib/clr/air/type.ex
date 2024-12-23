@@ -4,7 +4,7 @@ defmodule Clr.Air.Type do
 
   Clr.Air.import(
     Clr.Air.Base,
-    ~w[int identifier enum_literal squoted space dot comma cs lparen rparen langle rangle lbrack rbrack lbrace rbrace dstring notnewline]a
+    ~w[int identifier enum_literal squoted space dot comma cs lparen rparen langle rangle lbrack rbrack lbrace rbrace dstring colon notnewline]a
   )
 
   Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue basic_lvalue]a)
@@ -30,7 +30,8 @@ defmodule Clr.Air.Type do
     slice_ptr <- '[]'
     sentinel_many_ptr <- '[*:' sentinel ']'
     sentinel_slice_ptr <- '[:' sentinel ']'
-    alignment <- align lparen int rparen
+    alignment <- align lparen (sub_addr / int) rparen
+    sub_addr <- int colon int colon int
 
     sentinel <- 'null' / '0'
 
@@ -70,6 +71,7 @@ defmodule Clr.Air.Type do
     sentinel: [collect: true, post_traverse: :sentinel],
     callconv: [post_traverse: :callconv],
     inline: [token: :inline],
+    sub_addr: [post_traverse: :sub_addr],
     c: [token: :c],
     naked: [token: :naked],
     function: [token: :function],
@@ -79,8 +81,6 @@ defmodule Clr.Air.Type do
     errorunion_only: [post_traverse: :errorunion_only],
     errorlist: [post_traverse: :errorlist],
     structptr: [post_traverse: :structptr],
-    sizeof: [post_traverse: :sizeof],
-    alignof: [post_traverse: :alignof],
     builtinfunction: [post_traverse: :builtinfunction],
     allowzero: [token: :allowzero],
     volatile: [token: :volatile],
@@ -212,6 +212,10 @@ defmodule Clr.Air.Type do
     case Enum.reverse(args) do
       ["struct" | types] -> {rest, [{:struct, types}], context}
     end
+  end
+
+  defp sub_addr(rest, [c, b, a], context, _line, _bytes) do
+    {rest, [{a, b, c}], context}
   end
 
   # function post-traversals

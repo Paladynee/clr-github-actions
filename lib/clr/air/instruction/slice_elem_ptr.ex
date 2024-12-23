@@ -7,9 +7,10 @@ defmodule Clr.Air.Instruction.SliceElemPtr do
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen langle rangle]a)
   Clr.Air.import(Clr.Air.Type, ~w[type]a)
   Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
+  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
 
   Pegasus.parser_from_string(
-    "slice_elem_ptr <- 'slice_elem_ptr' lparen type cs lineref cs (lineref / lvalue) rparen",
+    "slice_elem_ptr <- 'slice_elem_ptr' lparen type cs lineref cs (lineref / lvalue / literal) rparen",
     slice_elem_ptr: [export: true, post_traverse: :slice_elem_ptr]
   )
 

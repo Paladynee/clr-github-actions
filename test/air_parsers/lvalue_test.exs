@@ -24,6 +24,10 @@ defmodule ClrTest.AirParsers.LvalueTest do
     assert {:function, "write"} = Lvalue.parse("(function 'write')")
   end
 
+  test "the special (extern *) identifier is an lvalue" do
+    assert {:extern, "write"} = Lvalue.parse("(extern 'write')")
+  end
+
   describe "type-returning function call with a dereference" do
     test "called with integer" do
       assert {:lvalue, [{:comptime_call, ~l"foo", [1]}, "bar"]} =

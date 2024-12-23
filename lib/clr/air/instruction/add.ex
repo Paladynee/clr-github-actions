@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Add do
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
 
   Pegasus.parser_from_string(
-    "add <- 'add' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",
+    "add <- 'add' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
     add: [export: true, post_traverse: :add]
   )
 

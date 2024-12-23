@@ -5,9 +5,10 @@ defmodule Clr.Air.Instruction.SubWrap do
   require Clr.Air
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
+  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "sub_wrap <- 'sub_wrap' lparen lineref cs (lineref / name) rparen",
+    "sub_wrap <- 'sub_wrap' lparen (lineref / literal) cs (lineref / name) rparen",
     sub_wrap: [export: true, post_traverse: :sub_wrap]
   )
 

@@ -23,7 +23,7 @@ defmodule Clr.Air.Instruction.SwitchBr do
     case_value <- range / literal / lvalue
     else_case <- 'else' (space modifier)? space fatarrow space codeblock_clobbers
 
-    range <- literal elision literal
+    range <- (literal / lvalue) elision (literal / lvalue)
 
     modifier <- cold / unlikely
 

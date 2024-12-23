@@ -13,11 +13,13 @@ defmodule Clr.Air.Instruction.AtomicLoad do
     """
     atomic_load <- 'atomic_load' lparen (lineref / literal) cs mode rparen
 
-    mode <- unordered
+    mode <- unordered / monotonic
     unordered <- 'unordered'
+    monotonic <- 'monotonic'
     """,
     atomic_load: [export: true, post_traverse: :atomic_load],
-    unordered: [token: :unordered]
+    unordered: [token: :unordered],
+    monotonic: [token: :monotonic]
   )
 
   def atomic_load(rest, [mode, loc, "atomic_load"], context, _line, _bytes) do

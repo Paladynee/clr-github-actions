@@ -6,9 +6,10 @@ defmodule Clr.Air.Instruction.Sub do
 
   Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
   Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
+  Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "sub <- 'sub' lparen lineref cs (lineref / lvalue) rparen",
+    "sub <- 'sub' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
     sub: [export: true, post_traverse: :sub]
   )
 

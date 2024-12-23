@@ -199,6 +199,43 @@ defmodule ClrTest.AirParsers.InstructionTest do
                } %12!)
                """)
     end
+
+    alias Clr.Air.Instruction.TryPtr
+
+    test "try_ptr" do
+      assert %TryPtr{
+               loc: {259, :keep},
+               type:
+                 {:ptr, :one, {:ptr, :slice, {:lvalue, ["u8"]}, [const: true]}, [const: true]},
+               code: %{:clobbers => [5, 247, 248]},
+               clobbers: [259]
+             } =
+               Instruction.parse("""
+               try_ptr(%259, *const []const u8, {
+                 %247! %5! %248!
+                 %261 = unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)
+                 %262!= dbg_stmt(35:38)
+                 %263 = bitcast(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}, %261!)
+                 %264 = wrap_errunion_err(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}!debug.Dwarf.FormValue, %263!)
+                 %265!= ret_safe(%264!)
+               } %259!)
+               """)
+    end
+
+    alias Clr.Air.Instruction.TryCold
+
+    test "try_cold" do
+      assert %TryCold{loc: {28, :keep}, error_code: %{}, clobbers: [28]} =
+               Instruction.parse("""
+               try_cold(%28, {
+                 %24! %4! %1! %0!
+                 %29 = unwrap_errunion_err(error{OutOfMemory}, %28!)
+                 %30!= dbg_stmt(8:13)
+                 %31 = wrap_errunion_err(error{OutOfMemory}!void, %29!)
+                 %32!= ret_safe(%31!)
+               } %28!)
+               """)
+    end
   end
 
   describe "pointer operations" do
@@ -230,6 +267,18 @@ defmodule ClrTest.AirParsers.InstructionTest do
              } =
                Instruction.parse("ptr_add([*]usize, %0, @Air.Inst.Ref.zero_usize)")
     end
+
+    alias Clr.Air.Instruction.PtrSub
+
+    test "ptr_sub" do
+      assert %PtrSub{
+               type: {:ptr, :many, ~l"usize", []},
+               line: {0, :keep},
+               val: ~l"@Air.Inst.Ref.zero_usize"
+             } =
+               Instruction.parse("ptr_sub([*]usize, %0, @Air.Inst.Ref.zero_usize)")
+    end
+
 
     alias Clr.Air.Instruction.Slice
 
@@ -291,8 +340,30 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.PtrSlicePtrPtr
 
     test "ptr_slice_ptr_ptr" do
-      assert %PtrSlicePtrPtr{type: {:ptr, :slice, {:ptr, :one, ~l"u8", []}, []}, src: {13, :clobber}} =
+      assert %PtrSlicePtrPtr{
+               type: {:ptr, :slice, {:ptr, :one, ~l"u8", []}, []},
+               src: {13, :clobber}
+             } =
                Instruction.parse("ptr_slice_ptr_ptr([]*u8, %13!)")
+    end
+
+    alias Clr.Air.Instruction.PtrSliceLenPtr
+
+    test "ptr_slice_len_ptr" do
+      assert %PtrSliceLenPtr{type: {:ptr, :one, {:lvalue, ["usize"]}, []}, src: {20, :clobber}} =
+               Instruction.parse("ptr_slice_len_ptr(*usize, %20!)")
+    end
+
+    alias Clr.Air.Instruction.UnwrapErrunionErrPtr
+
+    test "unwrap_errunion_err_ptr" do
+      assert %UnwrapErrunionErrPtr{
+               type: {:errorset, ~w[InvalidBuffer EndOfBuffer Overflow]},
+               src: {259, :clobber}
+             } =
+               Instruction.parse(
+                 "unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)"
+               )
     end
   end
 
@@ -380,6 +451,12 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse(
                  "aggregate_init(struct { comptime @Type(.enum_literal) = .mmap, comptime usize = 0, usize, comptime usize = 3, comptime u32 = 34, comptime usize = 18446744073709551615, comptime u64 = 0 }, [<@Type(.enum_literal), .mmap>, @Air.Inst.Ref.zero_usize, %44!, <usize, 3>, <u32, 34>, <usize, 18446744073709551615>, <u64, 0>])"
                )
+    end
+
+    alias Clr.Air.Instruction.UnionInit
+
+    test "union_init" do
+      assert %UnionInit{src: {18, :clobber}, val: 0} = Instruction.parse("union_init(0, %18!)")
     end
 
     alias Clr.Air.Instruction.UnwrapErrunionPayload
@@ -506,6 +583,12 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "error_name" do
       assert %ErrorName{val: {39, :clobber}} = Instruction.parse("error_name(%39!)")
     end
+
+    alias Clr.Air.Instruction.TagName
+
+    test "tag_name" do
+      assert %TagName{val: {39, :clobber}} = Instruction.parse("tag_name(%39!)")
+    end
   end
 
   describe "block" do
@@ -586,6 +669,27 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %CmpGte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
                Instruction.parse("cmp_gte(%95!, %96!)")
     end
+
+    # TODO: set off into "vector" domain
+    alias Clr.Air.Instruction.CmpVector
+
+    test "cmp_vector" do
+      assert %CmpVector{
+               op: :neq,
+               lhs: {405, :clobber},
+               rhs: {:literal, {:lvalue, [{:vector, {:lvalue, ["u8"]}, 16}]}, _}
+             } =
+               Instruction.parse(
+                 "cmp_vector(neq, %405!, <@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>)"
+               )
+    end
+
+    alias Clr.Air.Instruction.Reduce
+
+    test "reduce" do
+      assert %Reduce{loc: {0, :keep}, op: :or} =
+               Instruction.parse("reduce(%0, Or)")
+    end
   end
 
   describe "math operations" do
@@ -594,6 +698,20 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "add" do
       assert %Add{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
                Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    alias Clr.Air.Instruction.AddSat
+
+    test "add_sat" do
+      assert %AddSat{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+               Instruction.parse("add_sat(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    alias Clr.Air.Instruction.Abs
+
+    test "abs" do
+      assert %Abs{type: ~l"u64", src: {895, :clobber}} =
+               Instruction.parse("abs(u64, %895!)")
     end
 
     alias Clr.Air.Instruction.Shr
@@ -608,6 +726,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "shl" do
       assert %Shl{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
                Instruction.parse("shl(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    alias Clr.Air.Instruction.Clz
+
+    test "clz" do
+      assert %Clz{lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+               Instruction.parse("clz(%19, @Air.Inst.Ref.one_usize)")
     end
 
     alias Clr.Air.Instruction.SubWrap
@@ -636,6 +761,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "div_trunc" do
       assert %DivTrunc{lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
                Instruction.parse("div_trunc(%206!, <usize, 8>)")
+    end
+
+    alias Clr.Air.Instruction.Mod
+
+    test "mod" do
+      assert %Mod{lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
+               Instruction.parse("mod(%206!, <usize, 8>)")
     end
 
     alias Clr.Air.Instruction.SubWithOverflow
@@ -724,6 +856,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("min(%96, %97)")
     end
 
+    alias Clr.Air.Instruction.Max
+
+    test "max" do
+      assert %Max{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("max(%96, %97)")
+    end
+
     alias Clr.Air.Instruction.AddWrap
 
     test "add_wrap" do
@@ -731,11 +870,32 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("add_wrap(%206!, %207!)")
     end
 
+    alias Clr.Air.Instruction.Mul
+
+    test "mul" do
+      assert %Mul{lhs: {206, :clobber}, rhs: {207, :clobber}} =
+               Instruction.parse("mul(%206!, %207!)")
+    end
+
+    alias Clr.Air.Instruction.MulWrap
+
+    test "mul_wrap" do
+      assert %MulWrap{lhs: {206, :clobber}, rhs: {207, :clobber}} =
+               Instruction.parse("mul_wrap(%206!, %207!)")
+    end
+
     alias Clr.Air.Instruction.BoolOr
 
     test "bool_or" do
       assert %BoolOr{lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("bool_or(%96, %97)")
+    end
+
+    alias Clr.Air.Instruction.Xor
+
+    test "xor" do
+      assert %Xor{lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("xor(%96, %97)")
     end
   end
 
@@ -783,15 +943,31 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("atomic_store_unordered(%0, %13!, unordered)")
     end
 
+    alias Clr.Air.Instruction.AtomicStoreMonotonic
+
+    test "atomic_store_monotonic" do
+      assert %AtomicStoreMonotonic{
+               loc: {:literal, {:ptr, :one, ~l"i32", []}, ~l"debug.MemoryAccessor.cached_pid"},
+               val: {28, :keep},
+               mode: :monotonic
+             } =
+               Instruction.parse(
+                 "atomic_store_monotonic(<*i32, debug.MemoryAccessor.cached_pid>, %28, monotonic)"
+               )
+    end
+
     alias Clr.Air.Instruction.CmpxchgStrong
 
     test "cmpxchg_strong" do
       assert %CmpxchgStrong{
-                loc: {:literal, {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []}, ~l"heap.next_mmap_addr_hint"},
-                expected: {28, :clobber},
-                desired: {70, :clobber},
-                success_mode: :monotonic,
-                failure_mode: :monotonic
+               loc:
+                 {:literal,
+                  {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []},
+                  ~l"heap.next_mmap_addr_hint"},
+               expected: {28, :clobber},
+               desired: {70, :clobber},
+               success_mode: :monotonic,
+               failure_mode: :monotonic
              } =
                Instruction.parse(
                  "cmpxchg_strong(<*?[*]align(4096) u8, heap.next_mmap_addr_hint>, %28!, %70!, monotonic, monotonic)"
@@ -853,5 +1029,12 @@ defmodule ClrTest.AirParsers.InstructionTest do
   test "byte_swap" do
     assert %ByteSwap{type: ~l"u64", val: {0, :keep}} =
              Instruction.parse("byte_swap(u64, %0)")
+  end
+
+  alias Clr.Air.Instruction.BitReverse
+
+  test "bit_reverse" do
+    assert %BitReverse{type: ~l"u64", src: {0, :keep}} =
+             Instruction.parse("bit_reverse(u64, %0)")
   end
 end

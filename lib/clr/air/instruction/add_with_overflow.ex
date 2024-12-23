@@ -10,7 +10,7 @@ defmodule Clr.Air.Instruction.AddWithOverflow do
   Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
 
   Pegasus.parser_from_string(
-    "add_with_overflow <- 'add_with_overflow' lparen type cs lineref cs (lineref / lvalue / literal) rparen",
+    "add_with_overflow <- 'add_with_overflow' lparen type cs (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
     add_with_overflow: [export: true, post_traverse: :add_with_overflow]
   )
 

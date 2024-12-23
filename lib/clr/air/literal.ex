@@ -19,14 +19,17 @@ defmodule Clr.Air.Literal do
     fn_literal <- langle fn_type cs lvalue rangle
     other_literal <- langle type cs convertible rangle
 
+    # these are all of the things that are capable of being interpreted at comptime.
+    # TODO: clean this up.
     convertible <- int / void / undefined / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / type
 
     string_value <- dstring (indices)?
     indices <- lbrack int '..' int rbrack
 
     # special builtin functions
-    as <- '@as' lparen ptr_type cs (ptrcast / lvalue) rparen (dot "*")?
-    ptrcast <- '@ptrCast' lparen lvalue rparen
+    # TODO: move these into lvalue module.
+    as <- '@as' lparen type cs (ptrcast / lvalue / int) rparen (dot "*")?
+    ptrcast <- '@ptrCast' lparen (as / lvalue) rparen
     sizeof <- '@sizeOf' lparen type rparen
     alignof <- '@alignOf' lparen type rparen
 

@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.BitAnd do
   Clr.Air.import(Clr.Air.Literal, [:literal])
 
   Pegasus.parser_from_string(
-    "bit_and <- 'bit_and' lparen lineref cs (lineref / lvalue / literal) rparen",
+    "bit_and <- 'bit_and' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
     bit_and: [export: true, post_traverse: :bit_and]
   )
 

@@ -23,12 +23,12 @@ defmodule Clr.Air.Lvalue do
     """
     lvalue <- function_lvalue / basic_lvalue
     basic_lvalue <- lvalue_segment (dot lvalue_segment)*
-    lvalue_segment <- star / (identifier (comptime_call_params)? (array_deref)*) / questionmark
+    lvalue_segment <- star / vector / (identifier (comptime_call_params)? (array_deref)*) / questionmark
 
     # function lvalue is a "special function call" that has been defined at the language
     # level, possibly with os / runtime bindings, e.g. 'resetSegfaultHandler'
 
-    function_lvalue <- lparen function space squoted rparen
+    function_lvalue <- lparen (function / extern) space squoted rparen
 
     # comptime calls
     comptime_call_params <- lparen (comptime_call_param (comma comptime_call_param)*)? rparen
@@ -40,11 +40,16 @@ defmodule Clr.Air.Lvalue do
     comptime_struct_fields <- space comptime_struct_field (cs comptime_struct_field)* space
     comptime_struct_field <- dot identifier space equals space comptime_call_param
 
+    # vector is not a normal comptime call, since the parameters are separated
+    # with "comma space" instead of "space"
+    vector <- '@Vector' lparen int cs type rparen
+
     array_deref <- lbrack int rbrack
     elided_struct <- '.{ ... }'
     empty_struct <- '.{}'
 
     function <- 'function'
+    extern <- 'extern'
     questionmark <- '?'
     star <- '*'
     """,
@@ -53,10 +58,12 @@ defmodule Clr.Air.Lvalue do
     lvalue_segment: [post_traverse: :lvalue_segment],
     function_lvalue: [post_traverse: :function_lvalue],
     function: [token: :function],
+    extern: [token: :extern],
     comptime_call_params: [post_traverse: :comptime_call_params],
     comptime_struct: [export: true],
     comptime_struct_fields: [post_traverse: :comptime_struct_fields],
     comptime_tuple_fields: [post_traverse: :comptime_tuple_fields],
+    vector: [post_traverse: :vector],
     array_deref: [post_traverse: :array_deref],
     elided_struct: [token: :...],
     empty_struct: [token: %{}],
@@ -65,8 +72,10 @@ defmodule Clr.Air.Lvalue do
     star: [token: :pointer_deref]
   )
 
-  defp function_lvalue(rest, [name, :function], context, _line, _bytes) do
-    {rest, [{:function, name}], context}
+  @function_types [:function, :extern]
+
+  defp function_lvalue(rest, [name, type], context, _line, _bytes) when type in @function_types do
+    {rest, [{type, name}], context}
   end
 
   defp basic_lvalue(rest, args, context, _line, _bytes) do
@@ -116,6 +125,10 @@ defmodule Clr.Air.Lvalue do
 
   defp array_deref(rest, [index], context, _line, _bytes) do
     {rest, [{:array, index}], context}
+  end
+
+  defp vector(rest, [type, count, "@Vector"], context, _line, _bytes) do
+    {rest, [{:vector, type, count}], context}
   end
 
   defp to_map([value, key | rest], so_far), do: to_map(rest, Map.put(so_far, key, value))
