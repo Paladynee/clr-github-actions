@@ -8,8 +8,8 @@ defmodule Clr.Air.Instruction.Call do
 
   Pegasus.parser_from_string(
     """
-    call <- 'call' lparen (fn_literal / lineref) cs lbrack (arg (cs arg)*)? rbrack rparen
-    arg <- lineref / literal / lvalue
+    call <- 'call' lparen (fn_literal / lineref) cs lbrack (argument (cs argument)*)? rbrack rparen
+    argument <- lineref / literal / lvalue
     """,
     call: [export: true, post_traverse: :call]
   )

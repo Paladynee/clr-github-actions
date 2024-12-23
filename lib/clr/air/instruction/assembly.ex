@@ -5,7 +5,7 @@ defmodule Clr.Air.Instruction.Assembly do
   require Clr.Air
 
   Clr.Air.import(
-    ~w[type literal lvalue lineref identifier cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
+    ~w[argument type literal lvalue lineref identifier cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
   )
 
   Pegasus.parser_from_string(
@@ -16,7 +16,7 @@ defmodule Clr.Air.Instruction.Assembly do
 
     directive <- asm_io / asm_assign
 
-    asm_io <- lbrack lvalue rbrack space ('in' / 'out') space name_or_reg space '=' space lparen (literal / lvalue / lineref) rparen
+    asm_io <- lbrack lvalue rbrack space ('in' / 'out') space name_or_reg space '=' space lparen argument rparen
 
     asm_assign <- lbrack lvalue rbrack space rarrow space '=' name_or_reg 
 

@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Rem do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "rem <- 'rem' lparen lineref cs (lineref / lvalue / literal) rparen",
+    "rem <- 'rem' lparen lineref cs argument rparen",
     rem: [export: true, post_traverse: :rem]
   )
 

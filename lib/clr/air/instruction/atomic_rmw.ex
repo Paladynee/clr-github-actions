@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.AtomicRmw do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument type lvalue literal lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
-    atomic_rmw <- 'atomic_rmw' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) cs op cs mode rparen
+    atomic_rmw <- 'atomic_rmw' lparen argument cs argument cs op cs mode rparen
 
     op <- add / sub / or / xchg
     add <- 'Add'

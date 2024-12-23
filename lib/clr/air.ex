@@ -14,6 +14,8 @@ defmodule Clr.Air do
 
   @parser ~w[codeline codeblock codeblock_clobbers]a
 
+  @instruction ~w[instruction argument]a
+
   defmacro import(symbols) do
     symbol_map =
       symbols
@@ -24,7 +26,7 @@ defmodule Clr.Air do
         symbol when symbol in @lvalue -> {symbol, Clr.Air.Lvalue}
         symbol when symbol in @type_ -> {symbol, Clr.Air.Type}
         symbol when symbol in @parser -> {symbol, Clr.Air.Parser}
-        :instruction -> {:instruction, Clr.Air.Instruction}
+        symbol when symbol in @instruction -> {symbol, Clr.Air.Instruction}
       end)
 
     quote bind_quoted: [symbol_map: symbol_map] do

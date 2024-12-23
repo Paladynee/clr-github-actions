@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.CmpEq do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument lvalue literal lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "cmp_eq <- 'cmp_eq' lparen (lineref / lvalue) cs (literal / lvalue / lineref) rparen",
+    "cmp_eq <- 'cmp_eq' lparen argument cs argument rparen",
     cmp_eq: [export: true, post_traverse: :cmp_eq]
   )
 

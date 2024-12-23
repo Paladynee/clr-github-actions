@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Mod do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "mod <- 'mod' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
+    "mod <- 'mod' lparen argument cs argument rparen",
     mod: [export: true, post_traverse: :mod]
   )
 

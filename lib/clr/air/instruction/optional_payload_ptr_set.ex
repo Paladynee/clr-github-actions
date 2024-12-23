@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.OptionalPayloadPtrSet do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen type literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen type literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "optional_payload_ptr_set <- 'optional_payload_ptr_set' lparen type cs (lineref / literal / lvalue) rparen",
+    "optional_payload_ptr_set <- 'optional_payload_ptr_set' lparen type cs argument rparen",
     optional_payload_ptr_set: [export: true, post_traverse: :optional_payload_ptr_set]
   )
 

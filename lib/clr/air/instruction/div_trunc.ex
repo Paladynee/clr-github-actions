@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.DivTrunc do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "div_trunc <- 'div_trunc' lparen lineref cs (lineref / lvalue / literal) rparen",
+    "div_trunc <- 'div_trunc' lparen lineref cs argument rparen",
     div_trunc: [export: true, post_traverse: :div_trunc]
   )
 

@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Bitcast do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue type lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument lvalue type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "bitcast <- 'bitcast' lparen type cs (lineref / lvalue) rparen",
+    "bitcast <- 'bitcast' lparen type cs argument rparen",
     bitcast: [export: true, post_traverse: :bitcast]
   )
 

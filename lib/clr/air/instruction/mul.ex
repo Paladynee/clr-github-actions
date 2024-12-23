@@ -3,10 +3,10 @@ defmodule Clr.Air.Instruction.Mul do
 
   require Pegasus
   require Clr.Air
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "mul <- 'mul' lparen (lineref / lvalue /literal) cs (lineref / lvalue / literal) rparen",
+    "mul <- 'mul' lparen argument cs argument rparen",
     mul: [export: true, post_traverse: :mul]
   )
 

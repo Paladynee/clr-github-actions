@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.PtrElemVal do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument lvalue lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "ptr_elem_val <- 'ptr_elem_val' lparen lineref cs (lineref / lvalue) rparen",
+    "ptr_elem_val <- 'ptr_elem_val' lparen lineref cs argument rparen",
     ptr_elem_val: [export: true, post_traverse: :ptr_elem_val]
   )
 

@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.ShlWithOverflow do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument type lvalue literal lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "shl_with_overflow <- 'shl_with_overflow' lparen type cs lineref cs (lineref / lvalue / literal) rparen",
+    "shl_with_overflow <- 'shl_with_overflow' lparen type cs lineref cs argument rparen",
     shl_with_overflow: [export: true, post_traverse: :shl_with_overflow]
   )
 

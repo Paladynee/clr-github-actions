@@ -3,10 +3,10 @@ defmodule Clr.Air.Instruction.DbgArgInline do
 
   require Pegasus
   require Clr.Air
-  Clr.Air.import(~w[lineref cs dquoted lparen rparen lvalue literal]a)
+  Clr.Air.import(~w[argument lineref cs dquoted lparen rparen lvalue literal]a)
 
   Pegasus.parser_from_string(
-    "dbg_arg_inline <- 'dbg_arg_inline' lparen (literal / lvalue / lineref) cs dquoted rparen",
+    "dbg_arg_inline <- 'dbg_arg_inline' lparen argument cs dquoted rparen",
     dbg_arg_inline: [export: true, post_traverse: :dbg_arg_inline]
   )
 

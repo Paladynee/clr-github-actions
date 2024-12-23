@@ -3,10 +3,10 @@ defmodule Clr.Air.Instruction.Memcpy do
 
   require Pegasus
   require Clr.Air
-  Clr.Air.import(~w[lineref cs lparen rparen lvalue literal]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen lvalue literal]a)
 
   Pegasus.parser_from_string(
-    "memcpy <- 'memcpy' lparen (lvalue / lineref) cs (lvalue / lineref / literal) rparen",
+    "memcpy <- 'memcpy' lparen (lvalue / lineref) cs argument rparen",
     memcpy: [export: true, post_traverse: :memcpy]
   )
 

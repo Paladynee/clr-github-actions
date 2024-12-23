@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.CmpGte do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "cmp_gte <- 'cmp_gte' lparen (lineref / lvalue / literal) cs (lineref / literal) rparen",
+    "cmp_gte <- 'cmp_gte' lparen argument cs (lineref / literal) rparen",
     cmp_gte: [export: true, post_traverse: :cmp_gte]
   )
 

@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.AddWrap do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[literal lvalue lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "add_wrap <- 'add_wrap' lparen (lineref / lvalue /literal) cs (lineref / lvalue / literal) rparen",
+    "add_wrap <- 'add_wrap' lparen argument cs argument rparen",
     add_wrap: [export: true, post_traverse: :add_wrap]
   )
 

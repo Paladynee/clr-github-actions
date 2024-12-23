@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.ArrayElemVal do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type literal lvalue lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument type literal lvalue lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "array_elem_val <- 'array_elem_val' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",
+    "array_elem_val <- 'array_elem_val' lparen argument cs argument rparen",
     array_elem_val: [export: true, post_traverse: :array_elem_val]
   )
 

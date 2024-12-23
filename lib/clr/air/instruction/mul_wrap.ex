@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.MulWrap do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
-    "mul_wrap <- 'mul_wrap' lparen (lineref / lvalue /literal) cs (lineref / lvalue / literal) rparen",
+    "mul_wrap <- 'mul_wrap' lparen argument cs argument rparen",
     mul_wrap: [export: true, post_traverse: :mul_wrap]
   )
 

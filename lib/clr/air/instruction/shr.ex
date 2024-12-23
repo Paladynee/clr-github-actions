@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Shr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "shr <- 'shr' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",
+    "shr <- 'shr' lparen argument cs argument rparen",
     shr: [export: true, post_traverse: :shr]
   )
 

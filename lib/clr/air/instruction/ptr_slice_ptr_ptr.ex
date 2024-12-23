@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.PtrSlicePtrPtr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue type lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument lvalue type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "ptr_slice_ptr_ptr <- 'ptr_slice_ptr_ptr' lparen type cs (lineref / lvalue) rparen",
+    "ptr_slice_ptr_ptr <- 'ptr_slice_ptr_ptr' lparen type cs argument rparen",
     ptr_slice_ptr_ptr: [export: true, post_traverse: :ptr_slice_ptr_ptr]
   )
 

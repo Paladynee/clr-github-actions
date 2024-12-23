@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Abs do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen lvalue literal type]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen lvalue literal type]a)
 
   Pegasus.parser_from_string(
-    "abs <- 'abs' lparen type cs (lineref / lvalue / literal) rparen",
+    "abs <- 'abs' lparen type cs argument rparen",
     abs: [export: true, post_traverse: :abs]
   )
 

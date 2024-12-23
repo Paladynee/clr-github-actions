@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Store do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen lvalue literal type]a)
+  Clr.Air.import(~w[argument lineref cs lparen rparen lvalue literal type]a)
 
   Pegasus.parser_from_string(
-    "store <- 'store' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",
+    "store <- 'store' lparen (lineref / literal) cs argument rparen",
     store: [export: true, post_traverse: :store]
   )
 

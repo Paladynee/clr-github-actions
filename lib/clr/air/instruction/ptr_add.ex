@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.PtrAdd do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[cs lineref lparen rparen type lvalue literal]a)
+  Clr.Air.import(~w[argument cs lineref lparen rparen type lvalue literal]a)
 
   Pegasus.parser_from_string(
-    "ptr_add <- 'ptr_add' lparen type cs (lineref / literal) cs (lineref / lvalue /literal) rparen",
+    "ptr_add <- 'ptr_add' lparen type cs (lineref / literal) cs argument rparen",
     ptr_add: [export: true, post_traverse: :ptr_add]
   )
 

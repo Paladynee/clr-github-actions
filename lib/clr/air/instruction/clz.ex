@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.Clz do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref literal lvalue cs lparen rparen]a)
+  Clr.Air.import(~w[argument lineref literal lvalue cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "clz <- 'clz' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
+    "clz <- 'clz' lparen argument cs argument rparen",
     clz: [export: true, post_traverse: :clz]
   )
 

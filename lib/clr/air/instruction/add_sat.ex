@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.AddSat do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[literal lvalue lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "add_sat <- 'add_sat' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
+    "add_sat <- 'add_sat' lparen argument cs argument rparen",
     add_sat: [export: true, post_traverse: :add_sat]
   )
 

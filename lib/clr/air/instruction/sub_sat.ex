@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.SubSat do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument lvalue lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "sub_sat <- 'sub_sat' lparen lineref cs (lineref / lvalue) rparen",
+    "sub_sat <- 'sub_sat' lparen lineref cs argument rparen",
     sub_sat: [export: true, post_traverse: :sub_sat]
   )
 
