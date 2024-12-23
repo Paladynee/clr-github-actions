@@ -2,18 +2,18 @@ defmodule Clr.Air.Instruction do
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
                 arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload cond_br block 
-                repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr div_exact
-                slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach aggregate_init sub_with_overflow
-                cmp_eq add_with_overflow not bit_and ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
-                rem is_non_err unwrap_errunion_payload unwrap_errunion_err min cmp_gt ret_safe ret_addr wrap_optional
+                repeat loop slice slice_ptr struct_field_val cmp_neq switch_br call int_from_ptr 
+                slice_len cmp_lt slice_elem_val store_safe cmp_lte unreach aggregate_init
+                cmp_eq ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
+                is_non_err unwrap_errunion_payload unwrap_errunion_err cmp_gt ret_safe ret_addr wrap_optional
                 intcast atomic_rmw memset memcpy 
-                wrap_errunion_payload wrap_errunion_err array_to_slice cmp_gte bool_or ret_ptr ret_load cmpxchg_weak
+                wrap_errunion_payload wrap_errunion_err array_to_slice cmp_gte ret_ptr ret_load cmpxchg_weak
                 optional_payload_ptr try is_non_null_ptr set_union_tag get_union_tag
-                errunion_payload_ptr_set mul_with_overflow optional_payload_ptr_set array_elem_val ptr_elem_ptr
-                byte_swap int_from_bool error_name bit_or trunc is_null shl_with_overflow shr shl div_trunc
-                memset_safe frame_addr atomic_load atomic_store_unordered cmpxchg_strong ptr_slice_ptr_ptr xor
-                cmp_vector reduce try_ptr unwrap_errunion_err_ptr clz max ptr_slice_len_ptr tag_name union_init
-                bit_reverse atomic_store_monotonic try_cold abs mod mul mul_wrap ptr_sub math],
+                errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
+                byte_swap int_from_bool error_name trunc is_null
+                memset_safe frame_addr atomic_load atomic_store_unordered cmpxchg_strong ptr_slice_ptr_ptr
+                cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
+                bit_reverse atomic_store_monotonic try_cold abs ptr_sub math],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -63,10 +63,6 @@ defmodule Clr.Air.Instruction do
                    is_non_null_ptr / is_null / cmp_gte /
                    # math
                    math /
-                   div_exact / sub_with_overflow / add_with_overflow /
-                   not / bit_and / rem / min / bool_or / mul_with_overflow /
-                   bit_or / shl_with_overflow / shr / shl / div_trunc / xor / clz / max /
-                   abs / mod / mul / mul_wrap /
                    # etc
                    assembly / arg / block / byte_swap / bit_reverse /
                    # debug 
