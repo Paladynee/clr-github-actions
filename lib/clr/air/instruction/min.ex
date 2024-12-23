@@ -3,12 +3,10 @@ defmodule Clr.Air.Instruction.Min do
 
   require Pegasus
   require Clr.Air
-
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen literal]a)
 
   Pegasus.parser_from_string(
-    "min <- 'min' lparen (lineref / literal) cs (lineref / name) rparen",
+    "min <- 'min' lparen (lineref / literal) cs lineref rparen",
     min: [export: true, post_traverse: :min]
   )
 

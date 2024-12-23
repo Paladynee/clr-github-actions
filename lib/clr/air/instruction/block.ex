@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.Block do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[clobbers cs space lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+  Clr.Air.import(~w[type codeblock clobbers cs space lparen rparen]a)
 
   Pegasus.parser_from_string(
     "block <- 'block' lparen type cs codeblock (space clobbers)? rparen",

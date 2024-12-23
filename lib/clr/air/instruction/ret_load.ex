@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.RetLoad do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
+  Clr.Air.import(~w[lineref cs lparen rparen type lvalue]a)
 
   Pegasus.parser_from_string(
     "ret_load <- 'ret_load' lparen lineref rparen",

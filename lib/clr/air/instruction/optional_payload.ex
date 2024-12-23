@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.OptionalPayload do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type literal]a)
+  Clr.Air.import(~w[type literal lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "optional_payload <- 'optional_payload' lparen type cs lineref rparen",

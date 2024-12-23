@@ -4,11 +4,10 @@ defmodule Clr.Air.Instruction.Trunc do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import( ~w[type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "trunc <- 'trunc' lparen type cs (lineref / name) rparen",
+    "trunc <- 'trunc' lparen type cs lineref rparen",
     trunc: [export: true, post_traverse: :trunc]
   )
 

@@ -4,11 +4,10 @@ defmodule Clr.Air.Instruction.UnwrapErrunionErrPtr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(~w[lineref cs lparen rparen type]a)
 
   Pegasus.parser_from_string(
-    "unwrap_errunion_err_ptr <- 'unwrap_errunion_err_ptr' lparen type cs (lineref / name) rparen",
+    "unwrap_errunion_err_ptr <- 'unwrap_errunion_err_ptr' lparen type cs lineref rparen",
     unwrap_errunion_err_ptr: [export: true, post_traverse: :unwrap_errunion_err_ptr]
   )
 

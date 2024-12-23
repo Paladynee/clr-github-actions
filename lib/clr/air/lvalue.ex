@@ -3,13 +3,9 @@ defmodule Clr.Air.Lvalue do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[identifier int null undefined elision cs space comma dot lparen rparen lbrack rbrack lbrace rbrace squoted equals notnewline]a
+    ~w[type convertible identifier int null undefined elision cs space comma dot lparen rparen lbrack rbrack 
+       lbrace rbrace squoted equals notnewline]a
   )
-
-  Clr.Air.import(Clr.Air.Type, [:type])
-
-  Clr.Air.import(Clr.Air.Literal, ~w[convertible]a)
 
   defmacro sigil_l({:<<>>, _, [type]}, _) do
     values = String.split(type, ".")

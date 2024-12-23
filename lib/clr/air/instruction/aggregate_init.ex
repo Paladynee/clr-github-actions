@@ -5,13 +5,8 @@ defmodule Clr.Air.Instruction.AggregateInit do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[lineref int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
+    ~w[type literal enum_value lvalue lineref int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
   )
-
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal enum_value]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
 
   Pegasus.parser_from_string(
     """

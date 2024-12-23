@@ -5,13 +5,8 @@ defmodule Clr.Air.Instruction.Assembly do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[lineref identifier cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
+    ~w[type literal lvalue lineref identifier cs space lparen rparen lbrack rbrack lbrace rbrace dstring]a
   )
-
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
 
   Pegasus.parser_from_string(
     """

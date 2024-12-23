@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.Memset do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+  Clr.Air.import(~w[lineref cs lparen rparen lvalue codeblock]a)
 
   Pegasus.parser_from_string(
     "memset <- 'memset' lparen (lvalue / lineref) cs lvalue rparen",

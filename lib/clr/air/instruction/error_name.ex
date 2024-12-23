@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.ErrorName do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs dquoted lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(~w[lineref cs dquoted lparen rparen literal]a)
 
   Pegasus.parser_from_string(
     "error_name <- 'error_name' lparen (literal / lineref) rparen",

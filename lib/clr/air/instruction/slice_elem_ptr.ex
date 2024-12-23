@@ -4,10 +4,7 @@ defmodule Clr.Air.Instruction.SliceElemPtr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen langle rangle]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen langle rangle type lvalue literal]a)
 
   Pegasus.parser_from_string(
     "slice_elem_ptr <- 'slice_elem_ptr' lparen type cs lineref cs (lineref / lvalue / literal) rparen",

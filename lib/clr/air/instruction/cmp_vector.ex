@@ -3,10 +3,7 @@ defmodule Clr.Air.Instruction.CmpVector do
 
   require Pegasus
   require Clr.Air
-
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
+  Clr.Air.import(~w[lineref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
     """

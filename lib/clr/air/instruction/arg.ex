@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.Arg do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[int cs dquoted lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(~w[type int cs dquoted lparen rparen]a)
 
   Pegasus.parser_from_string(
     "arg <- 'arg' lparen type (cs dquoted)? rparen",

@@ -23,15 +23,12 @@ defmodule Clr.Air.Instruction do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[identifier space lbrace rbrace lparen newline notnewline]a)
-
-  # import the "codeline" parser
-  Clr.Air.import(Clr.Air.Parser, [:codeline])
+  Clr.Air.import(~w[codeline identifier space lbrace rbrace lparen newline notnewline]a)
 
   # import all parsers from their respective modules.
 
-  for {instruction, mod} <- @modules do
-    Clr.Air.import(mod, [instruction])
+  for {instruction, module} <- @modules do
+    NimbleParsec.defparsecp(instruction, NimbleParsec.parsec({module, instruction}))
   end
 
   Pegasus.parser_from_string(

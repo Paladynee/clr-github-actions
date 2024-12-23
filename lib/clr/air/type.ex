@@ -3,11 +3,9 @@ defmodule Clr.Air.Type do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[int identifier enum_literal squoted space dot comma cs lparen rparen langle rangle lbrack rbrack lbrace rbrace dstring colon notnewline]a
+    ~w[lvalue int identifier enum_literal squoted space dot comma cs lparen 
+       rparen langle rangle lbrack rbrack lbrace rbrace dstring colon notnewline]a
   )
-
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue basic_lvalue]a)
 
   Pegasus.parser_from_string(
     """

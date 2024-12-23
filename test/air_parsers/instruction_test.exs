@@ -279,7 +279,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("ptr_sub([*]usize, %0, @Air.Inst.Ref.zero_usize)")
     end
 
-
     alias Clr.Air.Instruction.Slice
 
     test "slice" do

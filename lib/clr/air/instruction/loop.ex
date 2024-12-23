@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.Loop do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+  Clr.Air.import(~w[cs lparen rparen type codeblock]a)
 
   Pegasus.parser_from_string(
     "loop <- 'loop' lparen type cs codeblock rparen",

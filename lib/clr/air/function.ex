@@ -1,3 +1,5 @@
+# TODO: merge Clr.Air.Parser into this module
+
 defmodule Clr.Air.Function do
   defstruct [:name, code: %{}]
 

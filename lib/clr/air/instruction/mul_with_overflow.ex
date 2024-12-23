@@ -4,10 +4,7 @@ defmodule Clr.Air.Instruction.MulWithOverflow do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen type lvalue literal]a)
 
   Pegasus.parser_from_string(
     "mul_with_overflow <- 'mul_with_overflow' lparen type cs (lineref / literal) cs (lineref / lvalue / literal) rparen",

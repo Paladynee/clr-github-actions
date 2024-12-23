@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.DbgStmt do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[int colon lparen rparen]a)
+  Clr.Air.import(~w[int colon lparen rparen]a)
 
   Pegasus.parser_from_string(
     """

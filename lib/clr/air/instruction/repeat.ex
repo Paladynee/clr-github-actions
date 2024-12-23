@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.Repeat do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(~w[lineref lparen rparen type]a)
 
   Pegasus.parser_from_string(
     "repeat <- 'repeat' lparen lineref rparen",

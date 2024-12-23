@@ -4,11 +4,10 @@ defmodule Clr.Air.Instruction.Intcast do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(~w[lineref cs lparen rparen type]a)
 
   Pegasus.parser_from_string(
-    "intcast <- 'intcast' lparen type cs (lineref / name) rparen",
+    "intcast <- 'intcast' lparen type cs lineref rparen",
     intcast: [export: true, post_traverse: :intcast]
   )
 

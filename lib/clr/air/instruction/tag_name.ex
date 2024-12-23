@@ -3,9 +3,7 @@ defmodule Clr.Air.Instruction.TagName do
 
   require Pegasus
   require Clr.Air
-
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs dquoted lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(~w[lineref cs dquoted lparen rparen literal]a)
 
   Pegasus.parser_from_string(
     "tag_name <- 'tag_name' lparen (literal / lineref) rparen",

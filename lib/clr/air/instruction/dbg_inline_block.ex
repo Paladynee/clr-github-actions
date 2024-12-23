@@ -4,15 +4,9 @@ defmodule Clr.Air.Instruction.DbgInlineBlock do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
-
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[clobbers name int tag cs squoted space colon lparen rparen langle rangle]a
+    ~w[codeblock clobbers int cs squoted space colon lparen rparen langle rangle type fn_literal]a
   )
-
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, [:fn_literal])
 
   Pegasus.parser_from_string(
     "dbg_inline_block <- 'dbg_inline_block' lparen type cs fn_literal cs codeblock (space clobbers)? rparen",

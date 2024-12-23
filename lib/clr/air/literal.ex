@@ -3,13 +3,9 @@ defmodule Clr.Air.Literal do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[identifier int elision cs space dot lparen rparen langle rangle lbrack rbrack lbrace rbrace squoted dstring]a
+    ~w[type lvalue comptime_struct fn_type ptr_type identifier int elision cs space dot lparen rparen langle rangle lbrack rbrack lbrace 
+      rbrace squoted dstring]a
   )
-
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue, :comptime_struct])
-
-  Clr.Air.import(Clr.Air.Type, ~w[type fn_type ptr_type]a)
 
   Pegasus.parser_from_string(
     """

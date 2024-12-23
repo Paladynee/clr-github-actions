@@ -4,12 +4,10 @@ defmodule Clr.Air.Instruction.RetPtr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
+  Clr.Air.import(~w[type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "ret_ptr <- 'ret_ptr' lparen type  rparen",
+    "ret_ptr <- 'ret_ptr' lparen type rparen",
     ret_ptr: [export: true, post_traverse: :ret_ptr]
   )
 

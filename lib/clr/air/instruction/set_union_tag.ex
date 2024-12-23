@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.SetUnionTag do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen type literal]a)
 
   Pegasus.parser_from_string(
     "set_union_tag <- 'set_union_tag' lparen lineref cs literal rparen",

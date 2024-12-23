@@ -4,10 +4,7 @@ defmodule Clr.Air.Instruction.ArrayElemVal do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
+  Clr.Air.import(~w[type literal lvalue lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "array_elem_val <- 'array_elem_val' lparen (lineref / literal) cs (lineref / lvalue / literal) rparen",

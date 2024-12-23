@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.IntFromPtr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs dquoted lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(~w[lineref cs dquoted lparen rparen literal]a)
 
   Pegasus.parser_from_string(
     "int_from_ptr <- 'int_from_ptr' lparen (literal / lineref) rparen",

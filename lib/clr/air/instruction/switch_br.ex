@@ -5,15 +5,11 @@ defmodule Clr.Air.Instruction.SwitchBr do
   require Clr.Air
 
   Clr.Air.import(
-    Clr.Air.Base,
-    ~w[lineref name cs space lparen rparen lbrack rbrack fatarrow newline elision]a
+    ~w[
+      lineref cs space lparen rparen lbrack rbrack fatarrow newline elision
+      type literal lvalue codeblock_clobbers
+    ]a
   )
-
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-
-  Clr.Air.import(Clr.Air.Parser, [:codeblock_clobbers])
 
   Pegasus.parser_from_string(
     """

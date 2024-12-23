@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.SliceLen do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen langle rangle]a)
-
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(~w[type lineref cs lparen rparen langle rangle]a)
 
   Pegasus.parser_from_string(
     "slice_len <- 'slice_len' lparen type cs lineref rparen",

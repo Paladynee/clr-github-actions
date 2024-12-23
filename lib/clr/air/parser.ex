@@ -5,9 +5,7 @@ defmodule Clr.Air.Parser do
   alias Clr.Air.Function
 
   # import the following "base" parsers
-  Clr.Air.import(Clr.Air.Base, ~w[lineref clobbers space lbrace rbrace newline]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Instruction, [:instruction])
+  Clr.Air.import(~w[lvalue instruction lineref clobbers space lbrace rbrace newline]a)
 
   Pegasus.parser_from_string(
     """

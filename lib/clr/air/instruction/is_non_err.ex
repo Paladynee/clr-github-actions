@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.IsNonErr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref lparen rparen]a)
+  Clr.Air.import(~w[lineref lparen rparen]a)
 
   Pegasus.parser_from_string(
     "is_non_err <- 'is_non_err' lparen lineref rparen",

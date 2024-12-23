@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.SubSat do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, ~w[lvalue]a)
+  Clr.Air.import(~w[lvalue lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "sub_sat <- 'sub_sat' lparen lineref cs (lineref / lvalue) rparen",

@@ -4,11 +4,10 @@ defmodule Clr.Air.Instruction.Not do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(~w[type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "not <- 'not' lparen type cs (lineref / name) rparen",
+    "not <- 'not' lparen type cs lineref rparen",
     not: [export: true, post_traverse: :not_op]
   )
 

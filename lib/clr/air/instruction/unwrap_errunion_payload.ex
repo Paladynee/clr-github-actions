@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.UnwrapErrunionPayload do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
+  Clr.Air.import(~w[type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "unwrap_errunion_payload <- 'unwrap_errunion_payload' lparen type cs lineref rparen",

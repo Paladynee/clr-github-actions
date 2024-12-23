@@ -4,10 +4,7 @@ defmodule Clr.Air.Instruction.MemsetSafe do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Literal, [:literal])
-  Clr.Air.import(Clr.Air.Parser, [:codeblock])
+  Clr.Air.import(~w[lineref cs lparen rparen lvalue literal codeblock]a)
 
   Pegasus.parser_from_string(
     "memset_safe <- 'memset_safe' lparen (lvalue / lineref) cs (lvalue / lineref / literal) rparen",

@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.StructFieldVal do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref int cs lparen rparen]a)
+  Clr.Air.import(~w[lineref int cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "struct_field_val <- 'struct_field_val' lparen lineref cs int rparen",

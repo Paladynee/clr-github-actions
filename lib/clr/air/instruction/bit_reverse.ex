@@ -4,10 +4,7 @@ defmodule Clr.Air.Instruction.BitReverse do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Literal, [:literal])
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(~w[lvalue literal type lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "bit_reverse <- 'bit_reverse' lparen type cs (lineref / lvalue / literal) rparen",

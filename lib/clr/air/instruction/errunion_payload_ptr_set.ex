@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.ErrunionPayloadPtrSet do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref name cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, ~w[type]a)
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen type literal]a)
 
   Pegasus.parser_from_string(
     "errunion_payload_ptr_set <- 'errunion_payload_ptr_set' lparen type cs lineref rparen",

@@ -4,8 +4,7 @@ defmodule Clr.Air.Instruction.Alloc do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref lparen rparen]a)
-  Clr.Air.import(Clr.Air.Type, [:type])
+  Clr.Air.import(~w[type lineref lparen rparen]a)
 
   Pegasus.parser_from_string(
     "alloc <- 'alloc' lparen type rparen",

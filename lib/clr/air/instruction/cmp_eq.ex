@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.CmpEq do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(~w[lvalue literal lineref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     "cmp_eq <- 'cmp_eq' lparen (lineref / lvalue) cs (literal / lvalue / lineref) rparen",

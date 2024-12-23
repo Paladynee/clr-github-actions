@@ -3,9 +3,7 @@ defmodule Clr.Air.Instruction.IsNonNullPtr do
 
   require Pegasus
   require Clr.Air
-
-  Clr.Air.import(Clr.Air.Base, ~w[lineref lparen rparen]a)
-  Clr.Air.import(Clr.Air.Literal, [:literal])
+  Clr.Air.import(~w[lineref lparen rparen literal]a)
 
   Pegasus.parser_from_string(
     "is_non_null_ptr <- 'is_non_null_ptr' lparen (lineref / literal) rparen",

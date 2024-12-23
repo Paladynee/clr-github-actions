@@ -4,9 +4,7 @@ defmodule Clr.Air.Instruction.Max do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(Clr.Air.Base, ~w[lineref cs lparen rparen]a)
-  Clr.Air.import(Clr.Air.Lvalue, [:lvalue])
-  Clr.Air.import(Clr.Air.Literal, ~w[literal]a)
+  Clr.Air.import(~w[lineref cs lparen rparen lvalue literal]a)
 
   Pegasus.parser_from_string(
     "max <- 'max' lparen (lineref / lvalue / literal) cs (lineref / lvalue / literal) rparen",
