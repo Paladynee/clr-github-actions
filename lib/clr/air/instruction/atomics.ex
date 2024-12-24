@@ -24,14 +24,22 @@ defmodule Clr.Air.Instruction.Atomics do
     or <- 'Or'
     xchg <- 'Xchg'
 
+    op <- add / sub / or / xchg
+    add <- 'Add'
+    sub <- 'Sub'
+    or <- 'Or'
+    xchg <- 'Xchg'
+
     weak_or_strong <- weak / strong
 
-    mode <- unordered / monotonic / seq_cst
+    mode <- unordered / monotonic / seq_cst / release / acquire
     unordered <- 'unordered'
     monotonic <- 'monotonic'
     seq_cst <- 'seq_cst'
     weak <- 'weak'
     strong <- 'strong'
+    release <- 'release'
+    acquire <- 'acquire'
     """,
     atomics: [export: true],
     atomic_load_instruction: [post_traverse: :atomic_load_instruction],
@@ -50,7 +58,9 @@ defmodule Clr.Air.Instruction.Atomics do
     or: [token: :or],
     xchg: [token: :xchg],
     weak: [token: :weak],
-    strong: [token: :strong]
+    strong: [token: :strong],
+    release: [token: :release],
+    acquire: [token: :acquire]
   )
 
   defmodule Load do

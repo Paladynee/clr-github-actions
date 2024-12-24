@@ -11,14 +11,14 @@ defmodule Mix.Tasks.Clr do
 
   @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
 
-  def run([file]) do
-    file
-    |> initializer
+  def run([cmd, file]) do
+    cmd
+    |> initializer(file)
     |> Stream.resource(&loop/1, &cleanup/1)
     |> Enum.reduce(%FunctionScanner{}, &scan_function/2)
   end
 
-  defp initializer(file) do
+  defp initializer(cmd, file) do
     port =
       :erlang.open_port({:spawn_executable, @zig}, [
         :binary,
@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Clr do
         :exit_status,
         :use_stdio,
         :stderr_to_stdout,
-        args: ~w[run --verbose-air #{file}]
+        args: [cmd, "--verbose-air", file]
       ])
 
     fn -> %LineScanner{port: port} end
@@ -81,9 +81,9 @@ defmodule Mix.Tasks.Clr do
     if String.starts_with?(name, state.name) do
       function = Enum.reverse([line | state.so_far])
 
-      IO.puts(function)
+      # IO.puts(function)
 
-      Clr.Air.parse(IO.iodata_to_binary(function))
+      Clr.Air.parse(IO.iodata_to_binary(function)) |> dbg(limit: 25)
     else
       Mix.raise("name mismatch (#{name}, #{state.name})")
     end
