@@ -6,16 +6,28 @@ defmodule Mix.Tasks.Clr do
   end
 
   defmodule FunctionScanner do
-    defstruct active: false, name: nil, so_far: []
+    defstruct active: false, name: nil, so_far: [], start_functions: []
   end
 
   @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
 
   def run([cmd, file]) do
+    # start the AIR server
+    Clr.Server.start_link([])
+
+    start_functions = case cmd do
+      "run" -> run_functions(file)
+    end
+
     cmd
     |> initializer(file)
     |> Stream.resource(&loop/1, &cleanup/1)
-    |> Enum.reduce(%FunctionScanner{}, &scan_function/2)
+    |> Enum.reduce(%FunctionScanner{start_functions: start_functions}, &scan_function/2)
+  end
+
+  defp run_functions(file) do
+    base = Path.basename(file, ".zig")
+    [lvalue: [base, "main"]]
   end
 
   defp initializer(cmd, file) do
@@ -81,14 +93,16 @@ defmodule Mix.Tasks.Clr do
     if String.starts_with?(name, state.name) do
       function = Enum.reverse([line | state.so_far])
 
-      # IO.puts(function)
-
-      Clr.Air.parse(IO.iodata_to_binary(function)) |> dbg(limit: 25)
+      function
+      |> IO.iodata_to_binary()
+      |> Clr.Air.parse()
+      |> Clr.Server.store_function()
+      |> maybe_trigger(state.start_functions)
     else
       Mix.raise("name mismatch (#{name}, #{state.name})")
     end
 
-    %FunctionScanner{}
+    %FunctionScanner{start_functions: state.start_functions}
   end
 
   defp scan_function("# End Function AIR: " <> name, _) do
@@ -105,5 +119,11 @@ defmodule Mix.Tasks.Clr do
 
   defp scan_function(line, state) do
     Map.update!(state, :so_far, &[line | &1])
+  end
+
+  defp maybe_trigger(function, start_functions) do
+    if function.name in start_functions do
+      Clr.Analysis.analyze(function.name)
+    end
   end
 end
