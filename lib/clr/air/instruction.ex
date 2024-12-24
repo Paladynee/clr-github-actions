@@ -1,19 +1,19 @@
 defmodule Clr.Air.Instruction do
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
-                arg ptr_elem_val ptr_add bitcast alloc store load is_non_null optional_payload cond_br block 
+                arg ptr_elem_val ptr_add bitcast alloc store load optional_payload cond_br block 
                 repeat loop slice slice_ptr struct_field_val switch_br call int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
-               ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
-                is_non_err unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
-                intcast atomic_rmw memset memcpy 
-                wrap_errunion_payload wrap_errunion_err array_to_slice ret_ptr ret_load cmpxchg_weak
-                optional_payload_ptr try is_non_null_ptr set_union_tag get_union_tag
+                ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
+                unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
+                intcast memset memcpy 
+                wrap_errunion_payload wrap_errunion_err array_to_slice ret_ptr ret_load
+                optional_payload_ptr try set_union_tag get_union_tag
                 errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
-                byte_swap int_from_bool error_name trunc is_null
-                memset_safe frame_addr atomic_load atomic_store_unordered cmpxchg_strong ptr_slice_ptr_ptr
+                byte_swap int_from_bool error_name trunc
+                memset_safe frame_addr ptr_slice_ptr_ptr
                 cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                bit_reverse atomic_store_monotonic try_cold abs ptr_sub maths tests],
+                bit_reverse try_cold ptr_sub maths tests atomics],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -54,14 +54,11 @@ defmodule Clr.Air.Instruction do
                    get_union_tag / int_from_bool / error_name / trunc / memset_safe /
                    unwrap_errunion_err_ptr / ptr_slice_len_ptr / tag_name / union_init /
                    # atomic operations
-                   atomic_rmw / cmpxchg_weak / atomic_load / atomic_store_unordered / cmpxchg_strong /
-                   atomic_store_monotonic /
+                   atomics /
                    # vector operations
                    reduce / cmp_vector /
                    # test
-                   tests / 
-                   is_non_null / is_non_err /
-                   is_non_null_ptr / is_null /
+                   tests /
                    # math
                    maths /
                    # etc

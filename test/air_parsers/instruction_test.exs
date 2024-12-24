@@ -628,27 +628,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "test operations" do
-    alias Clr.Air.Instruction.IsNonNull
-
-    test "is_non_null" do
-      assert %IsNonNull{line: {19, :keep}} =
-               Instruction.parse("is_non_null(%19)")
-    end
-
-    alias Clr.Air.Instruction.IsNonNullPtr
-
-    test "is_non_null_ptr" do
-      assert %IsNonNullPtr{line: {19, :keep}} =
-               Instruction.parse("is_non_null_ptr(%19)")
-    end
-
-    alias Clr.Air.Instruction.IsNonErr
-
-    test "is_non_err" do
-      assert %IsNonErr{line: {19, :keep}} =
-               Instruction.parse("is_non_err(%19)")
-    end
-
     # TODO: set off into "vector" domain
     alias Clr.Air.Instruction.CmpVector
 
@@ -668,82 +647,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "reduce" do
       assert %Reduce{loc: {0, :keep}, op: :or} =
                Instruction.parse("reduce(%0, Or)")
-    end
-  end
-
-  describe "atomics" do
-    alias Clr.Air.Instruction.AtomicRmw
-
-    test "atomic_rmw" do
-      assert %AtomicRmw{
-               loc: {:literal, {:ptr, :one, ~l"u8", []}, ~l"debug.panicking.raw"},
-               mode: :seq_cst,
-               op: :add,
-               val: ~l"@Air.Inst.Ref.one_u8"
-             } =
-               Instruction.parse(
-                 "atomic_rmw(<*u8, debug.panicking.raw>, @Air.Inst.Ref.one_u8, Add, seq_cst)"
-               )
-    end
-
-    alias Clr.Air.Instruction.CmpxchgWeak
-
-    test "cmpxchg_weak" do
-      assert %CmpxchgWeak{
-               loc: {:literal, {:ptr, :one, ~l"bool", []}, ~l"posix.abort.global.abort_entered"},
-               expected: ~l"@Air.Inst.Ref.bool_false",
-               desired: ~l"@Air.Inst.Ref.bool_true",
-               success_mode: :seq_cst,
-               failure_mode: :seq_cst
-             } =
-               Instruction.parse(
-                 "cmpxchg_weak(<*bool, posix.abort.global.abort_entered>, @Air.Inst.Ref.bool_false, @Air.Inst.Ref.bool_true, seq_cst, seq_cst)"
-               )
-    end
-
-    alias Clr.Air.Instruction.AtomicLoad
-
-    test "atomic_load" do
-      assert %AtomicLoad{loc: {13, :clobber}, mode: :unordered} =
-               Instruction.parse("atomic_load(%13!, unordered)")
-    end
-
-    alias Clr.Air.Instruction.AtomicStoreUnordered
-
-    test "atomic_store_unordered" do
-      assert %AtomicStoreUnordered{loc: {0, :keep}, val: {13, :clobber}, mode: :unordered} =
-               Instruction.parse("atomic_store_unordered(%0, %13!, unordered)")
-    end
-
-    alias Clr.Air.Instruction.AtomicStoreMonotonic
-
-    test "atomic_store_monotonic" do
-      assert %AtomicStoreMonotonic{
-               loc: {:literal, {:ptr, :one, ~l"i32", []}, ~l"debug.MemoryAccessor.cached_pid"},
-               val: {28, :keep},
-               mode: :monotonic
-             } =
-               Instruction.parse(
-                 "atomic_store_monotonic(<*i32, debug.MemoryAccessor.cached_pid>, %28, monotonic)"
-               )
-    end
-
-    alias Clr.Air.Instruction.CmpxchgStrong
-
-    test "cmpxchg_strong" do
-      assert %CmpxchgStrong{
-               loc:
-                 {:literal,
-                  {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []},
-                  ~l"heap.next_mmap_addr_hint"},
-               expected: {28, :clobber},
-               desired: {70, :clobber},
-               success_mode: :monotonic,
-               failure_mode: :monotonic
-             } =
-               Instruction.parse(
-                 "cmpxchg_strong(<*?[*]align(4096) u8, heap.next_mmap_addr_hint>, %28!, %70!, monotonic, monotonic)"
-               )
     end
   end
 

@@ -34,4 +34,28 @@ defmodule ClrTest.AirParsers.TestsTest do
                Instruction.parse("cmp_gte(%95!, %96!)")
     end
   end
+
+  describe "is operations" do
+    alias Clr.Air.Instruction.Tests.Is
+
+    test "is_non_null" do
+      assert %Is{op: :non_null, operand: {95, :clobber}} =
+               Instruction.parse("is_non_null(%95!)")
+    end
+
+    test "is_non_err" do
+      assert %Is{op: :non_err, operand: {95, :clobber}} =
+               Instruction.parse("is_non_err(%95!)")
+    end
+
+    test "is_non_null_ptr" do
+      assert %Is{op: :non_null_ptr, operand: {95, :clobber}} =
+               Instruction.parse("is_non_null_ptr(%95!)")
+    end
+
+    test "is_null" do
+      assert %Is{op: :null, operand: {95, :clobber}} =
+               Instruction.parse("is_null(%95!)")
+    end
+  end
 end

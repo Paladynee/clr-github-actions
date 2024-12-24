@@ -100,14 +100,6 @@ defmodule Clr.Air.Literal do
     {rest, [{:ptrcast, name}], context}
   end
 
-  defp struct_value(rest, args, context, _line, _bytes) do
-    {rest, [{:struct, Enum.reverse(args)}], context}
-  end
-
-  defp struct_kv(rest, [value, "=", key], context, _line, _bytes) do
-    {rest, [{key, value}], context}
-  end
-
   defp enum_value(rest, [value], context, _line, _bytes) do
     {rest, [{:enum, value}], context}
   end
