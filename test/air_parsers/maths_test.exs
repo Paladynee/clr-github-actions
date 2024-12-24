@@ -10,51 +10,51 @@ defmodule ClrTest.AirParsers.MathsTest do
     # add and friends
 
     test "add" do
-      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: nil} =
                Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
     end
 
     test "add_sat" do
-      assert %Binary{op: :add_sat, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :sat} =
                Instruction.parse("add_sat(%19, @Air.Inst.Ref.one_usize)")
     end
 
     test "add_wrap" do
-      assert %Binary{op: :add_wrap, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :add, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :wrap} =
                Instruction.parse("add_wrap(%206!, %207!)")
     end
 
     # sub and friends
 
     test "sub" do
-      assert %Binary{op: :sub, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
+      assert %Binary{op: :sub, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: nil} =
                Instruction.parse("sub(%19, @Air.Inst.Ref.one_usize)")
     end
 
     test "sub_sat" do
-      assert %Binary{op: :sub_sat, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :sub, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
                Instruction.parse("sub_sat(%206!, %207!)")
     end
 
     test "sub_wrap" do
-      assert %Binary{op: :sub_wrap, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :sub, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :wrap} =
                Instruction.parse("sub_wrap(%206!, %207!)")
     end
 
     # mul and friends
 
     test "mul" do
-      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: nil} =
                Instruction.parse("mul(%206!, %207!)")
     end
 
     test "mul_sat" do
-      assert %Binary{op: :mul_sat, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
                Instruction.parse("mul_sat(%206!, %207!)")
     end
 
     test "mul_wrap" do
-      assert %Binary{op: :mul_wrap, lhs: {206, :clobber}, rhs: {207, :clobber}} =
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :wrap} =
                Instruction.parse("mul_wrap(%206!, %207!)")
     end
 
@@ -71,12 +71,12 @@ defmodule ClrTest.AirParsers.MathsTest do
     end
 
     test "div_exact" do
-      assert %Binary{op: :div_exact, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
+      assert %Binary{op: :div, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}, mode: :exact} =
                Instruction.parse("div_exact(%206!, <usize, 8>)")
     end
 
     test "div_trunc" do
-      assert %Binary{op: :div_trunc, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
+      assert %Binary{op: :div, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}, mode: :trunc} =
                Instruction.parse("div_trunc(%206!, <usize, 8>)")
     end
 
@@ -145,6 +145,16 @@ defmodule ClrTest.AirParsers.MathsTest do
     test "clz" do
       assert %UnaryTyped{op: :clz, operand: {96, :keep}, type: ~l"usize"} =
                Instruction.parse("clz(usize, %96)")
+    end
+
+    test "byte_swap" do
+      assert %UnaryTyped{op: :byte_swap, type: ~l"u64", operand: {0, :keep}} =
+               Instruction.parse("byte_swap(u64, %0)")
+    end
+
+    test "bit_reverse" do
+      assert %UnaryTyped{op: :bit_reverse, type: ~l"u64", operand: {0, :keep}} =
+               Instruction.parse("bit_reverse(u64, %0)")
     end
   end
 

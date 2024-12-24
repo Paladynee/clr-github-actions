@@ -81,14 +81,23 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[strength loc expected desired success_mode failure_mode]a
   end
 
-  defp cmpxchg_instruction(rest, [failure_mode, success_mode, desired, expected, loc, strength], context, _line, _bytes) do
-    {rest, [%Cmpxchg{
-      failure_mode: failure_mode,
-      success_mode: success_mode,
-      desired: desired,
-      expected: expected,
-      loc: loc,
-      strength: strength
-    }], context}
+  defp cmpxchg_instruction(
+         rest,
+         [failure_mode, success_mode, desired, expected, loc, strength],
+         context,
+         _line,
+         _bytes
+       ) do
+    {rest,
+     [
+       %Cmpxchg{
+         failure_mode: failure_mode,
+         success_mode: success_mode,
+         desired: desired,
+         expected: expected,
+         loc: loc,
+         strength: strength
+       }
+     ], context}
   end
 end

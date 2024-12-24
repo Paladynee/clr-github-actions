@@ -23,7 +23,7 @@ defmodule ClrTest.AirParsers.AtomicsTests do
 
   test "atomic_load" do
     assert %Load{from: {13, :clobber}, mode: :unordered} =
-      Instruction.parse("atomic_load(%13!, unordered)")
+             Instruction.parse("atomic_load(%13!, unordered)")
   end
 
   alias Clr.Air.Instruction.Atomics.Store

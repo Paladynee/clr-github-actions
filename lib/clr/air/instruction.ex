@@ -10,10 +10,10 @@ defmodule Clr.Air.Instruction do
                 wrap_errunion_payload wrap_errunion_err array_to_slice ret_ptr ret_load
                 optional_payload_ptr try set_union_tag get_union_tag
                 errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
-                byte_swap int_from_bool error_name trunc
+                int_from_bool error_name trunc
                 memset_safe frame_addr ptr_slice_ptr_ptr
                 cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                bit_reverse try_cold ptr_sub maths tests atomics],
+                try_cold ptr_sub maths tests atomics],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -40,19 +40,26 @@ defmodule Clr.Air.Instruction do
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
                    br / trap / cond_br / repeat / switch_br / call / unreach / ret / ret_safe / ret_ptr /
-                   ret_addr / ret_load / try / try_ptr / try_cold /
+                   ret_addr / ret_load / try / try_ptr / try_cold / loop /
                    # pointer operations
                    ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
-                   ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr / ptr_sub /
+                   ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr / ptr_sub / ptr_slice_len_ptr / 
+                   struct_field_val / array_elem_val /
                    # memory operations
-                   bitcast / alloc / store / loop / load / optional_payload / struct_field_val /
-                   int_from_ptr / store_safe / aggregate_init / unwrap_errunion_payload / unwrap_errunion_err /
-                   wrap_optional / intcast / memset / memcpy / wrap_errunion_payload /
-                   wrap_errunion_err / array_to_slice / optional_payload_ptr / set_union_tag /
-                   errunion_payload_ptr_set / optional_payload_ptr_set / array_elem_val /
-                   get_union_tag / int_from_bool / error_name / trunc / memset_safe /
-                   unwrap_errunion_err_ptr / ptr_slice_len_ptr / tag_name / union_init /
+                   alloc / store / load / store_safe /
+                   memset / memcpy / memset_safe /
+                   # inits
+                   union_init / aggregate_init / 
+                   # casting operations
+                   bitcast / intcast / int_from_ptr / int_from_bool / array_to_slice / trunc /
+                   unwrap_errunion_payload / unwrap_errunion_err /
+                   unwrap_errunion_err_ptr / wrap_optional / wrap_errunion_payload /
+                   wrap_errunion_err / optional_payload_ptr / optional_payload_ptr_set /
+                   get_union_tag / set_union_tag / errunion_payload_ptr_set /
+                   optional_payload / 
+                   # names
+                   tag_name / error_name /
                    # atomic operations
                    atomics /
                    # vector operations
@@ -62,7 +69,7 @@ defmodule Clr.Air.Instruction do
                    # math
                    maths /
                    # etc
-                   assembly / arg / block / byte_swap / bit_reverse /
+                   assembly / arg / block /
                    # debug 
                    unknown_instruction
 

@@ -382,13 +382,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "memory operations" do
-    alias Clr.Air.Instruction.Bitcast
-
-    test "bitcast" do
-      assert %Bitcast{type: {:ptr, :many, ~l"u8", []}, line: {0, :keep}} =
-               Instruction.parse("bitcast([*]u8, %0)")
-    end
-
     alias Clr.Air.Instruction.Alloc
 
     test "alloc" do
@@ -697,19 +690,5 @@ defmodule ClrTest.AirParsers.InstructionTest do
   test "arg without value" do
     assert %Arg{type: {:ptr, :many, ~l"usize", []}, name: nil} =
              Instruction.parse(~S/arg([*]usize)/)
-  end
-
-  alias Clr.Air.Instruction.ByteSwap
-
-  test "byte_swap" do
-    assert %ByteSwap{type: ~l"u64", val: {0, :keep}} =
-             Instruction.parse("byte_swap(u64, %0)")
-  end
-
-  alias Clr.Air.Instruction.BitReverse
-
-  test "bit_reverse" do
-    assert %BitReverse{type: ~l"u64", src: {0, :keep}} =
-             Instruction.parse("bit_reverse(u64, %0)")
   end
 end
