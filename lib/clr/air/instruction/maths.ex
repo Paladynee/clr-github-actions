@@ -1,12 +1,12 @@
-defmodule Clr.Air.Instruction.Math do
+defmodule Clr.Air.Instruction.Maths do
   require Pegasus
   require Clr.Air
 
   Pegasus.parser_from_string(
     """
-    math <- binary_instruction / unary_type_instruction / overflow_instruction
+    maths <- binary_instruction / unary_type_instruction / overflow_instruction
     """,
-    math: [export: true]
+    maths: [export: true]
   )
 
   Clr.Air.import(~w[argument type lineref literal lvalue cs lparen rparen]a)

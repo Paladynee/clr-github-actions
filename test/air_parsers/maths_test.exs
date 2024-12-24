@@ -1,11 +1,11 @@
-defmodule ClrTest.AirParsers.MathTest do
+defmodule ClrTest.AirParsers.MathsTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
 
   import Clr.Air.Lvalue
 
   describe "binary operations" do
-    alias Clr.Air.Instruction.Math.Binary
+    alias Clr.Air.Instruction.Maths.Binary
 
     # add and friends
 
@@ -130,7 +130,7 @@ defmodule ClrTest.AirParsers.MathTest do
   end
 
   describe "unary + type operations" do
-    alias Clr.Air.Instruction.Math.UnaryTyped
+    alias Clr.Air.Instruction.Maths.UnaryTyped
 
     test "not" do
       assert %UnaryTyped{op: :not, operand: {96, :keep}, type: ~l"usize"} =
@@ -149,7 +149,7 @@ defmodule ClrTest.AirParsers.MathTest do
   end
 
   describe "overflow operations" do
-    alias Clr.Air.Instruction.Math.Overflow
+    alias Clr.Air.Instruction.Maths.Overflow
 
     test "add_with_overflow" do
       assert %Overflow{

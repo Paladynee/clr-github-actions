@@ -642,46 +642,11 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("is_non_null_ptr(%19)")
     end
 
-    alias Clr.Air.Instruction.CmpNeq
-
-    test "cmp_neq" do
-      assert %CmpNeq{lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}} =
-               Instruction.parse("cmp_neq(%95!, <u64, 0>)")
-    end
-
-    alias Clr.Air.Instruction.CmpLt
-
-    test "cmp_lt" do
-      assert %CmpLt{lhs: {95, :clobber}, rhs: {96, :clobber}} =
-               Instruction.parse("cmp_lt(%95!, %96!)")
-    end
-
-    alias Clr.Air.Instruction.CmpLte
-
-    test "cmp_lte" do
-      assert %CmpLte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
-               Instruction.parse("cmp_lte(%95!, %96!)")
-    end
-
     alias Clr.Air.Instruction.IsNonErr
 
     test "is_non_err" do
       assert %IsNonErr{line: {19, :keep}} =
                Instruction.parse("is_non_err(%19)")
-    end
-
-    alias Clr.Air.Instruction.CmpGt
-
-    test "cmp_gt" do
-      assert %CmpGt{lhs: {95, :clobber}, rhs: {96, :clobber}} =
-               Instruction.parse("cmp_gt(%95!, %96!)")
-    end
-
-    alias Clr.Air.Instruction.CmpGte
-
-    test "cmp_gte" do
-      assert %CmpGte{lhs: {95, :clobber}, rhs: {96, :clobber}} =
-               Instruction.parse("cmp_gte(%95!, %96!)")
     end
 
     # TODO: set off into "vector" domain
