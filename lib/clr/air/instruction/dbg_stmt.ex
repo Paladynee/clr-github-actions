@@ -1,5 +1,5 @@
 defmodule Clr.Air.Instruction.DbgStmt do
-  defstruct [:range]
+  defstruct [:row, :col]
 
   require Pegasus
   require Clr.Air
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.DbgStmt do
     dbg_stmt: [export: true, post_traverse: :dbg_stmt]
   )
 
-  defp dbg_stmt(rest, [right, left, "dbg_stmt"], context, _line, _bytes) do
-    {rest, [%__MODULE__{range: left..right}], context}
+  defp dbg_stmt(rest, [col, row, "dbg_stmt"], context, _line, _bytes) do
+    {rest, [%__MODULE__{row: row, col: col}], context}
   end
 end

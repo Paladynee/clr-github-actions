@@ -8,7 +8,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.DbgStmt
 
     test "dbg_stmt" do
-      assert %DbgStmt{range: 9..10} = Instruction.parse("dbg_stmt(9:10)")
+      assert %DbgStmt{row: 9, col: 10} = Instruction.parse("dbg_stmt(9:10)")
     end
 
     alias Clr.Air.Instruction.DbgInlineBlock

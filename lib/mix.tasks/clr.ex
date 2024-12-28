@@ -13,11 +13,12 @@ defmodule Mix.Tasks.Clr do
 
   def run([cmd, file]) do
     # start the AIR server
-    Clr.Server.start_link([])
+    Clr.Air.Server.start_link([])
 
-    start_functions = case cmd do
-      "run" -> run_functions(file)
-    end
+    start_functions =
+      case cmd do
+        "run" -> run_functions(file)
+      end
 
     cmd
     |> initializer(file)
@@ -96,7 +97,7 @@ defmodule Mix.Tasks.Clr do
       function
       |> IO.iodata_to_binary()
       |> Clr.Air.parse()
-      |> Clr.Server.store_function()
+      |> Clr.Air.Server.put()
       |> maybe_trigger(state.start_functions)
     else
       Mix.raise("name mismatch (#{name}, #{state.name})")
@@ -122,8 +123,11 @@ defmodule Mix.Tasks.Clr do
   end
 
   defp maybe_trigger(function, start_functions) do
+    # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
-      Clr.Analysis.analyze(function.name)
+      Task.start(fn ->
+        Clr.Analysis.analyze(function.name, [])
+      end)
     end
   end
 end

@@ -1,4 +1,8 @@
-defmodule Clr.Air.Instruction do
+use Protoss
+
+defprotocol Clr.Air.Instruction do
+  def analyze(instruction, state)
+after
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
                 arg ptr_elem_val ptr_add bitcast alloc store load optional_payload cond_br block 
@@ -92,5 +96,11 @@ defmodule Clr.Air.Instruction do
     case instruction(content) do
       {:ok, [instruction], rest, _, _, _} when rest in ["", "\n"] -> instruction
     end
+  end
+end
+
+defimpl Clr.Air.Instruction, for: Any do
+  def analyze(instruction, state) do
+    raise "instruction #{inspect(instruction)} not implemented"
   end
 end

@@ -1,4 +1,6 @@
 defmodule Clr.Air.Instruction.Call do
+  use Clr.Air.Instruction
+
   defstruct [:fn, :args]
 
   require Pegasus
@@ -19,5 +21,19 @@ defmodule Clr.Air.Instruction.Call do
       ["call", fun | args] ->
         {rest, [%__MODULE__{fn: fun, args: args}], context}
     end
+  end
+
+  def analyze(call, analysis) do
+    {:literal, _type, {:function, function_name}} = call.fn
+    # we also need the context of the current function.
+
+    analysis.name
+    |> merge_name(function_name)
+    |> Clr.Air.Server.get()
+    :ok
+  end
+
+  defp merge_name({:lvalue, lvalue}, function_name) do
+    {:lvalue, List.replace_at(lvalue, -1, function_name)}
   end
 end

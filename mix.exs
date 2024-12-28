@@ -26,7 +26,8 @@ defmodule Clr.MixProject do
   defp deps do
     [
       {:pegasus, "~> 0.2"},
-      {:protoss, "~> 0.2"}
+      {:protoss, "~> 0.2"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end

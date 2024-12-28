@@ -77,7 +77,8 @@ defmodule Clr.Air.Instruction.Maths do
   )
 
   @modes ~w[sat wrap exact trunc]a
-  def binary_instruction(rest, [rhs, lhs, mode, op], context, _line, _bytes) when mode in @modes do
+  def binary_instruction(rest, [rhs, lhs, mode, op], context, _line, _bytes)
+      when mode in @modes do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op, mode: mode}], context}
   end
 
