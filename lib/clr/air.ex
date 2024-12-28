@@ -1,8 +1,4 @@
 defmodule Clr.Air do
-  alias Clr.Air.Parser
-
-  defdelegate parse(text), to: Parser
-
   @base ~w[lineref clobbers keep clobber squoted dquoted dstring identifier alpha alnum int cs singleq doubleq comma space colon dot 
            lparen rparen langle rangle lbrace rbrace lbrack rbrack fatarrow newline equals null undefined elision notnewline]a
 
@@ -12,7 +8,7 @@ defmodule Clr.Air do
 
   @type_ ~w[type fn_type ptr_type enum_literal]a
 
-  @parser ~w[codeline codeblock codeblock_clobbers]a
+  @function ~w[codeline codeblock codeblock_clobbers]a
 
   @instruction ~w[instruction argument]a
 
@@ -25,7 +21,7 @@ defmodule Clr.Air do
         symbol when symbol in @literal -> {symbol, Clr.Air.Literal}
         symbol when symbol in @lvalue -> {symbol, Clr.Air.Lvalue}
         symbol when symbol in @type_ -> {symbol, Clr.Air.Type}
-        symbol when symbol in @parser -> {symbol, Clr.Air.Parser}
+        symbol when symbol in @function -> {symbol, Clr.Air.Function}
         symbol when symbol in @instruction -> {symbol, Clr.Air.Instruction}
       end)
 

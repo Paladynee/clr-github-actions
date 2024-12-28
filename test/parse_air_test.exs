@@ -3,9 +3,6 @@ defmodule ParseAirTest do
 
   import ClrTest.TestAir
 
-  alias Clr.Air
-  alias Clr.Air.Function
-
   test_air("start._start")
 
   test_air("start.posixCallMainAndExit")

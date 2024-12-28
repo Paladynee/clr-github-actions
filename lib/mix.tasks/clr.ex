@@ -96,7 +96,7 @@ defmodule Mix.Tasks.Clr do
 
       function
       |> IO.iodata_to_binary()
-      |> Clr.Air.parse()
+      |> Clr.Air.Function.parse()
       |> Clr.Air.Server.put()
       |> maybe_trigger(state.start_functions)
     else

@@ -11,7 +11,7 @@ defmodule ClrTest.TestAir do
         assert %Clr.Air.Function{name: sigil_l(unquote(lvalue), [])} =
                  "test/air_examples/#{unquote(name)}.air"
                  |> File.read!()
-                 |> Clr.Air.parse()
+                 |> Clr.Air.Function.parse()
       end
     end
   end
