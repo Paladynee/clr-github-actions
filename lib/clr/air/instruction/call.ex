@@ -30,6 +30,7 @@ defmodule Clr.Air.Instruction.Call do
     analysis.name
     |> merge_name(function_name)
     |> Clr.Air.Server.get()
+
     :ok
   end
 

@@ -13,12 +13,12 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
     test "a keep instruction gets the instruction put into the types slot." do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, _ -> {:foobar, []} end)
 
-      assert %{types: %{0 => :foobar}} = run_analysis(%{{0, :keep} => %ClrTest.TestInstruction{}})
+      assert %{types: %{0 => :foobar}} = run_analysis(%{{0, :keep} => %ClrTest.Instrtuction{}})
     end
 
     test "a clobber instruction does not change the state." do
       empty_map = %{}
-      assert %{types: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.TestInstruction{}})
+      assert %{types: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instrtuction{}})
     end
 
     test "a subsequent instruction gets the types passed" do
@@ -28,8 +28,8 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
 
       assert %{types: %{0 => :foobar, 1 => :barbaz}} =
                run_analysis(%{
-                 {0, :keep} => %ClrTest.TestInstruction{},
-                 {1, :keep} => %ClrTest.TestInstruction{}
+                 {0, :keep} => %ClrTest.Instrtuction{},
+                 {1, :keep} => %ClrTest.Instrtuction{}
                })
     end
   end

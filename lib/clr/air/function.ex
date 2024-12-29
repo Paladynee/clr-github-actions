@@ -4,6 +4,14 @@ defmodule Clr.Air.Function do
 
   defstruct [:name, code: %{}]
 
+  @type t :: %__MODULE__{
+          name: term,
+          # change to codeblock.t
+          code: term
+        }
+
+  # TODO: move codeblock and codeline stuff into its own module/domain
+
   # import the following "base" parsers
   Clr.Air.import(~w[lvalue instruction lineref clobbers space lbrace rbrace newline]a)
 
