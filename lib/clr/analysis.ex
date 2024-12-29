@@ -36,9 +36,12 @@ defmodule Clr.Analysis do
   end
 
   defp evaluate_impl(function_name, args, {pid, _ref}, waiters) do
-    case Map.fetch(waiters, function_name) do
-      {:ok, {pids, future}} ->
-        {:reply, future, Map.replace!(waiters, {function_name, args}, {[pid | pids], future})}
+    waiter_id_key = {function_name, args}
+
+    case Map.fetch(waiters, waiter_id_key) do
+      {:ok, {pids, future_ref}} ->
+        {:reply, {:future, future_ref},
+         Map.replace!(waiters, waiter_id_key, {[pid | pids], future_ref})}
 
       :error ->
         # do the evaluation here.  Response is obtained as a Task.async response.
@@ -49,7 +52,7 @@ defmodule Clr.Analysis do
             analyzer.do_evaluate(function_name, args)
           end)
 
-        {:reply, {:future, future.ref}, Map.put(waiters, {function_name, args}, {[pid], future.ref})}
+        {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {[pid], future.ref})}
     end
   end
 
@@ -59,14 +62,18 @@ defmodule Clr.Analysis do
 
   def debug_get_table(function_name, args) do
     [{_, result}] = :ets.lookup(table_name(), {function_name, args})
-    
+
     result
   end
 
   def await({:future, ref}) do
     receive do
-      {ref, result} -> result
+      {^ref, result} -> result
     end
+  end
+
+  def debug_insert_result(function_name, args, result) do
+    :ets.insert(table_name(), {{function_name, args}, result})
   end
 
   def handle_call({:evaluate, function_name, args}, from, waiters),
@@ -87,6 +94,9 @@ defmodule Clr.Analysis do
           # forward the result to the pids
           Enum.each(pids, &send(&1, response))
           function_call
+
+        _ ->
+          nil
       end)
 
     {:noreply, Map.delete(waiters, function_call)}
