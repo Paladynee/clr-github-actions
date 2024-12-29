@@ -29,9 +29,11 @@ defmodule Clr.Air.Instruction.Call do
 
     analysis.name
     |> merge_name(function_name)
-    |> Clr.Air.Server.get()
-
-    :ok
+    |> Clr.Analysis.evaluate(call.args)
+    |> case do
+      {:future, ref} -> {{:future, ref}, []}
+      {:ok, result} -> {result, []}
+    end
   end
 
   defp merge_name({:lvalue, lvalue}, function_name) do

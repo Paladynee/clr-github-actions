@@ -14,6 +14,8 @@ defmodule Mix.Tasks.Clr do
   def run([cmd, file]) do
     # start the AIR server
     Clr.Air.Server.start_link([])
+    # start the analysis server
+    Clr.Analysis.start_link([])
 
     start_functions =
       case cmd do
@@ -126,7 +128,7 @@ defmodule Mix.Tasks.Clr do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
       Task.start(fn ->
-        Clr.Analysis.analyze(function.name, [])
+        Clr.Analysis.evaluate(function.name, [])
       end)
     end
   end
