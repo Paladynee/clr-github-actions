@@ -17,8 +17,6 @@ defmodule Clr.Air.Instruction.RetSafe do
     {rest, [%__MODULE__{val: value}], context}
   end
 
-  alias Clr.Analysis
-
   def analyze(%{val: {:lvalue, _} = lvalue}, _dst_line, analysis) do
     %{analysis | return: {:TypeOf, lvalue}}
   end

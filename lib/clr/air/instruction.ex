@@ -102,7 +102,7 @@ after
 end
 
 defimpl Clr.Air.Instruction, for: Any do
-  def analyze(instruction, _state) do
+  def analyze(instruction, _line, _analysis) do
     raise "instruction #{inspect(instruction)} not implemented"
   end
 end

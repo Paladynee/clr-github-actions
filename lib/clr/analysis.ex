@@ -41,8 +41,8 @@ defmodule Clr.Analysis do
     waiter_id_key = {function_name, args}
 
     case Map.fetch(waiters, waiter_id_key) do
-      {:ok, {future_info, [pids]}} ->
-        {:reply, {:future, future_info},
+      {:ok, {{_pid, future_ref} = future_info, pids}} ->
+        {:reply, {:future, future_ref},
          Map.replace!(waiters, waiter_id_key, {future_info, [pid | pids]})}
 
       :error ->
@@ -69,6 +69,7 @@ defmodule Clr.Analysis do
   def await({:future, ref}) do
     receive do
       {^ref, result} -> result
+      other -> other
     end
   end
 
@@ -98,7 +99,7 @@ defmodule Clr.Analysis do
   def handle_info({ref, result} = response, waiters) when is_reference(ref) do
     function_call =
       Enum.find_value(waiters, fn
-        {function_call, {{task_pid, ^ref}, pids}} ->
+        {function_call, {{_task_pid, ^ref}, pids}} ->
           # clean up the DOWN message
           receive do
             {:DOWN, ^ref, :process, _, _reason} -> :ok
@@ -140,6 +141,10 @@ defmodule Clr.Analysis do
 
   def put_type(analysis, line, type) do
     %{analysis | types: Map.put(analysis.types, line, type)}
+  end
+
+  def put_future(analysis, future) do
+    %{analysis | awaits: [future | analysis.awaits]}
   end
 
   # this private function is made public for testing.

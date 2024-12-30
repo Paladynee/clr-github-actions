@@ -23,7 +23,9 @@ defmodule Clr.Air.Instruction.Call do
     end
   end
 
-  def analyze(call, analysis) do
+  alias Clr.Analysis
+
+  def analyze(call, line, analysis) do
     {:literal, _type, {:function, function_name}} = call.fn
     # we also need the context of the current function.
 
@@ -31,8 +33,12 @@ defmodule Clr.Air.Instruction.Call do
     |> merge_name(function_name)
     |> Clr.Analysis.evaluate(call.args)
     |> case do
-      {:future, ref} -> {{:future, ref}, []}
-      {:ok, result} -> {result, []}
+      {:future, ref} -> 
+        analysis
+        |> Analysis.put_type(line, {:future, ref})
+        |> Analysis.put_future(ref)
+
+      {:ok, result} -> Analysis.put_type(analysis, line, result)
     end
   end
 
