@@ -2,7 +2,7 @@ defmodule Clr.Air.Type do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue int identifier enum_literal squoted space dot comma cs lparen 
+  Clr.Air.import(~w[lvalue int identifier squoted space dot comma cs lparen 
        rparen langle rangle lbrack rbrack lbrace rbrace dstring colon notnewline]a)
 
   Pegasus.parser_from_string(

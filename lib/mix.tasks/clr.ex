@@ -6,12 +6,13 @@ defmodule Mix.Tasks.Clr do
   end
 
   defmodule FunctionScanner do
-    defstruct active: false, name: nil, so_far: [], start_functions: []
+    defstruct active: false, name: nil, await_refs: [], so_far: [], start_functions: []
   end
 
   @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
 
   def run([cmd, file]) do
+    Process.flag(:trap_exit, true)
     # start the AIR server
     Clr.Air.Server.start_link([])
     # start the analysis server
@@ -22,10 +23,15 @@ defmodule Mix.Tasks.Clr do
         "run" -> run_functions(file)
       end
 
-    cmd
-    |> initializer(file)
-    |> Stream.resource(&loop/1, &cleanup/1)
-    |> Enum.reduce(%FunctionScanner{start_functions: start_functions}, &scan_function/2)
+    scanner =
+      cmd
+      |> initializer(file)
+      |> Stream.resource(&loop/1, &cleanup/1)
+      |> Enum.reduce(%FunctionScanner{start_functions: start_functions}, &scan_function/2)
+
+    Enum.each(scanner.await_refs, fn ref ->
+      Clr.Analysis.await(ref) |> dbg(limit: 25)
+    end)
   end
 
   defp run_functions(file) do
@@ -101,11 +107,16 @@ defmodule Mix.Tasks.Clr do
       |> Clr.Air.Function.parse()
       |> Clr.Air.Server.put()
       |> maybe_trigger(state.start_functions)
+      |> case do
+        {:future, _} = future ->
+          %{state | name: nil, active: false, await_refs: [future | state.await_refs]}
+
+        _ ->
+          %{state | name: nil, active: false}
+      end
     else
       Mix.raise("name mismatch (#{name}, #{state.name})")
     end
-
-    %FunctionScanner{start_functions: state.start_functions}
   end
 
   defp scan_function("# End Function AIR: " <> name, _) do
@@ -127,9 +138,8 @@ defmodule Mix.Tasks.Clr do
   defp maybe_trigger(function, start_functions) do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
-      Task.start(fn ->
-        Clr.Analysis.evaluate(function.name, [])
-      end)
+      # we don't actually care what the return values of these guys are.
+      Clr.Analysis.evaluate(function.name, []) |> dbg(limit: 25)
     end
   end
 end

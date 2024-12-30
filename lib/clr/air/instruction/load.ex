@@ -1,4 +1,6 @@
 defmodule Clr.Air.Instruction.Load do
+  # takes a value from a pointer and puts into a vm slot.
+
   defstruct [:type, :loc]
 
   require Pegasus
@@ -14,4 +16,9 @@ defmodule Clr.Air.Instruction.Load do
   def load(rest, [loc, type, "load"], context, _line, _bytes) do
     {rest, [%__MODULE__{type: type, loc: loc}], context}
   end
+
+  use Clr.Air.Instruction
+  alias Clr.Analysis
+
+  def analyze(%{type: type}, line, analysis), do: Analysis.put_type(analysis, line, type)
 end

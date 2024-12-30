@@ -14,7 +14,8 @@ defmodule Clr.Analysis do
   end
 
   @type waiter_id :: {name :: term, args :: []}
-  @type waiters :: %{optional(waiter_id) => {[pid], future_ref :: reference}}
+  @type future_info :: {pid, reference}
+  @type waiters :: %{optional(waiter_id) => {future_info, [pid]}}
   @spec init([]) :: {:ok, waiters, :hibernate}
 
   def init(opts) do
@@ -23,6 +24,7 @@ defmodule Clr.Analysis do
     analyzer = Keyword.get(opts, :analyzer, __MODULE__)
     Process.put(:analyzer, analyzer)
     Process.put(Clr.Analysis.TableName, name)
+    Process.flag(:trap_exit, true)
 
     :ets.new(name, [:named_table, :set, :public])
     {:ok, %{}, :hibernate}
@@ -39,9 +41,9 @@ defmodule Clr.Analysis do
     waiter_id_key = {function_name, args}
 
     case Map.fetch(waiters, waiter_id_key) do
-      {:ok, {pids, future_ref}} ->
-        {:reply, {:future, future_ref},
-         Map.replace!(waiters, waiter_id_key, {[pid | pids], future_ref})}
+      {:ok, {future_info, [pids]}} ->
+        {:reply, {:future, future_info},
+         Map.replace!(waiters, waiter_id_key, {future_info, [pid | pids]})}
 
       :error ->
         # do the evaluation here.  Response is obtained as a Task.async response.
@@ -52,7 +54,9 @@ defmodule Clr.Analysis do
             analyzer.do_evaluate(function_name, args)
           end)
 
-        {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {[pid], future.ref})}
+        future_info = {future.pid, future.ref}
+
+        {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {future_info, [pid]})}
     end
   end
 
@@ -75,13 +79,29 @@ defmodule Clr.Analysis do
   def handle_call({:evaluate, function_name, args}, from, waiters),
     do: evaluate_impl(function_name, args, from, waiters)
 
+  def handle_info({:EXIT, _task_pid, :normal}, waiters), do: {:noreply, waiters}
+
+  def handle_info({:EXIT, task_pid, reason}, waiters) do
+    function_call =
+      Enum.find_value(waiters, fn
+        {function_call, {{^task_pid, ref}, pids}} ->
+          Enum.each(pids, &send(&1, {ref, {:error, reason}}))
+          function_call
+
+        _ ->
+          nil
+      end)
+
+    {:noreply, Map.delete(waiters, function_call)}
+  end
+
   def handle_info({ref, result} = response, waiters) when is_reference(ref) do
     function_call =
-      Enum.find(waiters, fn
-        {function_call, {pids, ^ref}} ->
+      Enum.find_value(waiters, fn
+        {function_call, {{task_pid, ^ref}, pids}} ->
           # clean up the DOWN message
           receive do
-            {:DOWN, ^ref, :process, _, reason} -> :ok
+            {:DOWN, ^ref, :process, _, _reason} -> :ok
           end
 
           # stash the result in the table.
@@ -105,7 +125,22 @@ defmodule Clr.Analysis do
 
   ## FUNCTION EVALUATION
 
-  defstruct [:name, :arguments, :position, types: %{}]
+  defstruct [:name, :args, :row, :col, :return, awaits: [], types: %{}]
+
+  @type t :: %__MODULE__{
+          name: term,
+          args: list(),
+          row: non_neg_integer(),
+          col: non_neg_integer(),
+          return: term,
+          awaits: [{pid, reference}],
+          types: %{optional(non_neg_integer()) => term}
+        }
+  alias Clr.Air.Instruction
+
+  def put_type(analysis, line, type) do
+    %{analysis | types: Map.put(analysis.types, line, type)}
+  end
 
   # this private function is made public for testing.
   def do_evaluate(function_name, arguments) do
@@ -118,16 +153,25 @@ defmodule Clr.Analysis do
   def do_analyze(function, arguments) do
     Enum.reduce(
       function.code,
-      %__MODULE__{name: function.name, arguments: arguments},
+      %__MODULE__{name: function.name, args: arguments},
       &analysis/2
     )
   end
 
+  # instructions that return need to be analyzed.
+  @returns [Clr.Air.Instruction.RetSafe]
+
+  defp analysis({{line, _}, %return{} = instruction}, state) when return in @returns do
+    Instruction.analyze(instruction, line, state)
+  end
+
+  defp analysis({_, %Clr.Air.Instruction.DbgStmt{row: row, col: col}}, state),
+    do: %{state | row: row, col: col}
+
   # values that are clobbered can be safely ignored.
   defp analysis({{_, :clobber}, _}, state), do: state
 
-  defp analysis({{line, :keep}, function}, state) do 
-    {result, _param_type_changes} = Clr.Air.Instruction.analyze(function, state)
-    %{state | types: Map.put(state.types, line, result)}
+  defp analysis({{line, :keep}, instruction}, state) do
+    Instruction.analyze(instruction, line, state)
   end
 end

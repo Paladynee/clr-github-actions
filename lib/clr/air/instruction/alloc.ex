@@ -14,4 +14,16 @@ defmodule Clr.Air.Instruction.Alloc do
   def alloc(rest, [type, "alloc"], context, _line, _bytes) do
     {rest, [%__MODULE__{type: type}], context}
   end
+
+  use Clr.Air.Instruction
+
+  alias Clr.Analysis
+
+  def analyze(%{type: {:ptr, ptrtype, child, opts}}, line, analysis) do
+    Analysis.put_type(
+      analysis,
+      line,
+      {:ptr, ptrtype, child, Keyword.put(opts, :stack, analysis.name)}
+    )
+  end
 end

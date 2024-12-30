@@ -1,4 +1,6 @@
 defmodule Clr.Air.Instruction.RetSafe do
+  use Clr.Air.Instruction
+
   defstruct [:val]
 
   require Pegasus
@@ -13,5 +15,28 @@ defmodule Clr.Air.Instruction.RetSafe do
 
   def ret_safe(rest, [value, "ret_safe"], context, _line, _bytes) do
     {rest, [%__MODULE__{val: value}], context}
+  end
+
+  alias Clr.Analysis
+
+  def analyze(%{val: {:lvalue, _} = lvalue}, _dst_line, analysis) do
+    %{analysis | return: {:TypeOf, lvalue}}
+  end
+
+  def analyze(%{val: {src_line, _}}, _dst_line, analysis) do
+    # get the type of the value.
+    case Map.fetch!(analysis.types, src_line) do
+      {:ptr, _, _, opts} = return_type->
+        if opts[:stack] == analysis.name do
+          raise Clr.StackPtrEscape,
+            function: Clr.Air.Lvalue.as_string(analysis.name),
+            line: analysis.row,
+            col: analysis.col
+        else
+          %{analysis | return: return_type}
+        end
+      return_type ->
+        %{analysis | return: return_type}
+    end
   end
 end

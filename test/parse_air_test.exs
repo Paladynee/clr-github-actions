@@ -18,4 +18,6 @@ defmodule ParseAirTest do
   test_air("debug.getSelfDebugInfo")
 
   test_air("posix.dl_iterate_phdr__anon_4201")
+
+  test_air("stack_ptr_escape.escaped_ptr")
 end

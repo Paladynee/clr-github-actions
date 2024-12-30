@@ -119,7 +119,10 @@ defmodule Clr.Air.Instruction.Maths do
   # Overflow operations
 
   defmodule Overflow do
+    use Clr.Air.Instruction
+    alias Clr.Analysis
     defstruct ~w[op type lhs rhs]a
+    def analyze(%{type: type}, line, analysis), do: Analysis.put_type(analysis, line, type)
   end
 
   Pegasus.parser_from_string(

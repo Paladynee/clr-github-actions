@@ -24,12 +24,6 @@ defmodule Clr.Air.Instruction.Atomics do
     or <- 'Or'
     xchg <- 'Xchg'
 
-    op <- add / sub / or / xchg
-    add <- 'Add'
-    sub <- 'Sub'
-    or <- 'Or'
-    xchg <- 'Xchg'
-
     weak_or_strong <- weak / strong
 
     mode <- unordered / monotonic / seq_cst / release / acquire

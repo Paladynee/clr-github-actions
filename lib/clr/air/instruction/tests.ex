@@ -14,7 +14,13 @@ defmodule Clr.Air.Instruction.Tests do
   # compares
 
   defmodule Compare do
+    use Clr.Air.Instruction
+
     defstruct ~w[lhs rhs op]a
+    import Clr.Air.Lvalue
+    alias Clr.Analysis
+
+    def analyze(_, line, analysis), do: Analysis.put_type(analysis, line, ~l"bool")
   end
 
   Pegasus.parser_from_string(

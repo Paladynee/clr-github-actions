@@ -135,4 +135,8 @@ defmodule Clr.Air.Lvalue do
       {:ok, [parsed], "", _, _, _} -> parsed
     end
   end
+
+  def as_string({:lvalue, segments}), do: Enum.map_join(segments, ".", &as_string/1)
+
+  def as_string(binary) when is_binary(binary), do: binary
 end

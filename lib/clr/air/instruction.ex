@@ -1,7 +1,9 @@
 use Protoss
 
 defprotocol Clr.Air.Instruction do
-  def analyze(instruction, state)
+  alias Clr.Analysis
+  @callback analyze(struct, non_neg_integer, Analysis.t()) :: Analysis.t()
+  def analyze(instruction, line, state)
 after
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
@@ -100,7 +102,7 @@ after
 end
 
 defimpl Clr.Air.Instruction, for: Any do
-  def analyze(instruction, state) do
+  def analyze(instruction, _state) do
     raise "instruction #{inspect(instruction)} not implemented"
   end
 end
