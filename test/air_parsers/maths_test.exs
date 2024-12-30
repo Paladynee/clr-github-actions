@@ -127,6 +127,11 @@ defmodule ClrTest.AirParsers.MathsTest do
       assert %Binary{op: :bool_or, lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("bool_or(%96, %97)")
     end
+
+    test "bool_and" do
+      assert %Binary{op: :bool_and, lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("bool_and(%96, %97)")
+    end
   end
 
   describe "unary + type operations" do

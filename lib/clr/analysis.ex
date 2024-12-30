@@ -52,6 +52,7 @@ defmodule Clr.Analysis do
         future =
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
+
             case analyzer.do_evaluate(function_name, args) do
               %{awaits: [], return: result} ->
                 {:ok, result}
@@ -198,7 +199,8 @@ defmodule Clr.Analysis do
     Clr.Air.Instruction.Call
   ]
 
-  defp analysis({{line, mode}, %always{} = instruction}, state) when (always in @always) or mode === :keep do
+  defp analysis({{line, mode}, %always{} = instruction}, state)
+       when always in @always or mode === :keep do
     Instruction.analyze(instruction, line, state)
   end
 

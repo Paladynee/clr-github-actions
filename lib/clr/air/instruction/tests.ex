@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.Tests do
 
   Pegasus.parser_from_string(
     """
-    tests <- compare_instruction / is_instruction
+    tests <- compare_instruction / is_instruction / unary_instruction
     """,
     tests: [export: true]
   )
@@ -79,5 +79,26 @@ defmodule Clr.Air.Instruction.Tests do
 
   def is_instruction(rest, [operand, op], context, _line, _bytes) do
     {rest, [%Is{operand: operand, op: op}], context}
+  end
+
+  defmodule Unary do
+    defstruct ~w[operand op]a
+  end
+
+  Pegasus.parser_from_string(
+    """
+    unary_instruction <- unary_op lparen argument rparen
+
+    unary_op <- cmp_lt_errors_len
+
+    cmp_lt_errors_len <- 'cmp_lt_errors_len'
+    """,
+    unary_instruction: [post_traverse: :unary_instruction],
+    unary_prefix: [ignore: true],
+    cmp_lt_errors_len: [token: :cmp_lt_errors_len]
+  )
+
+  def unary_instruction(rest, [operand, op], context, _line, _bytes) do
+    {rest, [%Unary{operand: operand, op: op}], context}
   end
 end

@@ -35,6 +35,15 @@ defmodule ClrTest.AirParsers.TestsTest do
     end
   end
 
+  describe "unary test operations" do
+    alias Clr.Air.Instruction.Tests.Unary
+
+    test "cmp_lt_errors_len" do
+      assert %Unary{op: :cmp_lt_errors_len, operand: {30, :keep}} =
+               Instruction.parse("cmp_lt_errors_len(%30)")
+    end
+  end
+
   describe "is operations" do
     alias Clr.Air.Instruction.Tests.Is
 

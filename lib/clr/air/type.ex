@@ -3,7 +3,7 @@ defmodule Clr.Air.Type do
   require Clr.Air
 
   Clr.Air.import(~w[lvalue int identifier squoted space dot comma cs lparen 
-       rparen langle rangle lbrack rbrack lbrace rbrace dstring colon notnewline]a)
+       rparen langle rangle lbrack rbrack lbrace rbrace dstring colon elision notnewline]a)
 
   Pegasus.parser_from_string(
     """
@@ -32,7 +32,7 @@ defmodule Clr.Air.Type do
     sentinel <- 'null' / '0'
 
     fn_type <- ('*' const space)? 'fn' space typelist (space callconv)? space type
-    typelist <- lparen ((noalias space)? type (cs (noalias space)? type)*)? rparen
+    typelist <- lparen ((noalias space)? type (cs (noalias space)? (type / elision))*)? rparen
 
     callconv <- 'callconv' lparen (inline / c / naked) rparen
     inline <- '.@"inline"'

@@ -24,7 +24,7 @@ defmodule Clr.Air.Instruction.Maths do
     binary_op <- add_op / sub_op / mul_op / div_op / rem / mod /
                  min / max / shl / shr /
                  bit_and / bit_or / xor /
-                 bool_or
+                 bool_and / bool_or
 
     add_op <- add (sat / wrap)?
     add <- 'add'
@@ -43,6 +43,7 @@ defmodule Clr.Air.Instruction.Maths do
     bit_and <- 'bit_and'
     bit_or <- 'bit_or'
     xor <- 'xor'
+    bool_and <- 'bool_and'
     bool_or <- 'bool_or'
 
     mode <- sat / wrap
@@ -69,6 +70,7 @@ defmodule Clr.Air.Instruction.Maths do
     bit_and: [token: :bit_and],
     bit_or: [token: :bit_or],
     xor: [token: :xor],
+    bool_and: [token: :bool_and],
     bool_or: [token: :bool_or],
     sat: [token: :sat],
     wrap: [token: :wrap],

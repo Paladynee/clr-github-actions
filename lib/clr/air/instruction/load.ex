@@ -23,11 +23,17 @@ defmodule Clr.Air.Instruction.Load do
   def analyze(%{type: type, loc: {src_line, _}}, line, analysis) do
     case Analysis.fetch!(analysis, src_line) do
       {:ptr, _, _, opts} ->
-        if opts[:undefined] do
-          raise Clr.UndefinedUsage,
-            function: Clr.Air.Lvalue.as_string(analysis.name),
-            line: line,
-            col: analysis.col
+        cond do
+          opts[:undefined] ->
+            raise Clr.UndefinedUsage,
+              function: Clr.Air.Lvalue.as_string(analysis.name),
+              row: analysis.row,
+              col: analysis.col
+          opts[:heap] == :deleted ->
+            raise Clr.UseAfterFreeError, 
+              function: Clr.Air.Lvalue.as_string(analysis.name),
+              row: analysis.row,
+              col: analysis.col
         end
     end
 

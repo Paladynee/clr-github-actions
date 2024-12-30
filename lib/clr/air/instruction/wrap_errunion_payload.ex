@@ -20,4 +20,12 @@ defmodule Clr.Air.Instruction.WrapErrunionPayload do
       ) do
     {rest, [%__MODULE__{src: op, type: type}], context}
   end
+
+  use Clr.Air.Instruction
+  alias Clr.Analysis
+
+  def analyze(%{type: {:errorable, errorset, _payload_type}, src: {src, _}}, line, analysis) do
+    updated_payload = Analysis.fetch!(analysis, src)
+    Analysis.put_type(analysis, line, {:errorable, errorset, updated_payload})
+  end
 end

@@ -100,6 +100,20 @@ defmodule ClrTest.Air.TypeTest do
              Type.parse("*const fn () callconv(.naked) noreturn")
   end
 
+  test "function type with elision" do
+    assert {:fn,
+            [
+              ~l"c_int",
+              {:ptr, :many, ~l"u8", const: true, sentinel: 0},
+              ~l"os.linux.O__struct8594",
+              :...
+            ], ~l"c_int",
+            callconv: :c} =
+             Type.parse(
+               "fn (c_int, [*:0]const u8, os.linux.O__struct8594, ...) callconv(.c) c_int"
+             )
+  end
+
   test "array type" do
     assert {:array, 8, ~l"i32", []} = Type.parse("[8]i32")
   end
