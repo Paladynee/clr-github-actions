@@ -22,5 +22,10 @@ defmodule Clr.Air.Instruction.Arg do
     {rest, [%__MODULE__{type: type, name: name}], context}
   end
 
-  def analyze(%{type: type}, line, analysis), do: Analysis.put_type(analysis, line, type)
+  def analyze(_, line, analysis) do
+    # note that the line of the arg instruction is ALWAYS the index of the
+    # call type parameter.
+    type = Analysis.fetch_arg!(analysis, line)
+    Analysis.put_type(analysis, line, type)
+  end
 end

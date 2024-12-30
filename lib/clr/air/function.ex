@@ -78,9 +78,12 @@ defmodule Clr.Air.Function do
   def parse(string) do
     case air(string) do
       {:ok, [], "", function, _, _} ->
-        # if match?({:lvalue, ["param_ptr_escape", _]}, function.name) do
-        #   IO.puts(string)
-        # end
+        if prefix = Clr.debug_prefix() do
+          if match?({:lvalue, [^prefix, _]}, function.name) do
+            IO.puts(string)
+          end
+        end
+
         function
     end
   end

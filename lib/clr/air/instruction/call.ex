@@ -29,9 +29,13 @@ defmodule Clr.Air.Instruction.Call do
     {:literal, _type, {:function, function_name}} = call.fn
     # we also need the context of the current function.
 
+    types = Enum.map(call.args, fn {line, _} ->
+      Analysis.fetch!(analysis, line)
+    end)
+
     analysis.name
     |> merge_name(function_name)
-    |> Clr.Analysis.evaluate(call.args)
+    |> Clr.Analysis.evaluate(types)
     |> case do
       {:future, ref} ->
         analysis

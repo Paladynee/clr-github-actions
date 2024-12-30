@@ -14,4 +14,16 @@ defmodule Clr.Air.Instruction.StoreSafe do
   def store_safe(rest, [value, loc, "store_safe"], context, _line, _bytes) do
     {rest, [%__MODULE__{val: value, loc: loc}], context}
   end
+
+  use Clr.Air.Instruction
+
+  def analyze(%__MODULE__{loc: {line, _}, val: {:literal, _type, :undefined}}, _line, analysis) do
+    %{analysis | types: Map.update!(analysis.types, line, &set_undefined/1)}
+  end
+
+  def analyze(_, _, analysis), do: analysis
+
+  defp set_undefined({:ptr, count, type, opts}) do
+    {:ptr, count, type, Keyword.put(opts, :undefined, true)}
+  end
 end

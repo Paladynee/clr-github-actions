@@ -18,13 +18,13 @@ defmodule Clr.Air.Instruction.Bitcast do
   use Clr.Air.Instruction
   alias Clr.Analysis
 
-  def analyze(%{type: {:ptr, count, base, opts}, src: {src_line, _}}, dst_line, analysis) do 
-    case Map.fetch!(analysis.types, src_line) do
+  def analyze(%{type: {:ptr, count, base, opts}, src: {src_line, _}}, dst_line, analysis) do
+    case Analysis.fetch!(analysis, src_line) do
       {:ptr, _, _, src_opts} ->
         type = {:ptr, count, base, Keyword.merge(opts, src_opts)}
         Analysis.put_type(analysis, dst_line, type)
-      
-      # don't deal with other cases yet.
+
+        # don't deal with other cases yet.
     end
   end
 end

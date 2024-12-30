@@ -20,5 +20,17 @@ defmodule Clr.Air.Instruction.Load do
   use Clr.Air.Instruction
   alias Clr.Analysis
 
-  def analyze(%{type: type}, line, analysis), do: Analysis.put_type(analysis, line, type)
+  def analyze(%{type: type, loc: {src_line, _}}, line, analysis) do
+    case Analysis.fetch!(analysis, src_line) do
+      {:ptr, _, _, opts} ->
+        if opts[:undefined] do
+          raise Clr.UndefinedUsage,
+            function: Clr.Air.Lvalue.as_string(analysis.name),
+            line: line,
+            col: analysis.col
+        end
+    end
+
+    Analysis.put_type(analysis, line, type)
+  end
 end

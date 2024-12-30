@@ -20,7 +20,7 @@ defmodule Clr.Air.Instruction.StructFieldVal do
   alias Clr.Analysis
 
   def analyze(%{src: {src_line, _keep_or_clobber}, index: index}, dst_line, analysis) do
-    {:struct, struct_types} = Map.fetch!(analysis.types, src_line)
+    {:struct, struct_types} = Analysis.fetch!(analysis, src_line)
     line_type = Enum.at(struct_types, index) || raise "Invalid struct field access"
     Analysis.put_type(analysis, dst_line, line_type)
   end

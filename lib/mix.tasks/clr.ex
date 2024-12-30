@@ -18,6 +18,10 @@ defmodule Mix.Tasks.Clr do
     # start the analysis server
     Clr.Analysis.start_link([])
 
+    if System.get_env("DEBUG", "false") == "true" do
+      Application.put_env(:clr, :debug_prefix, Path.basename(file, ".zig"))
+    end
+
     start_functions =
       case cmd do
         "run" -> run_functions(file)
@@ -31,11 +35,13 @@ defmodule Mix.Tasks.Clr do
 
     Enum.each(scanner.await_refs, fn ref ->
       case Clr.Analysis.await(ref) do
-        {:error, {error, _stacktrace}} when is_exception(error) -> 
+        {:error, {error, _stacktrace}} when is_exception(error) ->
           error
           |> Exception.message()
           |> Mix.raise()
-        _ok -> :ok
+
+        _ok ->
+          :ok
       end
     end)
   end
@@ -53,7 +59,7 @@ defmodule Mix.Tasks.Clr do
         :exit_status,
         :use_stdio,
         :stderr_to_stdout,
-        args: [cmd, "--verbose-air", file]
+        args: [cmd, "--verbose-air", "-lc", file]
       ])
 
     fn -> %LineScanner{port: port} end
@@ -145,7 +151,7 @@ defmodule Mix.Tasks.Clr do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
       # we don't actually care what the return values of these guys are.
-      Clr.Analysis.evaluate(function.name, []) 
+      Clr.Analysis.evaluate(function.name, [])
     end
   end
 end

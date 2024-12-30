@@ -18,4 +18,10 @@ defmodule Clr.Air.Instruction.DbgStmt do
   defp dbg_stmt(rest, [col, row, "dbg_stmt"], context, _line, _bytes) do
     {rest, [%__MODULE__{row: row, col: col}], context}
   end
+
+  use Clr.Air.Instruction
+
+  def analyze(%__MODULE__{row: row, col: col}, _line, analysis) do
+    %{analysis | row: row, col: col}
+  end
 end

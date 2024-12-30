@@ -51,9 +51,11 @@ defmodule Clr.Analysis do
 
         future =
           Task.async(fn ->
-            #Logger.disable(self())
+            if !Clr.debug_prefix(), do: Logger.disable(self())
             case analyzer.do_evaluate(function_name, args) do
-              %{awaits: [], return: result} -> {:ok, result}
+              %{awaits: [], return: result} ->
+                {:ok, result}
+
               %{awaits: awaits, return: result} ->
                 process_awaits(awaits, result)
             end
@@ -68,7 +70,7 @@ defmodule Clr.Analysis do
   defp process_awaits([], result), do: {:ok, result}
 
   defp process_awaits([head | rest], result) do
-    case await({:future, head}) do 
+    case await({:future, head}) do
       {:error, _} = error -> error
       {:ok, _} -> process_awaits(rest, result)
     end
@@ -161,6 +163,17 @@ defmodule Clr.Analysis do
     %{analysis | awaits: [future | analysis.awaits]}
   end
 
+  def fetch!(analysis, line) do
+    case Map.fetch!(analysis.types, line) do
+      {:future, future} -> await(future)
+      type -> type
+    end
+  end
+
+  def fetch_arg!(analysis, index) do
+    Enum.at(analysis.args, index) || raise "Invalid argument index #{index}"
+  end
+
   # this private function is made public for testing.
   def do_evaluate(function_name, arguments) do
     function_name
@@ -178,19 +191,17 @@ defmodule Clr.Analysis do
   end
 
   # instructions that return need to be analyzed.
-  @returns [Clr.Air.Instruction.RetSafe]
+  @always [
+    Clr.Air.Instruction.RetSafe,
+    Clr.Air.Instruction.StoreSafe,
+    Clr.Air.Instruction.DbgStmt,
+    Clr.Air.Instruction.Call
+  ]
 
-  defp analysis({{line, _}, %return{} = instruction}, state) when return in @returns do
+  defp analysis({{line, mode}, %always{} = instruction}, state) when (always in @always) or mode === :keep do
     Instruction.analyze(instruction, line, state)
   end
-
-  defp analysis({_, %Clr.Air.Instruction.DbgStmt{row: row, col: col}}, state),
-    do: %{state | row: row, col: col}
 
   # values that are clobbered can be safely ignored.
   defp analysis({{_, :clobber}, _}, state), do: state
-
-  defp analysis({{line, :keep}, instruction}, state) do
-    Instruction.analyze(instruction, line, state)
-  end
 end

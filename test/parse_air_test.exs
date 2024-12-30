@@ -22,4 +22,6 @@ defmodule ParseAirTest do
   test_air("stack_ptr_escape.escaped_ptr")
 
   test_air("param_ptr_escape.escaped_param_ptr")
+
+  test_air("undefined_value_use.main")
 end
