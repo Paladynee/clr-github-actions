@@ -33,12 +33,13 @@ defmodule Clr.Air.Instruction.Call do
     |> merge_name(function_name)
     |> Clr.Analysis.evaluate(call.args)
     |> case do
-      {:future, ref} -> 
+      {:future, ref} ->
         analysis
         |> Analysis.put_type(line, {:future, ref})
         |> Analysis.put_future(ref)
 
-      {:ok, result} -> Analysis.put_type(analysis, line, result)
+      {:ok, result} ->
+        Analysis.put_type(analysis, line, result)
     end
   end
 

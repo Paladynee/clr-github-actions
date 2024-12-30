@@ -78,8 +78,8 @@ defmodule Clr.Air.Function do
   def parse(string) do
     case air(string) do
       {:ok, [], "", function, _, _} ->
-        # if match?({:lvalue, ["stack_ptr_escape", _]}, function.name) do
-        #  IO.puts(string)
+        # if match?({:lvalue, ["param_ptr_escape", _]}, function.name) do
+        #   IO.puts(string)
         # end
         function
     end

@@ -24,7 +24,7 @@ defmodule Clr.Air.Instruction.RetSafe do
   def analyze(%{val: {src_line, _}}, _dst_line, analysis) do
     # get the type of the value.
     case Map.fetch!(analysis.types, src_line) do
-      {:ptr, _, _, opts} = return_type->
+      {:ptr, _, _, opts} = return_type ->
         if opts[:stack] == analysis.name do
           raise Clr.StackPtrEscape,
             function: Clr.Air.Lvalue.as_string(analysis.name),
@@ -33,6 +33,7 @@ defmodule Clr.Air.Instruction.RetSafe do
         else
           %{analysis | return: return_type}
         end
+
       return_type ->
         %{analysis | return: return_type}
     end

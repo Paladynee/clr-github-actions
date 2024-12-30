@@ -51,12 +51,26 @@ defmodule Clr.Analysis do
 
         future =
           Task.async(fn ->
-            analyzer.do_evaluate(function_name, args)
+            #Logger.disable(self())
+            case analyzer.do_evaluate(function_name, args) do
+              %{awaits: [], return: result} -> {:ok, result}
+              %{awaits: awaits, return: result} ->
+                process_awaits(awaits, result)
+            end
           end)
 
         future_info = {future.pid, future.ref}
 
         {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {future_info, [pid]})}
+    end
+  end
+
+  defp process_awaits([], result), do: {:ok, result}
+
+  defp process_awaits([head | rest], result) do
+    case await({:future, head}) do 
+      {:error, _} = error -> error
+      {:ok, _} -> process_awaits(rest, result)
     end
   end
 
@@ -80,22 +94,6 @@ defmodule Clr.Analysis do
   def handle_call({:evaluate, function_name, args}, from, waiters),
     do: evaluate_impl(function_name, args, from, waiters)
 
-  def handle_info({:EXIT, _task_pid, :normal}, waiters), do: {:noreply, waiters}
-
-  def handle_info({:EXIT, task_pid, reason}, waiters) do
-    function_call =
-      Enum.find_value(waiters, fn
-        {function_call, {{^task_pid, ref}, pids}} ->
-          Enum.each(pids, &send(&1, {ref, {:error, reason}}))
-          function_call
-
-        _ ->
-          nil
-      end)
-
-    {:noreply, Map.delete(waiters, function_call)}
-  end
-
   def handle_info({ref, result} = response, waiters) when is_reference(ref) do
     function_call =
       Enum.find_value(waiters, fn
@@ -118,6 +116,22 @@ defmodule Clr.Analysis do
 
     {:noreply, Map.delete(waiters, function_call)}
   end
+
+  def handle_info({:DOWN, ref, :process, task_pid, reason}, waiters) do
+    function_call =
+      Enum.find_value(waiters, fn
+        {function_call, {{^task_pid, ^ref}, pids}} ->
+          Enum.each(pids, &send(&1, {ref, {:error, reason}}))
+          function_call
+
+        _ ->
+          nil
+      end)
+
+    {:noreply, Map.delete(waiters, function_call)}
+  end
+
+  def handle_info(_, waiters), do: {:noreply, waiters}
 
   # common utility functions
   def table_name do

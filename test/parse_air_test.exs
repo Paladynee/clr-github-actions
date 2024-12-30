@@ -20,4 +20,6 @@ defmodule ParseAirTest do
   test_air("posix.dl_iterate_phdr__anon_4201")
 
   test_air("stack_ptr_escape.escaped_ptr")
+
+  test_air("param_ptr_escape.escaped_param_ptr")
 end
