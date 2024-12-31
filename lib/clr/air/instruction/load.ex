@@ -29,8 +29,9 @@ defmodule Clr.Air.Instruction.Load do
               function: Clr.Air.Lvalue.as_string(analysis.name),
               row: analysis.row,
               col: analysis.col
+
           opts[:heap] == :deleted ->
-            raise Clr.UseAfterFreeError, 
+            raise Clr.UseAfterFreeError,
               function: Clr.Air.Lvalue.as_string(analysis.name),
               row: analysis.row,
               col: analysis.col

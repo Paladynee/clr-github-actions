@@ -139,8 +139,10 @@ defmodule Mix.Tasks.Clr do
 
   defp scan_function(empty, %{active: false} = state) when empty in @emptylines, do: state
 
-  defp scan_function(line, %{active: false}) do
-    Mix.raise("unexpected line #{inspect(line)}")
+  defp scan_function(line, %{active: false} = state) do
+    # these lines appear after the parser has completed
+    IO.write(:stdio, line)
+    state
   end
 
   defp scan_function(line, state) do

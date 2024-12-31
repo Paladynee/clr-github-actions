@@ -30,17 +30,19 @@ defmodule Clr.Air.Instruction.Call do
     case call.fn do
       {:literal, {:fn, [~l"mem.Allocator" | params], type, _fn_opts}, {:function, function}} ->
         process_allocator(function, params, type, call.args, line, analysis)
+
       {:literal, _type, {:function, function_name}} ->
         # we also need the context of the current function.
 
         types =
-          Enum.map(call.args, fn 
+          Enum.map(call.args, fn
             {:literal, type, _} ->
               type
+
             {line, _} ->
               Analysis.fetch!(analysis, line)
           end)
-    
+
         analysis.name
         |> merge_name(function_name)
         |> Clr.Analysis.evaluate(types)
@@ -49,33 +51,65 @@ defmodule Clr.Air.Instruction.Call do
             analysis
             |> Analysis.put_type(line, {:future, ref})
             |> Analysis.put_future(ref)
-    
+
           {:ok, result} ->
             Analysis.put_type(analysis, line, result)
         end
-      end
+    end
   end
 
-  defp process_allocator("create" <> _, [], {:errorable, e, {:ptr, count, type, opts}}, [{:literal, ~l"mem.Allocator", struct}], line, analysis) do
-    heap_type = {:errorable, e, {:ptr, count, type, Keyword.put(opts, :heap, Map.fetch!(struct, "vtable"))}}
+  defp process_allocator(
+         "create" <> _,
+         [],
+         {:errorable, e, {:ptr, count, type, opts}},
+         [{:literal, ~l"mem.Allocator", struct}],
+         line,
+         analysis
+       ) do
+    heap_type =
+      {:errorable, e, {:ptr, count, type, Keyword.put(opts, :heap, Map.fetch!(struct, "vtable"))}}
+
     Analysis.put_type(analysis, line, heap_type)
   end
 
-  defp process_allocator("destroy" <> _, [_], ~l"void", [{:literal, ~l"mem.Allocator", struct}, {src, _}], line, analysis) do
+  defp process_allocator(
+         "destroy" <> _,
+         [_],
+         ~l"void",
+         [{:literal, ~l"mem.Allocator", struct}, {src, _}],
+         line,
+         analysis
+       ) do
     {:ptr, :one, type, opts} = Analysis.fetch!(analysis, src)
     vtable = Map.fetch!(struct, "vtable")
 
     case Keyword.fetch(opts, :heap) do
-       {:ok, ^vtable} ->
-          
+      {:ok, ^vtable} ->
         analysis
         |> Analysis.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
         |> Analysis.put_type(line, ~l"void")
 
       {:ok, :deleted} ->
-        raise Clr.DoubleFreeError
+        raise Clr.DoubleFreeError,
+          function: Clr.Air.Lvalue.as_string(analysis.name),
+          row: analysis.row,
+          col: analysis.col
 
-      :error -> raise Clr.AllocatorMismatchError
+      {:ok, other} ->
+        raise Clr.AllocatorMismatchError,
+          original: Clr.Air.Lvalue.as_string(other),
+          attempted: Clr.Air.Lvalue.as_string(vtable),
+          function: Clr.Air.Lvalue.as_string(analysis.name),
+          row: analysis.row,
+          col: analysis.col
+
+      :error ->
+        raise Clr.AllocatorMismatchError,
+          original: :stack,
+          attempted: Clr.Air.Lvalue.as_string(vtable),
+          function: Clr.Air.Lvalue.as_string(analysis.name),
+          row: analysis.row,
+          col: analysis.col
     end
   end
 

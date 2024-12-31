@@ -31,9 +31,13 @@ defmodule Clr.DoubleFreeError do
 end
 
 defmodule Clr.AllocatorMismatchError do
-  defexception [:function, :row, :col]
+  defexception [:original, :attempted, :function, :row, :col]
+
+  def message(%{original: :stack} = exception) do
+    "Stack memory attempted to be freed by `#{exception.attempted}` in `#{exception.function}` at #{exception.row}:#{exception.col}"
+  end
 
   def message(exception) do
-    "Allocator mismatch detected in function `#{exception.function}` at #{exception.row}:#{exception.col}"
+    "Heap memory allocated by `#{exception.original}` freed by `#{exception.attempted}` in `#{exception.function}` at #{exception.row}:#{exception.col}"
   end
 end
