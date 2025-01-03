@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.ErrunionPayloadPtrSet do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen type literal]a)
+  Clr.Air.import(~w[slotref cs lparen rparen type literal]a)
 
   Pegasus.parser_from_string(
-    "errunion_payload_ptr_set <- 'errunion_payload_ptr_set' lparen type cs lineref rparen",
+    "errunion_payload_ptr_set <- 'errunion_payload_ptr_set' lparen type cs slotref rparen",
     errunion_payload_ptr_set: [export: true, post_traverse: :errunion_payload_ptr_set]
   )
 
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.ErrunionPayloadPtrSet do
         rest,
         [loc, type, "errunion_payload_ptr_set"],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{loc: loc, type: type}], context}

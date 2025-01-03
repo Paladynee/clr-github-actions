@@ -131,7 +131,10 @@ defmodule Clr.Analysis do
 
   ## FUNCTION EVALUATION
 
-  defstruct [:name, :args, :row, :col, :return, awaits: [], types: %{}]
+  defstruct [:name, :args, :row, :col, :return, awaits: [], slots: %{}]
+
+  # TODO: go through and rename "lines" to "slots"
+  @type slot_spec :: {term, keyword}
 
   @type t :: %__MODULE__{
           name: term,
@@ -140,20 +143,21 @@ defmodule Clr.Analysis do
           col: non_neg_integer(),
           return: term,
           awaits: [{pid, reference}],
-          types: %{optional(non_neg_integer()) => term}
+          slots: %{optional(non_neg_integer()) => slot_spec}
         }
+
   alias Clr.Air.Instruction
 
-  def put_type(analysis, line, type) do
-    %{analysis | types: Map.put(analysis.types, line, type)}
+  def put_type(analysis, slot, type) do
+    %{analysis | slots: Map.put(analysis.slots, slot, type)}
   end
 
   def put_future(analysis, future) do
     %{analysis | awaits: [future | analysis.awaits]}
   end
 
-  def fetch!(analysis, line) do
-    case Map.fetch!(analysis.types, line) do
+  def fetch!(analysis, slot) do
+    case Map.fetch!(analysis.slots, slot) do
       {:future, future} -> await(future)
       type -> type
     end
@@ -171,10 +175,10 @@ defmodule Clr.Analysis do
   end
 
   # this private function is made public for testing.
-  def do_analyze(function, arguments, debug_preload \\ %{}) do
+  def do_analyze(function, arguments, debug_preload_slots \\ %{}) do
     Enum.reduce(
       function.code,
-      %__MODULE__{name: function.name, args: arguments, types: debug_preload},
+      %__MODULE__{name: function.name, args: arguments, slots: debug_preload_slots},
       &analysis/2
     )
   end
@@ -187,9 +191,9 @@ defmodule Clr.Analysis do
     Clr.Air.Instruction.Call
   ]
 
-  defp analysis({{line, mode}, %always{} = instruction}, state)
+  defp analysis({{slot, mode}, %always{} = instruction}, state)
        when always in @always or mode === :keep do
-    Instruction.analyze(instruction, line, state)
+    Instruction.analyze(instruction, slot, state)
   end
 
   # values that are clobbered can be safely ignored.

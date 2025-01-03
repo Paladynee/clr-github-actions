@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.TryCold do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref clobbers cs space lparen rparen type codeblock_clobbers]a)
+  Clr.Air.import(~w[slotref clobbers cs space lparen rparen type codeblock_clobbers]a)
 
   Pegasus.parser_from_string(
     """
-    try_cold <- 'try_cold' lparen lineref cs codeblock_clobbers (space clobbers)? rparen
+    try_cold <- 'try_cold' lparen slotref cs codeblock_clobbers (space clobbers)? rparen
     """,
     try_cold: [export: true, post_traverse: :try_cold]
   )
@@ -17,7 +17,7 @@ defmodule Clr.Air.Instruction.TryCold do
          rest,
          [{:clobbers, clobbers}, error_code, loc, "try_cold"],
          context,
-         _line,
+         _slot,
          _bytes
        ) do
     {rest, [%__MODULE__{loc: loc, error_code: error_code, clobbers: clobbers}], context}

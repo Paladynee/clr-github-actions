@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.WrapOptional do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "wrap_optional <- 'wrap_optional' lparen type cs lineref rparen",
+    "wrap_optional <- 'wrap_optional' lparen type cs slotref rparen",
     wrap_optional: [export: true, post_traverse: :wrap_optional]
   )
 
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.WrapOptional do
         rest,
         [op, type, "wrap_optional"],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{src: op, type: type}], context}

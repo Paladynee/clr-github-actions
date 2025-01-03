@@ -3,11 +3,11 @@ defmodule Clr.Air.Instruction.CmpVector do
 
   require Pegasus
   require Clr.Air
-  Clr.Air.import(~w[argument lineref cs lparen rparen literal lvalue]a)
+  Clr.Air.import(~w[argument slotref cs lparen rparen literal lvalue]a)
 
   Pegasus.parser_from_string(
     """
-    cmp_vector <- 'cmp_vector' lparen op cs (literal / lineref) cs argument rparen
+    cmp_vector <- 'cmp_vector' lparen op cs (literal / slotref) cs argument rparen
     op <- neq
     neq <- 'neq'
     """,
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.CmpVector do
     neq: [token: :neq]
   )
 
-  def cmp_vector(rest, [rhs, lhs, op, "cmp_vector"], context, _line, _bytes) do
+  def cmp_vector(rest, [rhs, lhs, op, "cmp_vector"], context, _slot, _bytes) do
     {rest, [%__MODULE__{op: op, lhs: lhs, rhs: rhs}], context}
   end
 end

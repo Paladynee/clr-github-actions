@@ -2,14 +2,14 @@ defmodule Clr.Air.Instruction.Atomics do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[argument type lineref literal lvalue cs lparen rparen]a)
+  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
     atomics <- atomic_load_instruction / atomic_store_instruction / atomic_rmw_instruction / cmpxchg_instruction
 
-    atomic_load_instruction <- atomic_load lparen (lineref / literal) cs mode rparen
-    atomic_store_instruction <- atomic_store_prefix mode lparen (lineref / literal) cs (lineref / literal) cs mode rparen
+    atomic_load_instruction <- atomic_load lparen (slotref / literal) cs mode rparen
+    atomic_store_instruction <- atomic_store_prefix mode lparen (slotref / literal) cs (slotref / literal) cs mode rparen
     atomic_rmw_instruction <- atomic_rmw lparen argument cs argument cs op cs mode rparen
     cmpxchg_instruction <- cmpxchg_prefix weak_or_strong lparen argument cs argument cs argument cs mode cs mode rparen
 
@@ -61,7 +61,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[from mode]a
   end
 
-  defp atomic_load_instruction(rest, [mode, from], context, _line, _bytes) do
+  defp atomic_load_instruction(rest, [mode, from], context, _slot, _bytes) do
     {rest, [%Load{from: from, mode: mode}], context}
   end
 
@@ -69,7 +69,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[from to mode]a
   end
 
-  defp atomic_store_instruction(rest, [mode, from, to, mode], context, _line, _bytes) do
+  defp atomic_store_instruction(rest, [mode, from, to, mode], context, _slot, _bytes) do
     {rest, [%Store{from: from, to: to, mode: mode}], context}
   end
 
@@ -77,7 +77,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[val loc op mode]a
   end
 
-  defp atomic_rmw_instruction(rest, [mode, op, val, loc], context, _line, _bytes) do
+  defp atomic_rmw_instruction(rest, [mode, op, val, loc], context, _slot, _bytes) do
     {rest, [%Rmw{val: val, loc: loc, op: op, mode: mode}], context}
   end
 
@@ -89,7 +89,7 @@ defmodule Clr.Air.Instruction.Atomics do
          rest,
          [failure_mode, success_mode, desired, expected, loc, strength],
          context,
-         _line,
+         _slot,
          _bytes
        ) do
     {rest,

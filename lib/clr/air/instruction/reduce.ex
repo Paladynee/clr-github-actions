@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.Reduce do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen type lvalue literal]a)
+  Clr.Air.import(~w[slotref cs lparen rparen type lvalue literal]a)
 
   Pegasus.parser_from_string(
     """
-    reduce <- 'reduce' lparen lineref cs op rparen
+    reduce <- 'reduce' lparen slotref cs op rparen
 
     op <- add / sub / or
     add <- 'Add'
@@ -25,7 +25,7 @@ defmodule Clr.Air.Instruction.Reduce do
     seq_cst: [token: :seq_cst]
   )
 
-  def reduce(rest, [op, loc, "reduce"], context, _line, _bytes) do
+  def reduce(rest, [op, loc, "reduce"], context, _slot, _bytes) do
     {rest, [%__MODULE__{op: op, loc: loc}], context}
   end
 end

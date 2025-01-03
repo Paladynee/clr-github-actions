@@ -14,18 +14,18 @@ defmodule Clr.Air.Instruction.Arg do
     arg: [export: true, post_traverse: :arg]
   )
 
-  def arg(rest, [type, "arg"], context, _line, _byte) do
+  def arg(rest, [type, "arg"], context, _slot, _byte) do
     {rest, [%__MODULE__{type: type}], context}
   end
 
-  def arg(rest, [name, type, "arg"], context, _line, _byte) do
+  def arg(rest, [name, type, "arg"], context, _slot, _byte) do
     {rest, [%__MODULE__{type: type, name: name}], context}
   end
 
-  def analyze(_, line, analysis) do
-    # note that the line of the arg instruction is ALWAYS the index of the
+  def analyze(_, slot, analysis) do
+    # note that the slot of the arg instruction is ALWAYS the index of the
     # call type parameter.
-    type = Analysis.fetch_arg!(analysis, line)
-    Analysis.put_type(analysis, line, type)
+    type = Analysis.fetch_arg!(analysis, slot)
+    Analysis.put_type(analysis, slot, type)
   end
 end

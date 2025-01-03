@@ -91,49 +91,49 @@ defmodule Clr.Air.Type do
 
   # TYPE post-traversals
 
-  defp type(rest, [type], context, _line, _bytes), do: {rest, [type], context}
+  defp type(rest, [type], context, _slot, _bytes), do: {rest, [type], context}
 
-  defp type(rest, [type, :comptime], context, _line, _bytes) do
+  defp type(rest, [type, :comptime], context, _slot, _bytes) do
     {rest, [comptime: type], context}
   end
 
-  defp errorable_types(rest, [payload, :!, :anyerror], context, _line, _bytes) do
+  defp errorable_types(rest, [payload, :!, :anyerror], context, _slot, _bytes) do
     {rest, [{:errorable, :any, payload}], context}
   end
 
-  defp errorable_types(rest, [payload, :!, errortype], context, _line, _bytes) do
+  defp errorable_types(rest, [payload, :!, errortype], context, _slot, _bytes) do
     {rest, [{:errorable, errortype, payload}], context}
   end
 
-  defp errorable_types(rest, [payload, :!, errorset, :error], context, _line, _bytes) do
+  defp errorable_types(rest, [payload, :!, errorset, :error], context, _slot, _bytes) do
     {rest, [{:errorable, errorset, payload}], context}
   end
 
-  defp general_types(rest, [errorset, :error], context, _line, _bytes) do
+  defp general_types(rest, [errorset, :error], context, _slot, _bytes) do
     {rest, [{:errorset, errorset}], context}
   end
 
-  defp general_types(rest, [{:ptr, kind, type, opts}, "?"], context, _line, _bytes) do
+  defp general_types(rest, [{:ptr, kind, type, opts}, "?"], context, _slot, _bytes) do
     {rest, [{:ptr, kind, type, Keyword.put(opts, :optional, true)}], context}
   end
 
-  defp general_types(rest, [type, "?"], context, _line, _bytes) do
+  defp general_types(rest, [type, "?"], context, _slot, _bytes) do
     {rest, [{:optional, type}], context}
   end
 
-  defp general_types(rest, [type], context, _line, _bytes) do
+  defp general_types(rest, [type], context, _slot, _bytes) do
     {rest, [type], context}
   end
 
-  defp array_type(rest, [type, "]", sentinel, ":", int, "["], context, _line, _bytes) do
+  defp array_type(rest, [type, "]", sentinel, ":", int, "["], context, _slot, _bytes) do
     {rest, [{:array, int, type, [sentinel: sentinel]}], context}
   end
 
-  defp array_type(rest, [type, "]", int, "["], context, _line, _bytes) do
+  defp array_type(rest, [type, "]", int, "["], context, _slot, _bytes) do
     {rest, [{:array, int, type, []}], context}
   end
 
-  defp fn_type(rest, [return_type | args_rest], context, _line, _bytes) do
+  defp fn_type(rest, [return_type | args_rest], context, _slot, _bytes) do
     {arg_types, opts} = fn_info(args_rest, [])
     {rest, [{:fn, arg_types, return_type, opts}], context}
   end
@@ -196,37 +196,37 @@ defmodule Clr.Air.Type do
     end
   end
 
-  defp sentinel(rest, ["null"], context, _line, _bytes) do
+  defp sentinel(rest, ["null"], context, _slot, _bytes) do
     {rest, [:null], context}
   end
 
-  defp sentinel(rest, ["0"], context, _line, _bytes) do
+  defp sentinel(rest, ["0"], context, _slot, _bytes) do
     {rest, [0], context}
   end
 
-  defp struct_type(rest, args, context, _line, _bytes) do
+  defp struct_type(rest, args, context, _slot, _bytes) do
     case Enum.reverse(args) do
       ["struct" | types] -> {rest, [{:struct, types}], context}
     end
   end
 
-  defp sub_addr(rest, [c, b, a], context, _line, _bytes) do
+  defp sub_addr(rest, [c, b, a], context, _slot, _bytes) do
     {rest, [{a, b, c}], context}
   end
 
   # function post-traversals
 
-  defp callconv(rest, [type, "callconv"], context, _line, _bytes) do
+  defp callconv(rest, [type, "callconv"], context, _slot, _bytes) do
     {rest, [{:callconv, type}], context}
   end
 
   def parse(str) do
     case type(str) do
-      {:ok, [result], "", _context, _line, _bytes} -> result
+      {:ok, [result], "", _context, _slot, _bytes} -> result
     end
   end
 
-  defp errorlist(rest, errors, context, _line, _bytes) do
+  defp errorlist(rest, errors, context, _slot, _bytes) do
     {rest, [errors], context}
   end
 end

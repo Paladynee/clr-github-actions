@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.AtomicRmw do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[argument type lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[argument type lvalue literal slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
@@ -31,7 +31,7 @@ defmodule Clr.Air.Instruction.AtomicRmw do
     acquire: [token: :acquire]
   )
 
-  def atomic_rmw(rest, [mode, op, val, loc, "atomic_rmw"], context, _line, _bytes) do
+  def atomic_rmw(rest, [mode, op, val, loc, "atomic_rmw"], context, _slot, _bytes) do
     {rest, [%__MODULE__{mode: mode, op: op, loc: loc, val: val}], context}
   end
 end

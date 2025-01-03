@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Maths do
     maths: [export: true]
   )
 
-  Clr.Air.import(~w[argument type lineref literal lvalue cs lparen rparen]a)
+  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
   # binary instructions
 
@@ -79,12 +79,12 @@ defmodule Clr.Air.Instruction.Maths do
   )
 
   @modes ~w[sat wrap exact trunc]a
-  def binary_instruction(rest, [rhs, lhs, mode, op], context, _line, _bytes)
+  def binary_instruction(rest, [rhs, lhs, mode, op], context, _slot, _bytes)
       when mode in @modes do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op, mode: mode}], context}
   end
 
-  def binary_instruction(rest, [rhs, lhs, op], context, _line, _bytes) do
+  def binary_instruction(rest, [rhs, lhs, op], context, _slot, _bytes) do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op}], context}
   end
 
@@ -114,7 +114,7 @@ defmodule Clr.Air.Instruction.Maths do
     bit_reverse: [token: :bit_reverse]
   )
 
-  def unary_type_instruction(rest, [operand, type, op], context, _line, _bytes) do
+  def unary_type_instruction(rest, [operand, type, op], context, _slot, _bytes) do
     {rest, [%UnaryTyped{operand: operand, type: type, op: op}], context}
   end
 
@@ -124,7 +124,7 @@ defmodule Clr.Air.Instruction.Maths do
     use Clr.Air.Instruction
     alias Clr.Analysis
     defstruct ~w[op type lhs rhs]a
-    def analyze(%{type: type}, line, analysis), do: Analysis.put_type(analysis, line, type)
+    def analyze(%{type: type}, slot, analysis), do: Analysis.put_type(analysis, slot, type)
   end
 
   Pegasus.parser_from_string(
@@ -137,7 +137,7 @@ defmodule Clr.Air.Instruction.Maths do
     overflow_instruction: [post_traverse: :overflow_instruction]
   )
 
-  def overflow_instruction(rest, [rhs, lhs, type, op], context, _line, _bytes) do
+  def overflow_instruction(rest, [rhs, lhs, type, op], context, _slot, _bytes) do
     {rest, [%Overflow{lhs: lhs, rhs: rhs, type: type, op: op}], context}
   end
 end

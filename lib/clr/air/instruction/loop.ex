@@ -11,7 +11,7 @@ defmodule Clr.Air.Instruction.Loop do
     loop: [export: true, post_traverse: :loop]
   )
 
-  def loop(rest, [codeblock, type, "loop"], context, _line, _bytes) do
+  def loop(rest, [codeblock, type, "loop"], context, _slot, _bytes) do
     {rest, [%__MODULE__{type: type, code: codeblock}], context}
   end
 end

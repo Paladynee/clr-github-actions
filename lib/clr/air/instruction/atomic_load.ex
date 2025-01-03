@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.AtomicLoad do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type lvalue literal slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
-    atomic_load <- 'atomic_load' lparen (lineref / literal) cs mode rparen
+    atomic_load <- 'atomic_load' lparen (slotref / literal) cs mode rparen
 
     mode <- unordered / monotonic
     unordered <- 'unordered'
@@ -19,7 +19,7 @@ defmodule Clr.Air.Instruction.AtomicLoad do
     monotonic: [token: :monotonic]
   )
 
-  def atomic_load(rest, [mode, loc, "atomic_load"], context, _line, _bytes) do
+  def atomic_load(rest, [mode, loc, "atomic_load"], context, _slot, _bytes) do
     {rest, [%__MODULE__{mode: mode, loc: loc}], context}
   end
 end

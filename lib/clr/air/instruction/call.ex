@@ -6,12 +6,12 @@ defmodule Clr.Air.Instruction.Call do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lvalue fn_literal literal cs lineref lparen rparen lbrack rbrack]a)
+  Clr.Air.import(~w[lvalue fn_literal literal cs slotref lparen rparen lbrack rbrack]a)
 
   Pegasus.parser_from_string(
     """
-    call <- 'call' lparen (fn_literal / lineref) cs lbrack (argument (cs argument)*)? rbrack rparen
-    argument <- lineref / literal / lvalue
+    call <- 'call' lparen (fn_literal / slotref) cs lbrack (argument (cs argument)*)? rbrack rparen
+    argument <- slotref / literal / lvalue
     """,
     call: [export: true, post_traverse: :call]
   )
@@ -26,10 +26,10 @@ defmodule Clr.Air.Instruction.Call do
   alias Clr.Analysis
   import Clr.Air.Lvalue
 
-  def analyze(call, line, analysis) do
+  def analyze(call, slot, analysis) do
     case call.fn do
       {:literal, {:fn, [~l"mem.Allocator" | params], type, _fn_opts}, {:function, function}} ->
-        process_allocator(function, params, type, call.args, line, analysis)
+        process_allocator(function, params, type, call.args, slot, analysis)
 
       {:literal, _type, {:function, function_name}} ->
         # we also need the context of the current function.
@@ -39,8 +39,8 @@ defmodule Clr.Air.Instruction.Call do
             {:literal, type, _} ->
               type
 
-            {line, _} ->
-              Analysis.fetch!(analysis, line)
+            {slot, _} ->
+              Analysis.fetch!(analysis, slot)
           end)
 
         analysis.name
@@ -49,11 +49,11 @@ defmodule Clr.Air.Instruction.Call do
         |> case do
           {:future, ref} ->
             analysis
-            |> Analysis.put_type(line, {:future, ref})
+            |> Analysis.put_type(slot, {:future, ref})
             |> Analysis.put_future(ref)
 
           {:ok, result} ->
-            Analysis.put_type(analysis, line, result)
+            Analysis.put_type(analysis, slot, result)
         end
     end
   end
@@ -63,13 +63,13 @@ defmodule Clr.Air.Instruction.Call do
          [],
          {:errorable, e, {:ptr, count, type, opts}},
          [{:literal, ~l"mem.Allocator", struct}],
-         line,
+         slot,
          analysis
        ) do
     heap_type =
       {:errorable, e, {:ptr, count, type, Keyword.put(opts, :heap, Map.fetch!(struct, "vtable"))}}
 
-    Analysis.put_type(analysis, line, heap_type)
+    Analysis.put_type(analysis, slot, heap_type)
   end
 
   defp process_allocator(
@@ -77,7 +77,7 @@ defmodule Clr.Air.Instruction.Call do
          [_],
          ~l"void",
          [{:literal, ~l"mem.Allocator", struct}, {src, _}],
-         line,
+         slot,
          analysis
        ) do
     {:ptr, :one, type, opts} = Analysis.fetch!(analysis, src)
@@ -87,7 +87,7 @@ defmodule Clr.Air.Instruction.Call do
       {:ok, ^vtable} ->
         analysis
         |> Analysis.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
-        |> Analysis.put_type(line, ~l"void")
+        |> Analysis.put_type(slot, ~l"void")
 
       {:ok, :deleted} ->
         raise Clr.DoubleFreeError,

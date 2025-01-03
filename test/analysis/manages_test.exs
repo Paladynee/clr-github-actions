@@ -5,11 +5,11 @@ defmodule ClrTest.Analysis.ManagesTest do
   alias Clr.Analysis
   import Clr.Air.Lvalue
 
-  defp run_analysis(code, args \\ []) do
+  defp run_analysis(code, args) do
     Analysis.do_analyze(%Function{name: ~l"foo.bar", code: code}, args)
   end
 
-  defp destructor(vtable, src, call \\ "destroy") do
+  defp destructor(vtable, src, call) do
     {:literal,
      {:fn, [~l"mem.Allocator", :foobar], ~l"void",
       [{:literal, ~l"mem.Allocator", %{"vtable" => vtable}}, {src, :clobber}]}, {:function, call}}

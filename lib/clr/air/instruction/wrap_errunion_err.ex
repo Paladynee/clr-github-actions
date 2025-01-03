@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.WrapErrunionErr do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "wrap_errunion_err <- 'wrap_errunion_err' lparen type cs lineref rparen",
+    "wrap_errunion_err <- 'wrap_errunion_err' lparen type cs slotref rparen",
     wrap_errunion_err: [export: true, post_traverse: :wrap_errunion_err]
   )
 
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.WrapErrunionErr do
         rest,
         [op, type, "wrap_errunion_err"],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{src: op, type: type}], context}

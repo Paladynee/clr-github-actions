@@ -15,12 +15,12 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
         Analysis.put_type(analysis, line, :foobar)
       end)
 
-      assert %{types: %{0 => :foobar}} = run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
+      assert %{slots: %{0 => :foobar}} = run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
     end
 
     test "a clobber instruction does not change the state." do
       empty_map = %{}
-      assert %{types: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instruction{}})
+      assert %{slots: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instruction{}})
     end
 
     test "a subsequent instruction gets the types passed" do
@@ -28,11 +28,11 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
       |> Mox.expect(:analyze, fn _, line, analysis ->
         Analysis.put_type(analysis, line, :foobar)
       end)
-      |> Mox.expect(:analyze, fn _, line, %{types: %{0 => :foobar}} = analysis ->
+      |> Mox.expect(:analyze, fn _, line, %{slots: %{0 => :foobar}} = analysis ->
         Analysis.put_type(analysis, line, :barbaz)
       end)
 
-      assert %{types: %{0 => :foobar, 1 => :barbaz}} =
+      assert %{slots: %{0 => :foobar, 1 => :barbaz}} =
                run_analysis(%{
                  {0, :keep} => %ClrTest.Instruction{},
                  {1, :keep} => %ClrTest.Instruction{}
@@ -41,7 +41,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   end
 
   test "alloc function" do
-    assert %{types: %{0 => {:ptr, :one, ~l"u32", [stack: ~l"foo.bar"]}}} =
+    assert %{slots: %{0 => {:ptr, :one, ~l"u32", [stack: ~l"foo.bar"]}}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Alloc{
                  type: {:ptr, :one, {:lvalue, ["u32"]}, []}
@@ -50,7 +50,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   end
 
   test "load function" do
-    assert %{types: %{0 => :u32}} =
+    assert %{slots: %{0 => :u32}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
              }, [], %{47 => {:ptr, :one, :u32, []}})
@@ -58,7 +58,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
 
   describe "maths functions" do
     test "overflow functions" do
-      assert %{types: %{0 => {:struct, [~l"u32", ~l"u1"]}}} =
+      assert %{slots: %{0 => {:struct, [~l"u32", ~l"u1"]}}} =
                run_analysis(%{
                  {0, :keep} => %Clr.Air.Instruction.Maths.Overflow{
                    op: :add,
@@ -75,7 +75,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
       Analysis.put_type(analysis, line, {:struct, [~l"u32", ~l"u1"]})
     end)
 
-    assert %{types: %{1 => ~l"u1"}} =
+    assert %{slots: %{1 => ~l"u1"}} =
              run_analysis(%{
                {0, :keep} => %ClrTest.Instruction{},
                {1, :keep} => %Clr.Air.Instruction.StructFieldVal{src: {0, :keep}, index: 1}
@@ -83,7 +83,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   end
 
   test "boolean comparison function" do
-    assert %{types: %{0 => ~l"bool"}} =
+    assert %{slots: %{0 => ~l"bool"}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Tests.Compare{
                  lhs: {8, :clobber},

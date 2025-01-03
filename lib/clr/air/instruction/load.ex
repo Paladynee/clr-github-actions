@@ -6,22 +6,22 @@ defmodule Clr.Air.Instruction.Load do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen type literal]a)
+  Clr.Air.import(~w[slotref cs lparen rparen type literal]a)
 
   Pegasus.parser_from_string(
-    "load <- 'load' lparen type cs (lineref / literal) rparen",
+    "load <- 'load' lparen type cs (slotref / literal) rparen",
     load: [export: true, post_traverse: :load]
   )
 
-  def load(rest, [loc, type, "load"], context, _line, _bytes) do
+  def load(rest, [loc, type, "load"], context, _slot, _bytes) do
     {rest, [%__MODULE__{type: type, loc: loc}], context}
   end
 
   use Clr.Air.Instruction
   alias Clr.Analysis
 
-  def analyze(%{type: type, loc: {src_line, _}}, line, analysis) do
-    case Analysis.fetch!(analysis, src_line) do
+  def analyze(%{type: type, loc: {src_slot, _}}, slot, analysis) do
+    case Analysis.fetch!(analysis, src_slot) do
       {:ptr, _, _, opts} ->
         cond do
           opts[:undefined] ->
@@ -36,7 +36,7 @@ defmodule Clr.Air.Instruction.Load do
               row: analysis.row,
               col: analysis.col
           :else ->
-            Analysis.put_type(analysis, line, type)
+            Analysis.put_type(analysis, slot, type)
         end
     end
 

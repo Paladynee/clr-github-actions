@@ -45,7 +45,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.DbgVarVal
 
     test "dbg_var_val" do
-      assert %DbgVarVal{line: {0, :keep}, val: "argc"} =
+      assert %DbgVarVal{src: {0, :keep}, val: "argc"} =
                Instruction.parse(~S/dbg_var_val(%0, "argc")/)
 
       # more complex case
@@ -59,7 +59,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.DbgVarPtr
 
     test "dbg_var_ptr" do
-      assert %DbgVarPtr{line: {0, :keep}, val: "envp_count"} =
+      assert %DbgVarPtr{src: {0, :keep}, val: "envp_count"} =
                Instruction.parse(~S/dbg_var_ptr(%0, "envp_count")/)
     end
   end
@@ -242,7 +242,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.PtrElemVal
 
     test "ptr_elem_val" do
-      assert %PtrElemVal{line: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_usize"} =
+      assert %PtrElemVal{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_usize"} =
                Instruction.parse("ptr_elem_val(%0, @Air.Inst.Ref.zero_usize)")
     end
 
@@ -262,7 +262,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "ptr_add" do
       assert %PtrAdd{
                type: {:ptr, :many, ~l"usize", []},
-               line: {0, :keep},
+               src: {0, :keep},
                val: ~l"@Air.Inst.Ref.zero_usize"
              } =
                Instruction.parse("ptr_add([*]usize, %0, @Air.Inst.Ref.zero_usize)")
@@ -273,7 +273,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "ptr_sub" do
       assert %PtrSub{
                type: {:ptr, :many, ~l"usize", []},
-               line: {0, :keep},
+               src: {0, :keep},
                val: ~l"@Air.Inst.Ref.zero_usize"
              } =
                Instruction.parse("ptr_sub([*]usize, %0, @Air.Inst.Ref.zero_usize)")
@@ -483,14 +483,14 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Intcast
 
     test "intcast" do
-      assert %Intcast{type: ~l"usize", line: {0, :keep}} =
+      assert %Intcast{type: ~l"usize", src: {0, :keep}} =
                Instruction.parse("intcast(usize, %0)")
     end
 
     alias Clr.Air.Instruction.Trunc
 
     test "trunc" do
-      assert %Trunc{type: ~l"usize", line: {0, :keep}} =
+      assert %Trunc{type: ~l"usize", src: {0, :keep}} =
                Instruction.parse("trunc(usize, %0)")
     end
 

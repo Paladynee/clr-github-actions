@@ -5,8 +5,8 @@ defmodule Clr.Air.Base do
 
   Pegasus.parser_from_string(
     """
-    # line numbers
-    lineref <- clobber / keep
+    # slot numbers
+    slotref <- clobber / keep
     clobbers <- clobber (space clobber)*
     keep <- percent int space?
     clobber <- percent int bang
@@ -54,7 +54,7 @@ defmodule Clr.Air.Base do
     percent <- '%'
     bang <- '!'
     """,
-    lineref: [export: true],
+    slotref: [export: true],
     clobbers: [export: true, post_traverse: :clobbers],
     keep: [post_traverse: :keep],
     clobber: [post_traverse: :clobber],
@@ -89,23 +89,23 @@ defmodule Clr.Air.Base do
     elision: [export: true, token: :...]
   )
 
-  defp int(rest, [value], context, _line, _bytes), do: {rest, [String.to_integer(value)], context}
+  defp int(rest, [value], context, _slot, _bytes), do: {rest, [String.to_integer(value)], context}
 
-  defp keep(rest, [line], context, _line, _bytes), do: {rest, [{line, :keep}], context}
+  defp keep(rest, [slot], context, _slot, _bytes), do: {rest, [{slot, :keep}], context}
 
-  defp identifier(rest, args, context, _line, _bytes) do
+  defp identifier(rest, args, context, _slot, _bytes) do
     case args do
       [identifier] -> {rest, [identifier], context}
       [identifier, "@"] -> {rest, [identifier], context}
     end
   end
 
-  defp clobber(rest, [line], context, _line, _bytes), do: {rest, [{line, :clobber}], context}
+  defp clobber(rest, [slot], context, _slot, _bytes), do: {rest, [{slot, :clobber}], context}
 
-  defp clobbers(rest, clobbers, context, _line, _bytes) do
+  defp clobbers(rest, clobbers, context, _slot, _bytes) do
     clobbers =
       clobbers
-      |> Enum.map(fn {line, :clobber} -> line end)
+      |> Enum.map(fn {slot, :clobber} -> slot end)
       |> Enum.sort()
 
     {rest, [{:clobbers, clobbers}], context}

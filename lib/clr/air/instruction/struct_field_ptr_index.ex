@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.StructFieldPtrIndex do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type int lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type int slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
-    struct_field_ptr_index <- instruction int lparen type cs lineref rparen
+    struct_field_ptr_index <- instruction int lparen type cs slotref rparen
     instruction <- 'struct_field_ptr_index_'
     """,
     struct_field_ptr_index: [export: true, post_traverse: :struct_field_ptr_index],
@@ -19,7 +19,7 @@ defmodule Clr.Air.Instruction.StructFieldPtrIndex do
         rest,
         [op, type, index],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{src: op, type: type, index: index}], context}

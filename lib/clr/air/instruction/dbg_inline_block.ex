@@ -13,7 +13,7 @@ defmodule Clr.Air.Instruction.DbgInlineBlock do
     dbg_inline_block: [export: true, post_traverse: :dbg_inline_block]
   )
 
-  defp dbg_inline_block(rest, [codeblock, fun, name, "dbg_inline_block"], context, _line, _bytes) do
+  defp dbg_inline_block(rest, [codeblock, fun, name, "dbg_inline_block"], context, _slot, _bytes) do
     {rest, [%__MODULE__{code: codeblock, what: fun, type: name}], context}
   end
 
@@ -21,7 +21,7 @@ defmodule Clr.Air.Instruction.DbgInlineBlock do
          rest,
          [{:clobbers, clobbers}, codeblock, fun, name, "dbg_inline_block"],
          context,
-         _line,
+         _slot,
          _bytes
        ) do
     {rest, [%__MODULE__{code: codeblock, what: fun, type: name, clobbers: clobbers}], context}

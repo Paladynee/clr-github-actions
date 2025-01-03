@@ -3,11 +3,11 @@ defmodule Clr.Air.Instruction.CmpxchgStrong do
 
   require Pegasus
   require Clr.Air
-  Clr.Air.import(~w[lineref cs space lparen rparen newline lvalue literal]a)
+  Clr.Air.import(~w[slotref cs space lparen rparen newline lvalue literal]a)
 
   Pegasus.parser_from_string(
     """
-    cmpxchg_strong <- 'cmpxchg_strong' lparen literal cs (lvalue / lineref) cs (lvalue / lineref) cs mode cs mode rparen
+    cmpxchg_strong <- 'cmpxchg_strong' lparen literal cs (lvalue / slotref) cs (lvalue / slotref) cs mode cs mode rparen
 
     mode <- seq_cst / monotonic
     seq_cst <- 'seq_cst'
@@ -22,7 +22,7 @@ defmodule Clr.Air.Instruction.CmpxchgStrong do
          rest,
          [failure, success, desired, expected, loc, "cmpxchg_strong"],
          context,
-         _line,
+         _slot,
          _bytes
        ) do
     {rest,

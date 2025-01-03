@@ -4,14 +4,14 @@ defmodule Clr.Air.Instruction.Store do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[argument lineref cs lparen rparen lvalue literal type]a)
+  Clr.Air.import(~w[argument slotref cs lparen rparen lvalue literal type]a)
 
   Pegasus.parser_from_string(
-    "store <- 'store' lparen (lineref / literal) cs argument rparen",
+    "store <- 'store' lparen (slotref / literal) cs argument rparen",
     store: [export: true, post_traverse: :store]
   )
 
-  def store(rest, [value, loc, "store"], context, _line, _bytes) do
+  def store(rest, [value, loc, "store"], context, _slot, _bytes) do
     {rest, [%__MODULE__{val: value, loc: loc}], context}
   end
 end

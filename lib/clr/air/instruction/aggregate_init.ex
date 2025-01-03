@@ -5,7 +5,7 @@ defmodule Clr.Air.Instruction.AggregateInit do
   require Clr.Air
 
   Clr.Air.import(
-    ~w[argument type literal enum_value lvalue lineref int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
+    ~w[argument type literal enum_value lvalue slotref int cs space lparen rparen lbrack rbrack lbrace rbrace notnewline]a
   )
 
   Pegasus.parser_from_string(
@@ -26,11 +26,11 @@ defmodule Clr.Air.Instruction.AggregateInit do
     params: [post_traverse: :params]
   )
 
-  defp aggregate_init(rest, [params, init, "aggregate_init"], context, _line, _bytes) do
+  defp aggregate_init(rest, [params, init, "aggregate_init"], context, _slot, _bytes) do
     {rest, [%__MODULE__{params: params, init: init}], context}
   end
 
-  defp struct_init(rest, params, context, _line, _bytes) do
+  defp struct_init(rest, params, context, _slot, _bytes) do
     params =
       case Enum.reverse(params) do
         ["struct" | params] -> params
@@ -39,15 +39,15 @@ defmodule Clr.Air.Instruction.AggregateInit do
     {rest, [params], context}
   end
 
-  defp initializer(rest, [val, "=", type], context, _line, _bytes) do
+  defp initializer(rest, [val, "=", type], context, _slot, _bytes) do
     {rest, [{type, val}], context}
   end
 
-  defp initializer(rest, [type], context, _line, _bytes) do
+  defp initializer(rest, [type], context, _slot, _bytes) do
     {rest, [type], context}
   end
 
-  defp params(rest, params, context, _line, _bytes) do
+  defp params(rest, params, context, _slot, _bytes) do
     {rest, [Enum.reverse(params)], context}
   end
 end

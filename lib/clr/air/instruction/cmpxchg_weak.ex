@@ -21,7 +21,7 @@ defmodule Clr.Air.Instruction.CmpxchgWeak do
          rest,
          [failure, success, desired, expected, loc, "cmpxchg_weak"],
          context,
-         _line,
+         _slot,
          _bytes
        ) do
     {rest,

@@ -4,14 +4,14 @@ defmodule Clr.Air.Instruction.Slice do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[lineref cs lparen rparen langle rangle type literal]a)
+  Clr.Air.import(~w[slotref cs lparen rparen langle rangle type literal]a)
 
   Pegasus.parser_from_string(
-    "slice <- 'slice' lparen type cs (lineref / literal) cs lineref rparen",
+    "slice <- 'slice' lparen type cs (slotref / literal) cs slotref rparen",
     slice: [export: true, post_traverse: :slice]
   )
 
-  defp slice(rest, [len, src, type, "slice"], context, _line, _bytes) do
+  defp slice(rest, [len, src, type, "slice"], context, _slot, _bytes) do
     {rest, [%__MODULE__{type: type, src: src, len: len}], context}
   end
 end

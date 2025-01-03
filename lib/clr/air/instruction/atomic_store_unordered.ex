@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.AtomicStoreUnordered do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lvalue literal lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type lvalue literal slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
     """
-    atomic_store_unordered <- 'atomic_store_unordered' lparen lineref cs (lineref / literal) cs mode rparen
+    atomic_store_unordered <- 'atomic_store_unordered' lparen slotref cs (slotref / literal) cs mode rparen
 
     mode <- unordered
     unordered <- 'unordered'
@@ -21,7 +21,7 @@ defmodule Clr.Air.Instruction.AtomicStoreUnordered do
         rest,
         [mode, val, loc, "atomic_store_unordered"],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{mode: mode, val: val, loc: loc}], context}

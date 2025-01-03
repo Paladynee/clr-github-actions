@@ -3,7 +3,7 @@ use Protoss
 defprotocol Clr.Air.Instruction do
   alias Clr.Analysis
   @callback analyze(struct, non_neg_integer, Analysis.t()) :: Analysis.t()
-  def analyze(instruction, line, state)
+  def analyze(instruction, slot, state)
 after
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
@@ -30,7 +30,7 @@ after
   require Clr.Air
 
   Clr.Air.import(
-    ~w[codeline lineref lvalue literal identifier space lbrace rbrace lparen newline notnewline]a
+    ~w[codeline slotref lvalue literal identifier space lbrace rbrace lparen newline notnewline]a
   )
 
   # import all parsers from their respective modules.
@@ -82,15 +82,15 @@ after
     # for debugging
     unknown_instruction <- identifier lparen notnewline
 
-    argument <- lvalue / literal / lineref
+    argument <- lvalue / literal / slotref
     """,
     instruction: [export: true, parser: true],
     unknown_instruction: [post_traverse: :unknown_instruction],
     argument: [export: true]
   )
 
-  defp unknown_instruction(_rest, [rest, instruction], _context, {line, _}, _bytes) do
-    raise "unknown instruction \"#{instruction}(#{rest}\" found on line #{line}"
+  defp unknown_instruction(_rest, [rest, instruction], _context, {slot, _}, _bytes) do
+    raise "unknown instruction \"#{instruction}(#{rest}\" found on slot #{slot}"
   end
 
   # debug tool for parsing a single instruction
@@ -102,7 +102,7 @@ after
 end
 
 defimpl Clr.Air.Instruction, for: Any do
-  def analyze(instruction, _line, _analysis) do
+  def analyze(instruction, _slot, _analysis) do
     raise "instruction #{inspect(instruction)} not implemented"
   end
 end

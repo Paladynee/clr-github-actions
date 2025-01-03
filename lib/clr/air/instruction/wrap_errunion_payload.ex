@@ -4,10 +4,10 @@ defmodule Clr.Air.Instruction.WrapErrunionPayload do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[type lineref cs lparen rparen]a)
+  Clr.Air.import(~w[type slotref cs lparen rparen]a)
 
   Pegasus.parser_from_string(
-    "wrap_errunion_payload <- 'wrap_errunion_payload' lparen type cs lineref rparen",
+    "wrap_errunion_payload <- 'wrap_errunion_payload' lparen type cs slotref rparen",
     wrap_errunion_payload: [export: true, post_traverse: :wrap_errunion_payload]
   )
 
@@ -15,7 +15,7 @@ defmodule Clr.Air.Instruction.WrapErrunionPayload do
         rest,
         [op, type, "wrap_errunion_payload"],
         context,
-        _line,
+        _slot,
         _bytes
       ) do
     {rest, [%__MODULE__{src: op, type: type}], context}
@@ -24,8 +24,8 @@ defmodule Clr.Air.Instruction.WrapErrunionPayload do
   use Clr.Air.Instruction
   alias Clr.Analysis
 
-  def analyze(%{type: {:errorable, errorset, _payload_type}, src: {src, _}}, line, analysis) do
+  def analyze(%{type: {:errorable, errorset, _payload_type}, src: {src, _}}, slot, analysis) do
     updated_payload = Analysis.fetch!(analysis, src)
-    Analysis.put_type(analysis, line, {:errorable, errorset, updated_payload})
+    Analysis.put_type(analysis, slot, {:errorable, errorset, updated_payload})
   end
 end

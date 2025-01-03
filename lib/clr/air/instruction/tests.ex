@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Tests do
     tests: [export: true]
   )
 
-  Clr.Air.import(~w[argument type lineref literal lvalue cs lparen rparen]a)
+  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
   # compares
 
@@ -20,7 +20,7 @@ defmodule Clr.Air.Instruction.Tests do
     import Clr.Air.Lvalue
     alias Clr.Analysis
 
-    def analyze(_, line, analysis), do: Analysis.put_type(analysis, line, ~l"bool")
+    def analyze(_, slot, analysis), do: Analysis.put_type(analysis, slot, ~l"bool")
   end
 
   Pegasus.parser_from_string(
@@ -48,7 +48,7 @@ defmodule Clr.Air.Instruction.Tests do
     gte: [token: :gte]
   )
 
-  def compare_instruction(rest, [rhs, lhs, op], context, _line, _bytes) do
+  def compare_instruction(rest, [rhs, lhs, op], context, _slot, _bytes) do
     {rest, [%Compare{lhs: lhs, rhs: rhs, op: op}], context}
   end
 
@@ -77,7 +77,7 @@ defmodule Clr.Air.Instruction.Tests do
     null: [token: :null]
   )
 
-  def is_instruction(rest, [operand, op], context, _line, _bytes) do
+  def is_instruction(rest, [operand, op], context, _slot, _bytes) do
     {rest, [%Is{operand: operand, op: op}], context}
   end
 
@@ -98,7 +98,7 @@ defmodule Clr.Air.Instruction.Tests do
     cmp_lt_errors_len: [token: :cmp_lt_errors_len]
   )
 
-  def unary_instruction(rest, [operand, op], context, _line, _bytes) do
+  def unary_instruction(rest, [operand, op], context, _slot, _bytes) do
     {rest, [%Unary{operand: operand, op: op}], context}
   end
 end

@@ -11,11 +11,11 @@ defmodule Clr.Air.Instruction.Block do
     block: [export: true, post_traverse: :block]
   )
 
-  def block(rest, [codeblock, type, "block"], context, _line, _bytes) do
+  def block(rest, [codeblock, type, "block"], context, _slot, _bytes) do
     {rest, [%__MODULE__{type: type, code: codeblock}], context}
   end
 
-  def block(rest, [{:clobbers, clobbers}, codeblock, type, "block"], context, _line, _bytes) do
+  def block(rest, [{:clobbers, clobbers}, codeblock, type, "block"], context, _slot, _bytes) do
     {rest, [%__MODULE__{type: type, code: codeblock, clobbers: clobbers}], context}
   end
 end
