@@ -21,6 +21,10 @@ defmodule Clr.Air.Instruction.RetSafe do
     %{analysis | return: {:TypeOf, lvalue}}
   end
 
+  def analyze(%{val: {:literal, type, _}}, _dst_line, analysis) do
+    %{analysis | return: type}
+  end
+
   def analyze(%{val: {src_line, _}}, _dst_line, analysis) do
     # get the type of the value.
     case Map.fetch!(analysis.types, src_line) do
