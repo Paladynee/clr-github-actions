@@ -8,13 +8,16 @@ defmodule ClrTest.Analysis.ServerTest do
   setup %{test: test} do
     table_name = :"#{test}-analysis-server"
     server = start_supervised!({Analysis, [name: table_name, analyzer: AnalyzerMock]})
+
     Mox.allow(AnalyzerMock, self(), server)
     Process.put(Clr.Analysis.TableName, table_name)
     {:ok, table: table_name}
   end
 
+  defp ok_evaluation(type), do: {:ok, %Analysis{return: type}}
+
   test "we can make a single evaluation request" do
-    Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ -> {:ok, :result} end)
+    Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ -> ok_evaluation(:result) end)
 
     future = Analysis.evaluate(:foobar_function, [])
     assert {:ok, :result} = Analysis.await(future)
@@ -32,7 +35,7 @@ defmodule ClrTest.Analysis.ServerTest do
     Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ ->
       send(this, {:unblock, self()})
       assert_receive :unblock
-      {:ok, :result}
+      ok_evaluation(:result)
     end)
 
     future1 = Analysis.evaluate(:foobar_function, [])
@@ -57,13 +60,16 @@ defmodule ClrTest.Analysis.ServerTest do
 
   test "different args have different entries" do
     AnalyzerMock
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [:foo] -> {:ok, :result1} end)
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [:bar] -> {:ok, :result2} end)
+    |> Mox.expect(:do_evaluate, fn :foobar_function, [:foo] -> ok_evaluation(:fooresult) end)
+    |> Mox.expect(:do_evaluate, fn :foobar_function, [:bar] -> ok_evaluation(:barresult) end)
 
-    future1 = Analysis.evaluate(:foobar_function, [:foo])
-    future2 = Analysis.evaluate(:foobar_function, [:bar])
+    foofuture = Analysis.evaluate(:foobar_function, [:foo])
 
-    assert {:ok, :result1} = Analysis.await(future1)
-    assert {:ok, :result2} = Analysis.await(future2)
+    Process.sleep(100)
+
+    barfuture = Analysis.evaluate(:foobar_function, [:bar])
+
+    assert {:ok, :fooresult} = Analysis.await(foofuture)
+    assert {:ok, :barresult} = Analysis.await(barfuture)
   end
 end

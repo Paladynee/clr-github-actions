@@ -5,8 +5,8 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   alias Clr.Analysis
   import Clr.Air.Lvalue
 
-  defp run_analysis(code, args \\ []) do
-    Analysis.do_analyze(%Function{name: ~l"foo.bar", code: code}, args)
+  defp run_analysis(code, args \\ [], preload \\ %{}) do
+    Analysis.do_analyze(%Function{name: ~l"foo.bar", code: code}, args, preload)
   end
 
   describe "generic instructions" do
@@ -52,8 +52,8 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   test "load function" do
     assert %{types: %{0 => :u32}} =
              run_analysis(%{
-               {0, :keep} => %Clr.Air.Instruction.Load{type: :u32}
-             })
+               {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
+             }, [], %{47 => {:ptr, :one, :u32, []}})
   end
 
   describe "maths functions" do

@@ -35,9 +35,10 @@ defmodule Clr.Air.Instruction.Load do
               function: Clr.Air.Lvalue.as_string(analysis.name),
               row: analysis.row,
               col: analysis.col
+          :else ->
+            Analysis.put_type(analysis, line, type)
         end
     end
 
-    Analysis.put_type(analysis, line, type)
   end
 end

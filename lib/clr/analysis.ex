@@ -54,26 +54,14 @@ defmodule Clr.Analysis do
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
             case analyzer.do_evaluate(function_name, args) do
-              %{awaits: [], return: result} ->
-                {:ok, result}
-
-              %{awaits: awaits, return: result} ->
-                process_awaits(awaits, result)
+              {:ok, analysis} -> process_awaited(analysis)
+              {:error, _} = error -> error
             end
           end)
 
         future_info = {future.pid, future.ref}
 
         {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {future_info, [pid]})}
-    end
-  end
-
-  defp process_awaits([], result), do: {:ok, result}
-
-  defp process_awaits([head | rest], result) do
-    case await({:future, head}) do
-      {:error, _} = error -> error
-      {:ok, _} -> process_awaits(rest, result)
     end
   end
 
@@ -183,10 +171,10 @@ defmodule Clr.Analysis do
   end
 
   # this private function is made public for testing.
-  def do_analyze(function, arguments) do
+  def do_analyze(function, arguments, debug_preload \\ %{}) do
     Enum.reduce(
       function.code,
-      %__MODULE__{name: function.name, args: arguments},
+      %__MODULE__{name: function.name, args: arguments, types: debug_preload},
       &analysis/2
     )
   end
@@ -206,4 +194,13 @@ defmodule Clr.Analysis do
 
   # values that are clobbered can be safely ignored.
   defp analysis({{_, :clobber}, _}, state), do: state
+
+  def process_awaited(%{awaits: [], return: type}), do: {:ok, type}
+
+  def process_awaited(%{awaits: [head | rest]} = analysis) do
+    case await({:future, head}) do
+      {:error, _} = error -> error
+      {:ok, _} -> process_awaited(%{analysis | awaits: rest})
+    end
+  end
 end

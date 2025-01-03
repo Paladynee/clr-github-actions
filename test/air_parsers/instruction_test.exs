@@ -188,7 +188,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
     alias Clr.Air.Instruction.Try
 
     test "try" do
-      assert %Try{loc: {12, :keep}, error_code: %{}, clobbers: [12]} =
+      assert %Try{src: {12, :keep}, error_code: %{}, clobbers: [12]} =
                Instruction.parse("""
                try(%12, {
                  %13 = unwrap_errunion_err(error{MissingDebugInfo,UnsupportedOperatingSystem}, %12!)

@@ -32,7 +32,7 @@ defmodule Clr.Air.Instruction.RetSafe do
         if opts[:stack] == analysis.name do
           raise Clr.StackPtrEscape,
             function: Clr.Air.Lvalue.as_string(analysis.name),
-            line: analysis.row,
+            row: analysis.row,
             col: analysis.col
         else
           %{analysis | return: return_type}
