@@ -32,7 +32,7 @@ defmodule ClrTest.Analysis.ManagesTest do
                  [{:ptr, :one, ~l"u8", [heap: ~l"my_vtable"]}]
                )
 
-      assert opts[:responsibility] == :transferred
+      assert Keyword.fetch!(opts, :transferred) == ~l"foo.bar"
     end
   end
 end

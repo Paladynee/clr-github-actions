@@ -138,7 +138,7 @@ defmodule Clr.Analysis do
 
   @type t :: %__MODULE__{
           name: term,
-          args: list(),
+          args: [term],
           row: non_neg_integer(),
           col: non_neg_integer(),
           return: term,
@@ -165,6 +165,10 @@ defmodule Clr.Analysis do
 
   def fetch_arg!(analysis, index) do
     Enum.at(analysis.args, index) || raise "Invalid argument index #{index}"
+  end
+
+  def update_arg!(analysis, index, transformation) do
+    Map.update!(analysis, :args, &List.update_at(&1, index, transformation))
   end
 
   # this private function is made public for testing.

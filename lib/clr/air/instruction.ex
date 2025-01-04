@@ -100,9 +100,3 @@ after
     end
   end
 end
-
-defimpl Clr.Air.Instruction, for: Any do
-  def analyze(instruction, _slot, _analysis) do
-    raise "instruction #{inspect(instruction)} not implemented"
-  end
-end

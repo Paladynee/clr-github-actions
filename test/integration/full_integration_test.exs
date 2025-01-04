@@ -1,6 +1,8 @@
 defmodule ClrTest.FullIntegrationTest do
   use ExUnit.Case, async: true
 
+  @moduletag :integration
+
   def assert_errors_with(msg, prefix) do
     assert_raise Mix.Error, msg, fn ->
       prefix
@@ -65,7 +67,7 @@ defmodule ClrTest.FullIntegrationTest do
 
     test "mismatched allocator" do
       assert_errors_with(
-        "Heap memory allocated by `heap.c_allocator_vtable` freed by `heap.PageAllocator.vtable` in `mismatched_allocator.main` at 3:19",
+        "Heap memory allocated by `heap.PageAllocator.vtable` freed by `heap.c_allocator_vtable` in `mismatched_allocator.main` at 3:19",
         "uaf_df/mismatched_allocator.zig"
       )
     end

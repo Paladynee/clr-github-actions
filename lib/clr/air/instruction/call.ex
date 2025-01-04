@@ -88,6 +88,7 @@ defmodule Clr.Air.Instruction.Call do
         analysis
         |> Analysis.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
         |> Analysis.put_type(slot, ~l"void")
+        |> maybe_mark_transferred(opts)
 
       {:ok, :deleted} ->
         raise Clr.DoubleFreeError,
@@ -114,6 +115,16 @@ defmodule Clr.Air.Instruction.Call do
   end
 
   # utility functions
+
+  defp maybe_mark_transferred(analysis, opts) do
+    if index = Keyword.get(opts, :passed_as) do
+      Analysis.update_arg!(analysis, index, fn {:ptr, count, type, opts} ->
+        {:ptr, count, type, Keyword.put(opts, :transferred, analysis.name)}
+      end)
+    else
+      analysis
+    end
+  end
 
   defp merge_name({:lvalue, lvalue}, function_name) do
     {:lvalue, List.replace_at(lvalue, -1, function_name)}
