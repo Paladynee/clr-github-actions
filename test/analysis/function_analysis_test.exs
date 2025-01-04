@@ -51,9 +51,13 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
 
   test "load function" do
     assert %{slots: %{0 => :u32}} =
-             run_analysis(%{
-               {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
-             }, [], %{47 => {:ptr, :one, :u32, []}})
+             run_analysis(
+               %{
+                 {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
+               },
+               [],
+               %{47 => {:ptr, :one, :u32, []}}
+             )
   end
 
   describe "maths functions" do

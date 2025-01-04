@@ -172,6 +172,7 @@ defmodule Clr.Analysis do
     function_name
     |> Clr.Air.Server.get()
     |> do_analyze(arguments)
+    |> then(&{:ok, &1})
   end
 
   # this private function is made public for testing.

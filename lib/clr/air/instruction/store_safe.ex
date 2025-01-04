@@ -18,7 +18,7 @@ defmodule Clr.Air.Instruction.StoreSafe do
   use Clr.Air.Instruction
 
   def analyze(%__MODULE__{loc: {slot, _}, val: {:literal, _type, :undefined}}, _slot, analysis) do
-    %{analysis | types: Map.update!(analysis.types, slot, &set_undefined/1)}
+    %{analysis | slots: Map.update!(analysis.slots, slot, &set_undefined/1)}
   end
 
   def analyze(_, _, analysis), do: analysis
