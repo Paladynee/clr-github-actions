@@ -17,7 +17,7 @@ defmodule ClrTest.Analysis.ManagesTest do
 
   describe "responsibility is marked as transferred" do
     test "when you pass a pointer to the function" do
-      assert %{args: [{:ptr, :one, ~l"u8", opts}]} =
+      assert %{args: [{:ptr, :one, ~l"u8", [heap: ~l"my_vtable"]}], reqs: [[transferred: ~l"foo.bar"]]} =
                run_analysis(
                  %{
                    {0, :keep} => %Clr.Air.Instruction.Arg{type: {:ptr, :one, ~l"u8", []}},
@@ -31,8 +31,6 @@ defmodule ClrTest.Analysis.ManagesTest do
                  },
                  [{:ptr, :one, ~l"u8", [heap: ~l"my_vtable"]}]
                )
-
-      assert Keyword.fetch!(opts, :transferred) == ~l"foo.bar"
     end
   end
 end

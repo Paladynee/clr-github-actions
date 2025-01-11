@@ -131,7 +131,7 @@ defmodule Clr.Analysis do
 
   ## FUNCTION EVALUATION
 
-  defstruct [:name, :args, :row, :col, :return, awaits: [], slots: %{}]
+  defstruct [:name, :args, :reqs, :row, :col, :return, awaits: [], slots: %{}]
 
   # TODO: go through and rename "lines" to "slots"
   @type slot_spec :: {term, keyword}
@@ -139,6 +139,7 @@ defmodule Clr.Analysis do
   @type t :: %__MODULE__{
           name: term,
           args: [term],
+          reqs: [keyword],
           row: non_neg_integer(),
           col: non_neg_integer(),
           return: term,
@@ -171,6 +172,10 @@ defmodule Clr.Analysis do
     Map.update!(analysis, :args, &List.update_at(&1, index, transformation))
   end
 
+  def update_req!(analysis, index, transformation) do
+    Map.update!(analysis, :reqs, &List.update_at(&1, index, transformation))
+  end
+
   # this private function is made public for testing.
   def do_evaluate(function_name, arguments) do
     function_name
@@ -181,9 +186,10 @@ defmodule Clr.Analysis do
 
   # this private function is made public for testing.
   def do_analyze(function, arguments, debug_preload_slots \\ %{}) do
+    requirements = Enum.map(arguments, fn _ -> [] end)
     Enum.reduce(
       function.code,
-      %__MODULE__{name: function.name, args: arguments, slots: debug_preload_slots},
+      %__MODULE__{name: function.name, args: arguments, reqs: requirements, slots: debug_preload_slots},
       &analysis/2
     )
   end

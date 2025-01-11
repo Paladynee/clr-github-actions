@@ -118,9 +118,7 @@ defmodule Clr.Air.Instruction.Call do
 
   defp maybe_mark_transferred(analysis, opts) do
     if index = Keyword.get(opts, :passed_as) do
-      Analysis.update_arg!(analysis, index, fn {:ptr, count, type, opts} ->
-        {:ptr, count, type, Keyword.put(opts, :transferred, analysis.name)}
-      end)
+      Analysis.update_req!(analysis, index, &Keyword.put(&1, :transferred, analysis.name))
     else
       analysis
     end
