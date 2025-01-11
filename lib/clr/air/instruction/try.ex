@@ -21,7 +21,7 @@ defmodule Clr.Air.Instruction.Try do
   alias Clr.Analysis
 
   def analyze(%{src: {src, _}}, slot, analysis) do
-    {:errorable, _, payload} = Analysis.fetch!(analysis, src)
+    {{:errorable, _, payload}, analysis} = Analysis.fetch!(analysis, src)
     # for now.  Ultimately, we will need to walk the analysis on this, too.
     Analysis.put_type(analysis, slot, payload)
   end

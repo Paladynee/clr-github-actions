@@ -14,14 +14,14 @@ defmodule ClrTest.Analysis.ServerTest do
     {:ok, table: table_name}
   end
 
-  defp ok_evaluation(type), do: {:ok, %Analysis{return: type}}
+  defp ok_evaluation(type), do: {:ok, %Analysis{return: type, reqs: []}}
 
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ -> ok_evaluation(:result) end)
 
     future = Analysis.evaluate(:foobar_function, [])
-    assert {:ok, :result} = Analysis.await(future)
-    assert {:ok, :result} = Analysis.debug_get_table(:foobar_function, [])
+    assert {:ok, {:result, []}} = Analysis.await(future)
+    assert {:ok, {:result, []}} = Analysis.debug_get_table(:foobar_function, [])
   end
 
   test "if content is in the table, it doesn't reevaluate" do
@@ -44,7 +44,7 @@ defmodule ClrTest.Analysis.ServerTest do
       Process.put(Clr.Analysis.TableName, table_name)
       future2 = Analysis.evaluate(:foobar_function, [])
       send(this, :registered)
-      assert {:ok, :result} = Analysis.await(future2)
+      assert {:ok, {:result, []}} = Analysis.await(future2)
       send(this, :done)
     end)
 
@@ -55,7 +55,7 @@ defmodule ClrTest.Analysis.ServerTest do
     end
 
     assert_receive :done, 500
-    assert {:ok, :result} = Analysis.await(future1)
+    assert {:ok, {:result, []}} = Analysis.await(future1)
   end
 
   test "different args have different entries" do
@@ -69,7 +69,7 @@ defmodule ClrTest.Analysis.ServerTest do
 
     barfuture = Analysis.evaluate(:foobar_function, [:bar])
 
-    assert {:ok, :fooresult} = Analysis.await(foofuture)
-    assert {:ok, :barresult} = Analysis.await(barfuture)
+    assert {:ok, {:fooresult, []}} = Analysis.await(foofuture)
+    assert {:ok, {:barresult, []}} = Analysis.await(barfuture)
   end
 end

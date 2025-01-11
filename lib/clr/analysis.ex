@@ -53,9 +53,9 @@ defmodule Clr.Analysis do
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            case analyzer.do_evaluate(function_name, args) do
-              {:ok, analysis} -> process_awaited(analysis)
-              {:error, _} = error -> error
+            with {:ok, analysis} <- analyzer.do_evaluate(function_name, args),
+                 {:ok, analysis} <- process_awaited(analysis) do
+              {:ok, {analysis.return, analysis.reqs}}
             end
           end)
 
@@ -150,6 +150,7 @@ defmodule Clr.Analysis do
   alias Clr.Air.Instruction
 
   def put_type(analysis, slot, type) do
+    if match?({_, %Clr.Analysis{}}, type), do: raise "eepers"
     %{analysis | slots: Map.put(analysis.slots, slot, type)}
   end
 
@@ -157,11 +158,21 @@ defmodule Clr.Analysis do
     %{analysis | awaits: [future | analysis.awaits]}
   end
 
+  @spec fetch!(t, non_neg_integer()) :: {term, t}
   def fetch!(analysis, slot) do
     case Map.fetch!(analysis.slots, slot) do
-      {:future, future} -> await(future)
-      type -> type
+      {:future, future} -> 
+        case await(future) do
+          {type, requirements} ->
+            {type, put_requirements(analysis, requirements)}
+        end
+      type -> 
+        {type, analysis}
     end
+  end
+
+  defp put_requirements(_analysis, _requirements) do
+    raise "unimplemented"
   end
 
   def fetch_arg!(analysis, index) do
@@ -210,12 +221,15 @@ defmodule Clr.Analysis do
   # values that are clobbered can be safely ignored.
   defp analysis({{_, :clobber}, _}, state), do: state
 
-  def process_awaited(%{awaits: [], return: type}), do: {:ok, type}
+  @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t}
+
+  def process_awaited(%{awaits: []} = analysis), do: {:ok, analysis}
 
   def process_awaited(%{awaits: [head | rest]} = analysis) do
     case await({:future, head}) do
       {:error, _} = error -> error
-      {:ok, _} -> process_awaited(%{analysis | awaits: rest})
+      {:ok, _result} -> 
+        process_awaited(%{analysis | awaits: rest})
     end
   end
 end

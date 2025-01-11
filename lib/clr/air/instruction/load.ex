@@ -22,7 +22,7 @@ defmodule Clr.Air.Instruction.Load do
 
   def analyze(%{type: type, loc: {src_slot, _}}, slot, analysis) do
     case Analysis.fetch!(analysis, src_slot) do
-      {:ptr, _, _, opts} ->
+      {{:ptr, _, _, opts}, analysis} ->
         cond do
           opts[:undefined] ->
             raise Clr.UndefinedUsage,

@@ -34,14 +34,10 @@ defmodule Clr.Air.Instruction.Call do
       {:literal, _type, {:function, function_name}} ->
         # we also need the context of the current function.
 
-        types =
-          Enum.map(call.args, fn
-            {:literal, type, _} ->
-              type
-
-            {slot, _} ->
-              Analysis.fetch!(analysis, slot)
-          end)
+        {types, analysis} = Enum.map_reduce(call.args, analysis, fn
+          {:literal, type, _}, analysis -> {type, analysis}
+          {slot, _}, analysis -> Analysis.fetch!(analysis, slot)
+        end)
 
         analysis.name
         |> merge_name(function_name)
@@ -80,7 +76,10 @@ defmodule Clr.Air.Instruction.Call do
          slot,
          analysis
        ) do
-    {:ptr, :one, type, opts} = Analysis.fetch!(analysis, src)
+
+    Analysis.process_awaited(analysis)
+
+    {{:ptr, :one, type, opts}, analysis} = Analysis.fetch!(analysis, src)
     vtable = Map.fetch!(struct, "vtable")
 
     case Keyword.fetch(opts, :heap) do

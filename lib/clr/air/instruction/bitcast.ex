@@ -20,7 +20,7 @@ defmodule Clr.Air.Instruction.Bitcast do
 
   def analyze(%{type: {:ptr, count, base, opts}, src: {src_slot, _}}, dst_slot, analysis) do
     case Analysis.fetch!(analysis, src_slot) do
-      {:ptr, _, _, src_opts} ->
+      {{:ptr, _, _, src_opts}, analysis} ->
         type = {:ptr, count, base, Keyword.merge(opts, src_opts)}
         Analysis.put_type(analysis, dst_slot, type)
 
