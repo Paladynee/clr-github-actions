@@ -23,7 +23,7 @@ defmodule Clr.Air.Instruction.Call do
     end
   end
 
-  alias Clr.Analysis
+  alias Clr.Function
   import Clr.Air.Lvalue
 
   def analyze(call, slot, analysis) do
@@ -37,20 +37,20 @@ defmodule Clr.Air.Instruction.Call do
         {types, analysis} =
           Enum.map_reduce(call.args, analysis, fn
             {:literal, type, _}, analysis -> {type, analysis}
-            {slot, _}, analysis -> Analysis.fetch!(analysis, slot)
+            {slot, _}, analysis -> Function.fetch!(analysis, slot)
           end)
 
         analysis.name
         |> merge_name(function_name)
-        |> Clr.Analysis.evaluate(types)
+        |> Clr.Function.evaluate(types)
         |> case do
           {:future, ref} ->
             analysis
-            |> Analysis.put_type(slot, {:future, ref})
-            |> Analysis.put_future(ref)
+            |> Function.put_type(slot, {:future, ref})
+            |> Function.put_future(ref)
 
           {:ok, result} ->
-            Analysis.put_type(analysis, slot, result)
+            Function.put_type(analysis, slot, result)
         end
     end
   end
@@ -66,7 +66,7 @@ defmodule Clr.Air.Instruction.Call do
     heap_type =
       {:errorable, e, {:ptr, count, type, Keyword.put(opts, :heap, Map.fetch!(struct, "vtable"))}}
 
-    Analysis.put_type(analysis, slot, heap_type)
+    Function.put_type(analysis, slot, heap_type)
   end
 
   defp process_allocator(
@@ -77,16 +77,16 @@ defmodule Clr.Air.Instruction.Call do
          slot,
          analysis
        ) do
-    # Analysis.process_awaited(analysis)
+    # Function.process_awaited(analysis)
 
-    {{:ptr, :one, type, opts}, analysis} = Analysis.fetch!(analysis, src)
+    {{:ptr, :one, type, opts}, analysis} = Function.fetch!(analysis, src)
     vtable = Map.fetch!(struct, "vtable")
 
     case Keyword.fetch(opts, :heap) do
       {:ok, ^vtable} ->
         analysis
-        |> Analysis.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
-        |> Analysis.put_type(slot, ~l"void")
+        |> Function.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
+        |> Function.put_type(slot, ~l"void")
         |> maybe_mark_transferred(opts)
 
       {:ok, :deleted} ->
@@ -117,7 +117,7 @@ defmodule Clr.Air.Instruction.Call do
 
   defp maybe_mark_transferred(analysis, opts) do
     if index = Keyword.get(opts, :passed_as) do
-      Analysis.update_req!(analysis, index, &Keyword.put(&1, :transferred, analysis.name))
+      Function.update_req!(analysis, index, &Keyword.put(&1, :transferred, analysis.name))
     else
       analysis
     end

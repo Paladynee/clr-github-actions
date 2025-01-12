@@ -5,7 +5,7 @@ defmodule Clr.Air.Instruction.Arg do
 
   require Pegasus
   require Clr.Air
-  alias Clr.Analysis
+  alias Clr.Function
 
   Clr.Air.import(~w[type int cs dquoted lparen rparen]a)
 
@@ -26,7 +26,7 @@ defmodule Clr.Air.Instruction.Arg do
     # note that the slot of the arg instruction is ALWAYS the index of the
     # call type parameter.
     type =
-      case Analysis.fetch_arg!(analysis, slot) do
+      case Function.fetch_arg!(analysis, slot) do
         {:ptr, count, type, opts} ->
           # mark this as a passed argument, so that downstream we can remember
           # where it came from.
@@ -36,6 +36,6 @@ defmodule Clr.Air.Instruction.Arg do
           other
       end
 
-    Analysis.put_type(analysis, slot, type)
+    Function.put_type(analysis, slot, type)
   end
 end

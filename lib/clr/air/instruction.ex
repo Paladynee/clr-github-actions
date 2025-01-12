@@ -1,8 +1,8 @@
 use Protoss
 
 defprotocol Clr.Air.Instruction do
-  alias Clr.Analysis
-  @callback analyze(struct, non_neg_integer, Analysis.t()) :: Analysis.t()
+  alias Clr.Function
+  @callback analyze(struct, non_neg_integer, Function.t()) :: Function.t()
   def analyze(instruction, slot, state)
 after
   @modules Map.new(

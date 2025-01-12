@@ -1,4 +1,4 @@
-defmodule ClrTest.Analysis.BlockAnalysisTest do
+defmodule ClrTest.Function.BlockAnalysisTest do
   use ExUnit.Case, async: true
 
   alias Clr.Air.Function

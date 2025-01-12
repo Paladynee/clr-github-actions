@@ -1,4 +1,4 @@
-defmodule Clr.Analysis.Responsibility do
+defmodule Clr.Function.Responsibility do
   def maybe_set_manages(analysis, slot) do
     if passed_parameter?(analysis, slot) do
       %{analysis | args: List.update_at(analysis.args, slot, &set_manages/1)}

@@ -1,4 +1,4 @@
-defmodule Clr.Analysis do
+defmodule Clr.Function do
   @moduledoc false
 
   # stores evaluated AIR functions in an ets table for retrieval.
@@ -23,7 +23,7 @@ defmodule Clr.Analysis do
     # allow for analyzer dependency injection here.
     analyzer = Keyword.get(opts, :analyzer, __MODULE__)
     Process.put(:analyzer, analyzer)
-    Process.put(Clr.Analysis.TableName, name)
+    Process.put(Clr.Function.TableName, name)
     Process.flag(:trap_exit, true)
 
     :ets.new(name, [:named_table, :set, :public])
@@ -127,7 +127,7 @@ defmodule Clr.Analysis do
 
   # common utility functions
   def table_name do
-    Process.get(Clr.Analysis.TableName, __MODULE__)
+    Process.get(Clr.Function.TableName, __MODULE__)
   end
 
   ## FUNCTION EVALUATION
@@ -151,7 +151,7 @@ defmodule Clr.Analysis do
   alias Clr.Air.Instruction
 
   def put_type(analysis, slot, type) do
-    if match?({_, %Clr.Analysis{}}, type), do: raise("eepers")
+    if match?({_, %Clr.Function{}}, type), do: raise("eepers")
     %{analysis | slots: Map.put(analysis.slots, slot, type)}
   end
 

@@ -3,7 +3,7 @@ defmodule Clr.Block do
 
   alias Clr.Air.Function
   alias Clr.Air.Instruction
-  alias Clr.Analysis
+  alias Clr.Function
 
   @enforce_keys ~w[function args reqs]a
   defstruct @enforce_keys ++
@@ -96,7 +96,7 @@ defmodule Clr.Block do
   defp await_future(block, slot) do
     block.awaits
     |> Map.fetch!(slot)
-    |> Analysis.await()
+    |> Function.await()
     |> case do
       {:ok, {type, lambda}} when is_function(lambda, 1) ->
         block

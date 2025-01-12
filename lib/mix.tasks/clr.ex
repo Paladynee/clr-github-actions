@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Clr do
     # start the AIR server
     Clr.Air.Server.start_link([])
     # start the analysis server
-    Clr.Analysis.start_link([])
+    Clr.Function.start_link([])
 
     if System.get_env("DEBUG", "false") == "true" do
       Application.put_env(:clr, :debug_prefix, Path.basename(file, ".zig"))
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Clr do
       |> Enum.reduce(%FunctionScanner{start_functions: start_functions}, &scan_function/2)
 
     Enum.each(scanner.await_refs, fn ref ->
-      case Clr.Analysis.await(ref) do
+      case Clr.Function.await(ref) do
         {:error, {error, _stacktrace}} when is_exception(error) ->
           error
           |> Exception.message()
@@ -153,7 +153,7 @@ defmodule Mix.Tasks.Clr do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
       # we don't actually care what the return values of these guys are.
-      Clr.Analysis.evaluate(function.name, [])
+      Clr.Function.evaluate(function.name, [])
     end
   end
 end

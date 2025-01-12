@@ -18,10 +18,10 @@ defmodule Clr.Air.Instruction.Load do
   end
 
   use Clr.Air.Instruction
-  alias Clr.Analysis
+  alias Clr.Function
 
   def analyze(%{type: type, loc: {src_slot, _}}, slot, analysis) do
-    case Analysis.fetch!(analysis, src_slot) do
+    case Function.fetch!(analysis, src_slot) do
       {{:ptr, _, _, opts}, analysis} ->
         cond do
           opts[:undefined] ->
@@ -37,7 +37,7 @@ defmodule Clr.Air.Instruction.Load do
               col: analysis.col
 
           :else ->
-            Analysis.put_type(analysis, slot, type)
+            Function.put_type(analysis, slot, type)
         end
     end
   end

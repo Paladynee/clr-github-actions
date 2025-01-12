@@ -18,9 +18,9 @@ defmodule Clr.Air.Instruction.Tests do
 
     defstruct ~w[lhs rhs op]a
     import Clr.Air.Lvalue
-    alias Clr.Analysis
+    alias Clr.Function
 
-    def analyze(_, slot, analysis), do: Analysis.put_type(analysis, slot, ~l"bool")
+    def analyze(_, slot, analysis), do: Function.put_type(analysis, slot, ~l"bool")
   end
 
   Pegasus.parser_from_string(
