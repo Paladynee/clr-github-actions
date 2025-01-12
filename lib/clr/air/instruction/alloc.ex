@@ -17,13 +17,9 @@ defmodule Clr.Air.Instruction.Alloc do
 
   use Clr.Air.Instruction
 
-  alias Clr.Analysis
+  alias Clr.Block
 
-  def analyze(%{type: {:ptr, ptrtype, child, opts}}, slot, analysis) do
-    Analysis.put_type(
-      analysis,
-      slot,
-      {:ptr, ptrtype, child, Keyword.put(opts, :stack, analysis.name)}
-    )
+  def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis) do
+    Block.put_type(analysis, slot, type, stack: analysis.function)
   end
 end

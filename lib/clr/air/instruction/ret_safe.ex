@@ -25,21 +25,16 @@ defmodule Clr.Air.Instruction.RetSafe do
     %{analysis | return: type}
   end
 
-  def analyze(%{val: {src_slot, _}}, _dst_slot, analysis) do
+  def analyze(%{val: {src_slot, _}}, _dst_slot, %{function: function} = analysis) do
     # get the type of the value.
     case Map.fetch!(analysis.slots, src_slot) do
-      {:ptr, _, _, opts} = return_type ->
-        if opts[:stack] == analysis.name do
-          raise Clr.StackPtrEscape,
-            function: Clr.Air.Lvalue.as_string(analysis.name),
-            row: analysis.row,
-            col: analysis.col
-        else
-          %{analysis | return: return_type}
-        end
+      {{:ptr, _, _, opts}, %{stack: ^function}} ->
+        raise Clr.StackPtrEscape,
+          function: Clr.Air.Lvalue.as_string(function),
+          loc: analysis.loc
 
-      return_type ->
-        %{analysis | return: return_type}
+      retval ->
+        %{analysis | return: retval}
     end
   end
 end

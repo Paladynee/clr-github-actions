@@ -25,14 +25,17 @@ defmodule Clr.Air.Instruction.Arg do
   def analyze(_instruction, slot, analysis) do
     # note that the slot of the arg instruction is ALWAYS the index of the
     # call type parameter.
-    type = case Analysis.fetch_arg!(analysis, slot) do
-      {:ptr, count, type, opts} ->
-        # mark this as a passed argument, so that downstream we can remember
-        # where it came from.
-        {:ptr, count, type, Keyword.put(opts, :passed_as, slot)}
-      other ->
-        other
-    end
+    type =
+      case Analysis.fetch_arg!(analysis, slot) do
+        {:ptr, count, type, opts} ->
+          # mark this as a passed argument, so that downstream we can remember
+          # where it came from.
+          {:ptr, count, type, Keyword.put(opts, :passed_as, slot)}
+
+        other ->
+          other
+      end
+
     Analysis.put_type(analysis, slot, type)
   end
 end

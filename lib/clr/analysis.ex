@@ -71,10 +71,11 @@ defmodule Clr.Analysis do
     result
   end
 
-  def await({:future, ref}) do
+  def await(ref) when is_reference(ref) do
     receive do
-      {^ref, result} -> result
-      other -> other
+      {^ref, {_, lambda} = type_lambda} when is_function(lambda, 1) -> {:ok, type_lambda}
+      {^ref, {:error, _} = error} -> error
+      other -> raise inspect(other)
     end
   end
 
@@ -150,7 +151,7 @@ defmodule Clr.Analysis do
   alias Clr.Air.Instruction
 
   def put_type(analysis, slot, type) do
-    if match?({_, %Clr.Analysis{}}, type), do: raise "eepers"
+    if match?({_, %Clr.Analysis{}}, type), do: raise("eepers")
     %{analysis | slots: Map.put(analysis.slots, slot, type)}
   end
 
@@ -161,12 +162,13 @@ defmodule Clr.Analysis do
   @spec fetch!(t, non_neg_integer()) :: {term, t}
   def fetch!(analysis, slot) do
     case Map.fetch!(analysis.slots, slot) do
-      {:future, future} -> 
+      {:future, future} ->
         case await(future) do
           {type, requirements} ->
             {type, put_requirements(analysis, requirements)}
         end
-      type -> 
+
+      type ->
         {type, analysis}
     end
   end
@@ -191,44 +193,20 @@ defmodule Clr.Analysis do
   def do_evaluate(function_name, arguments) do
     function_name
     |> Clr.Air.Server.get()
-    |> do_analyze(arguments)
-    |> then(&{:ok, &1})
+
+    raise "foobar"
   end
 
-  # this private function is made public for testing.
-  def do_analyze(function, arguments, debug_preload_slots \\ %{}) do
-    requirements = Enum.map(arguments, fn _ -> [] end)
-    Enum.reduce(
-      function.code,
-      %__MODULE__{name: function.name, args: arguments, reqs: requirements, slots: debug_preload_slots},
-      &analysis/2
-    )
-  end
-
-  # instructions that return need to be analyzed.
-  @always [
-    Clr.Air.Instruction.RetSafe,
-    Clr.Air.Instruction.StoreSafe,
-    Clr.Air.Instruction.DbgStmt,
-    Clr.Air.Instruction.Call
-  ]
-
-  defp analysis({{slot, mode}, %always{} = instruction}, state)
-       when always in @always or mode === :keep do
-    Instruction.analyze(instruction, slot, state)
-  end
-
-  # values that are clobbered can be safely ignored.
-  defp analysis({{_, :clobber}, _}, state), do: state
-
-  @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t}
+  @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t()}
 
   def process_awaited(%{awaits: []} = analysis), do: {:ok, analysis}
 
   def process_awaited(%{awaits: [head | rest]} = analysis) do
     case await({:future, head}) do
-      {:error, _} = error -> error
-      {:ok, _result} -> 
+      {:error, _} = error ->
+        error
+
+      {:ok, _result} ->
         process_awaited(%{analysis | awaits: rest})
     end
   end

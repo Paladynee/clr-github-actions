@@ -2,7 +2,8 @@ defmodule Clr.Air.Function do
   require Pegasus
   require Clr.Air
 
-  defstruct [:name, code: %{}]
+  @enforce_keys [:name]
+  defstruct @enforce_keys ++ [code: %{}]
 
   @type t :: %__MODULE__{
           name: term,
@@ -50,7 +51,7 @@ defmodule Clr.Air.Function do
   )
 
   defp init(rest, _, _context, _slot, _bytes) do
-    {rest, [], %__MODULE__{}}
+    {rest, [], %__MODULE__{name: nil}}
   end
 
   defp function_head(rest, [_, name, _], context, _slot, _bytes) do

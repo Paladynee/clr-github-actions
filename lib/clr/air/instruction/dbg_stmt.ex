@@ -22,6 +22,6 @@ defmodule Clr.Air.Instruction.DbgStmt do
   use Clr.Air.Instruction
 
   def analyze(%__MODULE__{row: row, col: col}, _slot, analysis) do
-    %{analysis | row: row, col: col}
+    %{analysis | loc: {row, col}}
   end
 end

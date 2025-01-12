@@ -1,8 +1,9 @@
 defmodule Clr.StackPtrEscape do
-  defexception [:function, :row, :col]
+  defexception [:function, :loc]
 
   def message(exception) do
-    "Stack pointer escape detected in function `#{exception.function}` at #{exception.row}:#{exception.col}"
+    {row, col} = exception.loc
+    "Stack pointer escape detected in function `#{exception.function}` at #{row}:#{col}"
   end
 end
 

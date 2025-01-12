@@ -1,21 +1,27 @@
-defmodule ClrTest.Analysis.FunctionAnalysisTest do
+defmodule ClrTest.Analysis.BlockAnalysisTest do
   use ExUnit.Case, async: true
 
   alias Clr.Air.Function
-  alias Clr.Analysis
+  alias Clr.Block
   import Clr.Air.Lvalue
 
   defp run_analysis(code, args \\ [], preload \\ %{}) do
-    Analysis.do_analyze(%Function{name: ~l"foo.bar", code: code}, args, preload)
+    %Function{name: ~l"foo.bar"}
+    |> Block.new(args)
+    |> Map.replace!(:slots, preload)
+    |> Block.analyze(code)
   end
 
   describe "generic instructions" do
     test "a keep instruction gets the instruction put into the types slot." do
-      Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
-        Analysis.put_type(analysis, line, :foobar)
+      emptymap = %{}
+
+      Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, block ->
+        Block.put_type(block, line, :foobar)
       end)
 
-      assert %{slots: %{0 => :foobar}} = run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
+      assert %{slots: %{0 => {:foobar, ^emptymap}}} =
+               run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
     end
 
     test "a clobber instruction does not change the state." do
@@ -24,15 +30,17 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
     end
 
     test "a subsequent instruction gets the types passed" do
+      empty_map = %{}
+
       ClrTest.InstructionHandler
       |> Mox.expect(:analyze, fn _, line, analysis ->
-        Analysis.put_type(analysis, line, :foobar)
+        Block.put_type(analysis, line, :foobar)
       end)
-      |> Mox.expect(:analyze, fn _, line, %{slots: %{0 => :foobar}} = analysis ->
-        Analysis.put_type(analysis, line, :barbaz)
+      |> Mox.expect(:analyze, fn _, line, %{slots: %{0 => {:foobar, ^empty_map}}} = analysis ->
+        Block.put_type(analysis, line, :barbaz)
       end)
 
-      assert %{slots: %{0 => :foobar, 1 => :barbaz}} =
+      assert %{slots: %{0 => {:foobar, ^empty_map}, 1 => {:barbaz, ^empty_map}}} =
                run_analysis(%{
                  {0, :keep} => %ClrTest.Instruction{},
                  {1, :keep} => %ClrTest.Instruction{}
@@ -41,7 +49,9 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
   end
 
   test "alloc function" do
-    assert %{slots: %{0 => {:ptr, :one, ~l"u32", [stack: ~l"foo.bar"]}}} =
+    meta = %{stack: ~l"foo.bar"}
+
+    assert %{slots: %{0 => {{:ptr, :one, ~l"u32", []}, ^meta}}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Alloc{
                  type: {:ptr, :one, {:lvalue, ["u32"]}, []}
@@ -56,7 +66,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
                  {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
                },
                [],
-               %{47 => {:ptr, :one, :u32, []}}
+               %{47 => {{:ptr, :one, :u32, []}, []}}
              )
   end
 
@@ -76,7 +86,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
 
   test "struct_field_val function" do
     Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
-      Analysis.put_type(analysis, line, {:struct, [~l"u32", ~l"u1"]})
+      Block.put_type(analysis, line, {:struct, [~l"u32", ~l"u1"]})
     end)
 
     assert %{slots: %{1 => ~l"u1"}} =
@@ -107,7 +117,7 @@ defmodule ClrTest.Analysis.FunctionAnalysisTest do
 
     test "fails on pointer types which escape a stack pointer" do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
-        Analysis.put_type(analysis, line, {:ptr, :one, ~l"u32", [stack: ~l"foo.bar"]})
+        Block.put_type(analysis, line, {:ptr, :one, ~l"u32", []}, %{stack: ~l"foo.bar"})
       end)
 
       assert_raise Clr.StackPtrEscape,
