@@ -1,5 +1,7 @@
-defmodule ClrTest.Function.ServerTest do
+defmodule ClrTest.FunctionTest do
   use ExUnit.Case, async: true
+
+  # tests the
 
   alias Clr.Function
   alias ClrTest.AnalyzerMock

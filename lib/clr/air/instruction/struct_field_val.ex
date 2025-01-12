@@ -17,11 +17,11 @@ defmodule Clr.Air.Instruction.StructFieldVal do
 
   use Clr.Air.Instruction
 
-  alias Clr.Function
+  alias Clr.Block
 
   def analyze(%{src: {src_slot, _keep_or_clobber}, index: index}, dst_slot, analysis) do
-    {{:struct, struct_types}, analysis} = Function.fetch!(analysis, src_slot)
-    line_type = Enum.at(struct_types, index) || raise "Invalid struct field access"
-    Function.put_type(analysis, dst_slot, line_type)
+    {{{:struct, struct_types}, _meta}, analysis} = Block.fetch_up!(analysis, src_slot)
+    line_type = Enum.at(struct_types, index) || raise "unreachable"
+    Block.put_type(analysis, dst_slot, line_type)
   end
 end

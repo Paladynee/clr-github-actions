@@ -18,27 +18,26 @@ defmodule Clr.Air.Instruction.Load do
   end
 
   use Clr.Air.Instruction
+
   alias Clr.Function
+  alias Clr.Block
 
-  def analyze(%{type: type, loc: {src_slot, _}}, slot, analysis) do
-    case Function.fetch!(analysis, src_slot) do
-      {{:ptr, _, _, opts}, analysis} ->
-        cond do
-          opts[:undefined] ->
-            raise Clr.UndefinedUsage,
-              function: Clr.Air.Lvalue.as_string(analysis.name),
-              row: analysis.row,
-              col: analysis.col
+  def analyze(%{type: type, loc: {src_slot, _}}, slot, block) do
+    case Block.fetch_up!(block, src_slot) do
+      {{_, %{undefined: src}}, block} ->
+        raise Clr.UndefinedUsage,
+          function: Clr.Air.Lvalue.as_string(block.name),
+          row: block.row,
+          col: block.col
 
-          opts[:heap] == :deleted ->
+      {{_, %{deleted: src}}, block} ->
             raise Clr.UseAfterFreeError,
-              function: Clr.Air.Lvalue.as_string(analysis.name),
-              row: analysis.row,
-              col: analysis.col
+              function: Clr.Air.Lvalue.as_string(block.name),
+              row: block.row,
+              col: block.col
 
-          :else ->
-            Function.put_type(analysis, slot, type)
-        end
+      {{{:ptr, _, _, _}, _}, block} ->
+        Block.put_type(block, slot, type)
     end
   end
 end

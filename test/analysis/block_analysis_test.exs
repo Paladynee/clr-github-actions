@@ -12,26 +12,23 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     |> Block.analyze(code)
   end
 
-  describe "generic instructions" do
-    test "a keep instruction gets the instruction put into the types slot." do
-      emptymap = %{}
+  setup(do: {:ok, empty_map: %{}})
 
+  describe "generic instructions" do
+    test "a keep instruction gets the instruction put into the types slot.", %{empty_map: empty_map} do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, block ->
         Block.put_type(block, line, :foobar)
       end)
 
-      assert %{slots: %{0 => {:foobar, ^emptymap}}} =
+      assert %{slots: %{0 => {:foobar, ^empty_map}}} =
                run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
     end
 
-    test "a clobber instruction does not change the state." do
-      empty_map = %{}
+    test "a clobber instruction does not change the state." , %{empty_map: empty_map} do
       assert %{slots: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instruction{}})
     end
 
-    test "a subsequent instruction gets the types passed" do
-      empty_map = %{}
-
+    test "a subsequent instruction gets the types passed", %{empty_map: empty_map} do
       ClrTest.InstructionHandler
       |> Mox.expect(:analyze, fn _, line, analysis ->
         Block.put_type(analysis, line, :foobar)
@@ -59,8 +56,8 @@ defmodule ClrTest.Function.BlockAnalysisTest do
              })
   end
 
-  test "load function" do
-    assert %{slots: %{0 => :u32}} =
+  test "load function", %{empty_map: empty_map} do
+    assert %{slots: %{0 => {:u32, ^empty_map}}} =
              run_analysis(
                %{
                  {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
@@ -84,12 +81,12 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     end
   end
 
-  test "struct_field_val function" do
+  test "struct_field_val function", %{empty_map: empty_map} do
     Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
       Block.put_type(analysis, line, {:struct, [~l"u32", ~l"u1"]})
     end)
 
-    assert %{slots: %{1 => ~l"u1"}} =
+    assert %{slots: %{1 => {~l"u1", ^empty_map}}} =
              run_analysis(%{
                {0, :keep} => %ClrTest.Instruction{},
                {1, :keep} => %Clr.Air.Instruction.StructFieldVal{src: {0, :keep}, index: 1}
