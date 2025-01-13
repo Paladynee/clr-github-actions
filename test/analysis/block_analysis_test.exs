@@ -15,7 +15,9 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   setup(do: {:ok, empty_map: %{}})
 
   describe "generic instructions" do
-    test "a keep instruction gets the instruction put into the types slot.", %{empty_map: empty_map} do
+    test "a keep instruction gets the instruction put into the types slot.", %{
+      empty_map: empty_map
+    } do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, block ->
         Block.put_type(block, line, :foobar)
       end)
@@ -24,7 +26,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
                run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
     end
 
-    test "a clobber instruction does not change the state." , %{empty_map: empty_map} do
+    test "a clobber instruction does not change the state.", %{empty_map: empty_map} do
       assert %{slots: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instruction{}})
     end
 

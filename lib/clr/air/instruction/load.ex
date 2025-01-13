@@ -31,10 +31,10 @@ defmodule Clr.Air.Instruction.Load do
           col: block.col
 
       {{_, %{deleted: src}}, block} ->
-            raise Clr.UseAfterFreeError,
-              function: Clr.Air.Lvalue.as_string(block.name),
-              row: block.row,
-              col: block.col
+        raise Clr.UseAfterFreeError,
+          function: Clr.Air.Lvalue.as_string(block.name),
+          row: block.row,
+          col: block.col
 
       {{{:ptr, _, _, _}, _}, block} ->
         Block.put_type(block, slot, type)

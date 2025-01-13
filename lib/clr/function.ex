@@ -30,15 +30,27 @@ defmodule Clr.Function do
     {:ok, %{}, :hibernate}
   end
 
-  def evaluate(function_name, args) do
+  # when you "evaluate" a function, you are asking the server to
+  # "evaluate" the function.  
+  alias Clr.Block
+
+  @type block_mapper :: (Block.t() -> Block.t())
+
+  @spec evaluate(term, [Clr.type()], [Clr.slot()]) ::
+          {:future, reference} | {Clr.type(), block_mapper}
+  def evaluate(function_name, args, arg_slots) do
     case :ets.lookup(table_name(), {function_name, args}) do
-      [{_, result}] -> result
-      [] -> GenServer.call(table_name(), {:evaluate, function_name, args})
+      [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
+      [] -> GenServer.call(table_name(), {:evaluate, function_name, args, arg_slots})
     end
   end
 
-  defp evaluate_impl(function_name, args, {pid, _ref}, waiters) do
+  @type future :: {:future, reference}
+  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], GenServer.from(), waiters) ::
+          {:reply, future, waiters}
+  defp evaluate_impl(function_name, args, arg_slots, {pid, _ref}, waiters) do
     waiter_id_key = {function_name, args}
+    table_name = table_name()
 
     case Map.fetch(waiters, waiter_id_key) do
       {:ok, {{_pid, future_ref} = future_info, pids}} ->
@@ -53,9 +65,14 @@ defmodule Clr.Function do
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            with {:ok, analysis} <- analyzer.do_evaluate(function_name, args),
-                 {:ok, analysis} <- process_awaited(analysis) do
-              {:ok, {analysis.return, analysis.reqs}}
+            with {:ok, analysis} <- analyzer.do_evaluate(function_name, args) do
+                 #{:ok, analysis} <- process_awaited(analysis) do
+              # obtain the block remapper and store it in the table.
+              remapper = Block.remapper(analysis.reqs)
+              :ets.insert(table_name, {waiter_id_key, remapper})
+
+              # save the result.
+              {:ok, {analysis.return, &remapper.(&1, arg_slots)}}
             end
           end)
 
@@ -71,6 +88,7 @@ defmodule Clr.Function do
     result
   end
 
+  @spec await(reference) :: {:ok, {Clr.type(), block_mapper}}
   def await(ref) when is_reference(ref) do
     receive do
       {^ref, {_, lambda} = type_lambda} when is_function(lambda, 1) -> {:ok, type_lambda}
@@ -83,8 +101,8 @@ defmodule Clr.Function do
     :ets.insert(table_name(), {{function_name, args}, result})
   end
 
-  def handle_call({:evaluate, function_name, args}, from, waiters),
-    do: evaluate_impl(function_name, args, from, waiters)
+  def handle_call({:evaluate, function_name, args, arg_slots}, from, waiters),
+    do: evaluate_impl(function_name, args, arg_slots, from, waiters)
 
   def handle_info({ref, result} = response, waiters) when is_reference(ref) do
     function_call =
@@ -189,25 +207,17 @@ defmodule Clr.Function do
     Map.update!(analysis, :reqs, &List.update_at(&1, index, transformation))
   end
 
-  # this private function is made public for testing.
-  def do_evaluate(function_name, arguments) do
-    function_name
-    |> Clr.Air.Server.get()
-
-    raise "foobar"
-  end
-
-  @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t()}
-
-  def process_awaited(%{awaits: []} = analysis), do: {:ok, analysis}
-
-  def process_awaited(%{awaits: [head | rest]} = analysis) do
-    case await({:future, head}) do
-      {:error, _} = error ->
-        error
-
-      {:ok, _result} ->
-        process_awaited(%{analysis | awaits: rest})
-    end
-  end
+  # @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t()}
+  #
+  # def process_awaited(%{awaits: []} = analysis), do: {:ok, analysis}
+  #
+  # def process_awaited(%{awaits: [head | rest]} = analysis) do
+  #  case await({:future, head}) do
+  #    {:error, _} = error ->
+  #      error
+  #
+  #    {:ok, _result} ->
+  #      process_awaited(%{analysis | awaits: rest})
+  #  end
+  # end
 end

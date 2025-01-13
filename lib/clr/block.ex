@@ -17,7 +17,7 @@ defmodule Clr.Block do
 
   @type loc :: {row :: non_neg_integer, col :: non_neg_integer}
   @type slot_spec :: {Clr.type(), meta :: keyword}
-  @type slot :: Clr.Air.slot()
+  @type slot :: Clr.slot()
 
   @type t :: %__MODULE__{
           function: term,
@@ -84,11 +84,17 @@ defmodule Clr.Block do
     %{block | awaits: Map.put(block.awaits, line, reference)}
   end
 
+  def put_reqs(block, line, reqs) do
+    %{block | reqs: List.update_at(block.reqs, line, &Enum.into(reqs, &1))}
+  end
+
   # used to fetch the type and update the block type.  If the
   def fetch_up!(block, slot) do
     case Map.fetch(block.slots, slot) do
-      {:ok, typemeta} -> {typemeta, block}
-      :error -> 
+      {:ok, typemeta} ->
+        {typemeta, block}
+
+      :error ->
         await_future(block, slot)
     end
   end
@@ -103,8 +109,23 @@ defmodule Clr.Block do
         |> put_type(slot, type)
         |> then(lambda)
         |> fetch_up!(slot)
-      {:error, exception} -> 
+
+      {:error, exception} ->
         raise exception
+    end
+  end
+
+  @type call_meta_adder_fn :: (Block.t(), [Clr.slot()] -> Block.t())
+  @spec call_meta_adder(t) :: call_meta_adder_fn
+  # this function produces a lambda that can be used to add metadata to
+  # slots in a block, generated from the requirements of the "called" block.
+  def call_meta_adder(%{reqs: reqs} = called_fn) do
+    fn caller_fn, slots ->
+      slots
+      |> Enum.zip(reqs)
+      |> Enum.reduce(caller_fn, fn {slot, req_list}, caller_fn ->
+        put_meta(caller_fn, slot, req_list)
+      end)
     end
   end
 end

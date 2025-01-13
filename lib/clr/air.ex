@@ -36,10 +36,9 @@ defmodule Clr.Air do
 
   alias Clr.Air.Instruction
 
-  @type slot :: non_neg_integer
   @type mode :: :clobber | :keep
 
   @type codeblock() :: %{
-          optional({slot, mode}) => Instruction.t()
+          optional({Clr.slot(), mode}) => Instruction.t()
         }
 end
