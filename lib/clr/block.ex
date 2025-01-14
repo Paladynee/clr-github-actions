@@ -37,7 +37,7 @@ defmodule Clr.Block do
     %__MODULE__{function: function.name, args_meta: args_meta, reqs: reqs}
   end
 
-  @spec analyze(t, Clr.Air.code()) :: t
+  @spec analyze(t, Clr.Air.codeblock()) :: t
   def analyze(block, code) do
     Enum.reduce(code, block, &analyze_instruction/2)
   end
@@ -131,7 +131,7 @@ defmodule Clr.Block do
     end)
   end
 
-  @type call_meta_adder_fn :: (Block.t(), [Clr.slot()] -> Block.t())
+  @type call_meta_adder_fn :: (Block.t(), [Clr.slot() | nil] -> Block.t())
   @spec call_meta_adder(t) :: call_meta_adder_fn
   # this function produces a lambda that can be used to add metadata to
   # slots in a block, generated from the requirements of the "called" block.

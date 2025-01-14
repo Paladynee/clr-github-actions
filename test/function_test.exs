@@ -8,28 +8,29 @@ defmodule ClrTest.FunctionTest do
   alias ClrTest.AnalyzerMock
 
   import Clr.Air.Lvalue
+  import Mox
 
-  # each test gets its own analysis server process.
+  setup :verify_on_exit!
+
   setup %{test: test} do
-    table_name = :"#{test}-analysis-server"
+    table_name = :"#{test}-function-table"
     server = start_supervised!({Function, [name: table_name, analyzer: AnalyzerMock]})
 
     Mox.allow(AnalyzerMock, self(), server)
     Process.put(Clr.Function.TableName, table_name)
+    Clr.Air.Server.put(%Clr.Air.Function{name: :foobar_function})
     {:ok, table: table_name}
   end
 
-  defp ok_evaluation(type),
-    do: {:ok, %Block{function: ~l"foo.bar", return: type, args_meta: [], reqs: []}}
+  defp stub_eval(type), do: %Block{function: ~l"foo.bar", return: type, args_meta: [], reqs: []}
 
   test "we can make a single evaluation request" do
-    Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ -> ok_evaluation(:result) end)
+    Mox.expect(AnalyzerMock, :analyze, fn _, _ -> stub_eval(:result) end)
 
     {:future, future} = Function.evaluate(:foobar_function, [], [])
     assert {:ok, {:result, lambda1}} = Function.await(future)
     # this is the function that can add metadata to slots.
     assert is_function(lambda1, 1)
-
     assert {:result, lambda2} = Function.debug_get_table(:foobar_function, [])
     # this is a lambda that takes a block and 
     assert is_function(lambda2, 2)
@@ -46,10 +47,10 @@ defmodule ClrTest.FunctionTest do
   test "multiple evaluation requests can occur", %{table: table_name} do
     this = self()
 
-    Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ ->
+    Mox.expect(AnalyzerMock, :analyze, fn _, _ ->
       send(this, {:unblock, self()})
       assert_receive :unblock
-      ok_evaluation(:result)
+      stub_eval(:result)
     end)
 
     {:future, future1} = Function.evaluate(:foobar_function, [], [])
@@ -74,13 +75,13 @@ defmodule ClrTest.FunctionTest do
     assert is_function(lambda, 1)
   end
 
-  test "different args have different entries" do
+  test "different metadata have different entries" do
     AnalyzerMock
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [%{foo: :bar}] ->
-      ok_evaluation(:fooresult)
+    |> Mox.expect(:analyze, fn %{args_meta: [%{foo: :bar}]}, _ ->
+      stub_eval(:fooresult)
     end)
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [%{bar: :baz}] ->
-      ok_evaluation(:barresult)
+    |> Mox.expect(:analyze, fn %{args_meta: [%{bar: :baz}]}, _ ->
+      stub_eval(:barresult)
     end)
 
     {:future, foofuture} = Function.evaluate(:foobar_function, [%{foo: :bar}], [1])

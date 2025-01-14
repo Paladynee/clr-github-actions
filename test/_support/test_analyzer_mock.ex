@@ -1,5 +1,5 @@
 defmodule Clr.Analyzer.Api do
-  @callback do_evaluate(Clr.Function.t(), args :: [term]) :: Clr.Function.t()
+  @callback analyze(Clr.Block.t(), code :: Clr.Air.codeblock()) :: Clr.Block.t()
 end
 
 Mox.defmock(ClrTest.AnalyzerMock, for: Clr.Analyzer.Api)

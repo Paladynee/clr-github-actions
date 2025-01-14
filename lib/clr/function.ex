@@ -34,7 +34,7 @@ defmodule Clr.Function do
 
   @type block_mapper :: (Block.t() -> Block.t())
 
-  @spec evaluate(term, [Clr.meta()], [Clr.slot()]) ::
+  @spec evaluate(term, [Clr.meta()], [Clr.slot() | nil]) ::
           {:future, reference} | {Clr.type(), block_mapper}
   def evaluate(function_name, args_meta, arg_slots) do
     # TODO: remove the next clause
@@ -67,7 +67,7 @@ defmodule Clr.Function do
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            function = Clr.Air.Server.get(function_name)
+            function = Clr.Air.Server.get(function_name)  
 
             %{return: return} =
               block =
@@ -120,8 +120,6 @@ defmodule Clr.Function do
           receive do
             {:DOWN, ^ref, :process, _, _reason} -> :ok
           end
-
-          response |> dbg(limit: 25)
 
           # forward the result to the pids
           Enum.each(pids, &send(&1, response))
