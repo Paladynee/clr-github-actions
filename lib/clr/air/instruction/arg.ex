@@ -5,7 +5,7 @@ defmodule Clr.Air.Instruction.Arg do
 
   require Pegasus
   require Clr.Air
-  alias Clr.Function
+  alias Clr.Block
 
   Clr.Air.import(~w[type int cs dquoted lparen rparen]a)
 
@@ -22,20 +22,9 @@ defmodule Clr.Air.Instruction.Arg do
     {rest, [%__MODULE__{type: type, name: name}], context}
   end
 
-  def analyze(_instruction, slot, analysis) do
-    # note that the slot of the arg instruction is ALWAYS the index of the
-    # call type parameter.
-    type =
-      case Function.fetch_arg!(analysis, slot) do
-        {:ptr, count, type, opts} ->
-          # mark this as a passed argument, so that downstream we can remember
-          # where it came from.
-          {:ptr, count, type, Keyword.put(opts, :passed_as, slot)}
-
-        other ->
-          other
-      end
-
-    Function.put_type(analysis, slot, type)
+  def analyze(%{type: type}, slot, block) do
+    # note that metadata is conveyed through the args_meta
+    arg_meta = Enum.at(block.args_meta, slot) || raise "unreachable"
+    Block.put_type(block, slot, type, arg_meta)
   end
 end

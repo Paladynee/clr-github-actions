@@ -5,7 +5,7 @@ defmodule Clr.Block do
   alias Clr.Air.Instruction
   alias Clr.Function
 
-  @enforce_keys ~w[function args reqs]a
+  @enforce_keys ~w[function args_meta reqs]a
   defstruct @enforce_keys ++
               [
                 :loc,
@@ -21,7 +21,7 @@ defmodule Clr.Block do
 
   @type t :: %__MODULE__{
           function: term,
-          args: [Clr.type()],
+          args_meta: [Clr.meta()],
           reqs: [keyword],
           return: nil | {Clr.term(), meta :: keyword},
           loc: nil | loc,
@@ -31,10 +31,10 @@ defmodule Clr.Block do
         }
 
   @spec new(Function.t(), [Clr.type()]) :: t
-  def new(function, args) do
+  def new(function, args_meta) do
     # fill requirements with an empty set for each argument.
-    reqs = Enum.map(args, fn _ -> [] end)
-    %__MODULE__{function: function.name, args: args, reqs: reqs}
+    reqs = Enum.map(args_meta, fn _ -> %{} end)
+    %__MODULE__{function: function.name, args_meta: args_meta, reqs: reqs}
   end
 
   @spec analyze(t, Clr.Air.code()) :: t
@@ -113,6 +113,28 @@ defmodule Clr.Block do
       {:error, exception} ->
         raise exception
     end
+  end
+
+  @spec flush_awaits(t) :: {:ok, t} | {:error, Exception.t()}
+  def flush_awaits(block) do
+    block.awaits
+    |> Enum.reduce({:ok, %{block | awaits: %{}}}, fn
+      {slot, future}, {:ok, block} ->
+        case Function.await(future) do
+          {:ok, {type, lambda}} ->
+            block
+            |> put_type(slot, type)
+            |> then(lambda)
+            |> then(&{:ok, &1})
+
+          {:error, _} = error ->
+            nil
+        end
+
+      {_, future}, {:error, _} = first_error ->
+        Function.await(future)
+        first_error
+    end)
   end
 
   @type call_meta_adder_fn :: (Block.t(), [Clr.slot()] -> Block.t())

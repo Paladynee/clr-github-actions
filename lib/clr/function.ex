@@ -36,9 +36,12 @@ defmodule Clr.Function do
 
   @type block_mapper :: (Block.t() -> Block.t())
 
-  @spec evaluate(term, [Clr.type()], [Clr.slot()]) ::
+  @spec evaluate(term, [Clr.meta()], [Clr.slot()]) ::
           {:future, reference} | {Clr.type(), block_mapper}
   def evaluate(function_name, args, arg_slots) do
+    # TODO: remove the next clause
+    Enum.each(args, &(is_map(&1) or raise("did not get metadata")))
+
     case :ets.lookup(table_name(), {function_name, args}) do
       [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
       [] -> GenServer.call(table_name(), {:evaluate, function_name, args, arg_slots})
@@ -58,21 +61,22 @@ defmodule Clr.Function do
          Map.replace!(waiters, waiter_id_key, {future_info, [pid | pids]})}
 
       :error ->
-        # do the evaluation here.  Response is obtained as a Task.async response.
+        # we might be doing a dependency injection to the analyzer module.
         analyzer = Process.get(:analyzer)
 
+        # do the evaluation here.  Response is obtained as a Task.async response.
         future =
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            with {:ok, analysis} <- analyzer.do_evaluate(function_name, args) do
-                 #{:ok, analysis} <- process_awaited(analysis) do
+            with {:ok, block} <- analyzer.do_evaluate(function_name, args),
+                 {:ok, block} <- Block.flush_awaits(block) do
               # obtain the block remapper and store it in the table.
-              remapper = Block.remapper(analysis.reqs)
-              :ets.insert(table_name, {waiter_id_key, remapper})
+              remapper = Block.call_meta_adder(block)
+              :ets.insert(table_name, {waiter_id_key, {block.return, remapper}})
 
-              # save the result.
-              {:ok, {analysis.return, &remapper.(&1, arg_slots)}}
+              # return the result, with the arg slots remapped.
+              {:ok, block.return, &remapper.(&1, arg_slots)}
             end
           end)
 
@@ -91,7 +95,7 @@ defmodule Clr.Function do
   @spec await(reference) :: {:ok, {Clr.type(), block_mapper}}
   def await(ref) when is_reference(ref) do
     receive do
-      {^ref, {_, lambda} = type_lambda} when is_function(lambda, 1) -> {:ok, type_lambda}
+      {^ref, {:ok, type, lambda}} when is_function(lambda, 1) -> {:ok, {type, lambda}}
       {^ref, {:error, _} = error} -> error
       other -> raise inspect(other)
     end
@@ -112,9 +116,6 @@ defmodule Clr.Function do
           receive do
             {:DOWN, ^ref, :process, _, _reason} -> :ok
           end
-
-          # stash the result in the table.
-          :ets.insert(table_name(), {function_call, result})
 
           # forward the result to the pids
           Enum.each(pids, &send(&1, response))
@@ -147,77 +148,4 @@ defmodule Clr.Function do
   def table_name do
     Process.get(Clr.Function.TableName, __MODULE__)
   end
-
-  ## FUNCTION EVALUATION
-
-  defstruct [:name, :args, :reqs, :row, :col, :return, awaits: [], slots: %{}]
-
-  # TODO: go through and rename "lines" to "slots"
-  @type slot_spec :: {term, keyword}
-
-  @type t :: %__MODULE__{
-          name: term,
-          args: [term],
-          reqs: [keyword],
-          row: non_neg_integer(),
-          col: non_neg_integer(),
-          return: term,
-          awaits: [{pid, reference}],
-          slots: %{optional(non_neg_integer()) => slot_spec}
-        }
-
-  alias Clr.Air.Instruction
-
-  def put_type(analysis, slot, type) do
-    if match?({_, %Clr.Function{}}, type), do: raise("eepers")
-    %{analysis | slots: Map.put(analysis.slots, slot, type)}
-  end
-
-  def put_future(analysis, future) do
-    %{analysis | awaits: [future | analysis.awaits]}
-  end
-
-  @spec fetch!(t, non_neg_integer()) :: {term, t}
-  def fetch!(analysis, slot) do
-    case Map.fetch!(analysis.slots, slot) do
-      {:future, future} ->
-        case await(future) do
-          {type, requirements} ->
-            {type, put_requirements(analysis, requirements)}
-        end
-
-      type ->
-        {type, analysis}
-    end
-  end
-
-  defp put_requirements(_analysis, _requirements) do
-    raise "unimplemented"
-  end
-
-  def fetch_arg!(analysis, index) do
-    Enum.at(analysis.args, index) || raise "Invalid argument index #{index}"
-  end
-
-  def update_arg!(analysis, index, transformation) do
-    Map.update!(analysis, :args, &List.update_at(&1, index, transformation))
-  end
-
-  def update_req!(analysis, index, transformation) do
-    Map.update!(analysis, :reqs, &List.update_at(&1, index, transformation))
-  end
-
-  # @spec process_awaited(t) :: {:ok, t} | {:error, Exception.t()}
-  #
-  # def process_awaited(%{awaits: []} = analysis), do: {:ok, analysis}
-  #
-  # def process_awaited(%{awaits: [head | rest]} = analysis) do
-  #  case await({:future, head}) do
-  #    {:error, _} = error ->
-  #      error
-  #
-  #    {:ok, _result} ->
-  #      process_awaited(%{analysis | awaits: rest})
-  #  end
-  # end
 end

@@ -51,9 +51,10 @@ defmodule ClrTest.BlockTest do
 
   describe "the put_reqs/3 function" do
     test "puts a requirement" do
-      %{reqs: [[foo: :bar]]} = %Function{name: ~l"foo.bar"}
-      |> Block.new([~l"u8"])
-      |> Block.put_reqs(0, foo: :bar)
+      %{reqs: [[foo: :bar]]} =
+        %Function{name: ~l"foo.bar"}
+        |> Block.new([~l"u8"])
+        |> Block.put_reqs(0, foo: :bar)
     end
   end
 

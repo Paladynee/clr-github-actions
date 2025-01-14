@@ -3,8 +3,11 @@ defmodule ClrTest.FunctionTest do
 
   # tests the
 
+  alias Clr.Block
   alias Clr.Function
   alias ClrTest.AnalyzerMock
+
+  import Clr.Air.Lvalue
 
   # each test gets its own analysis server process.
   setup %{test: test} do
@@ -16,19 +19,28 @@ defmodule ClrTest.FunctionTest do
     {:ok, table: table_name}
   end
 
-  defp ok_evaluation(type), do: {:ok, %Function{return: type, reqs: []}}
+  defp ok_evaluation(type),
+    do: {:ok, %Block{function: ~l"foo.bar", return: type, args_meta: [], reqs: []}}
 
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :do_evaluate, fn _, _ -> ok_evaluation(:result) end)
 
-    future = Function.evaluate(:foobar_function, [])
-    assert {:ok, {:result, []}} = Function.await(future)
-    assert {:ok, {:result, []}} = Function.debug_get_table(:foobar_function, [])
+    {:future, future} = Function.evaluate(:foobar_function, [], [])
+    assert {:ok, {:result, lambda1}} = Function.await(future)
+    # this is the function that can add metadata to slots.
+    assert is_function(lambda1, 1)
+
+    assert {:result, lambda2} = Function.debug_get_table(:foobar_function, [])
+    # this is a lambda that takes a block and 
+    assert is_function(lambda2, 2)
   end
 
+  def empty_lambda(block, _args), do: block
+
   test "if content is in the table, it doesn't reevaluate" do
-    Function.debug_insert_result(:foobar_function, [], {:ok, :result})
-    {:ok, :result} = Function.evaluate(:foobar_function, [])
+    Function.debug_insert_result(:foobar_function, [], {:result, &empty_lambda/2})
+    {:result, lambda} = Function.evaluate(:foobar_function, [], [])
+    assert is_function(lambda, 1)
   end
 
   test "multiple evaluation requests can occur", %{table: table_name} do
@@ -40,13 +52,14 @@ defmodule ClrTest.FunctionTest do
       ok_evaluation(:result)
     end)
 
-    future1 = Function.evaluate(:foobar_function, [])
+    {:future, future1} = Function.evaluate(:foobar_function, [], [])
 
     spawn(fn ->
       Process.put(Clr.Function.TableName, table_name)
-      future2 = Function.evaluate(:foobar_function, [])
+      {:future, future2} = Function.evaluate(:foobar_function, [], [])
       send(this, :registered)
-      assert {:ok, {:result, []}} = Function.await(future2)
+      assert {:ok, {:result, lambda}} = Function.await(future2)
+      assert is_function(lambda, 1)
       send(this, :done)
     end)
 
@@ -57,7 +70,8 @@ defmodule ClrTest.FunctionTest do
     end
 
     assert_receive :done, 500
-    assert {:ok, {:result, []}} = Function.await(future1)
+    assert {:ok, {:result, lambda}} = Function.await(future1)
+    assert is_function(lambda, 1)
   end
 
   test "different args have different entries" do
@@ -65,13 +79,15 @@ defmodule ClrTest.FunctionTest do
     |> Mox.expect(:do_evaluate, fn :foobar_function, [:foo] -> ok_evaluation(:fooresult) end)
     |> Mox.expect(:do_evaluate, fn :foobar_function, [:bar] -> ok_evaluation(:barresult) end)
 
-    foofuture = Function.evaluate(:foobar_function, [:foo])
+    {:future, foofuture} = Function.evaluate(:foobar_function, [:foo], [1])
 
     Process.sleep(100)
 
-    barfuture = Function.evaluate(:foobar_function, [:bar])
+    {:future, barfuture} = Function.evaluate(:foobar_function, [:bar], [1])
 
-    assert {:ok, {:fooresult, []}} = Function.await(foofuture)
-    assert {:ok, {:barresult, []}} = Function.await(barfuture)
+    assert {:ok, {:fooresult, function1}} = Function.await(foofuture)
+    assert is_function(function1, 1)
+    assert {:ok, {:barresult, function2}} = Function.await(barfuture)
+    assert is_function(function2, 1)
   end
 end

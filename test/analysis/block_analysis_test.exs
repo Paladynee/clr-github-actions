@@ -5,9 +5,9 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   alias Clr.Block
   import Clr.Air.Lvalue
 
-  defp run_analysis(code, args \\ [], preload \\ %{}) do
+  defp run_analysis(code, args_meta \\ [], preload \\ %{}) do
     %Function{name: ~l"foo.bar"}
-    |> Block.new(args)
+    |> Block.new(args_meta)
     |> Map.replace!(:slots, preload)
     |> Block.analyze(code)
   end
@@ -47,7 +47,18 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     end
   end
 
-  test "alloc function" do
+  test "arg instruction" do
+    meta = %{foo: :bar}
+
+    assert %{slots: %{0 => {~l"u32", ^meta}}} = run_analysis(
+      %{
+        {0, :keep} => %Clr.Air.Instruction.Arg{type: ~l"u32", name: "name"}
+      },
+      [meta]
+    )
+  end
+
+  test "alloc instruction" do
     meta = %{stack: ~l"foo.bar"}
 
     assert %{slots: %{0 => {{:ptr, :one, ~l"u32", []}, ^meta}}} =
@@ -58,7 +69,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
              })
   end
 
-  test "load function", %{empty_map: empty_map} do
+  test "load instruction", %{empty_map: empty_map} do
     assert %{slots: %{0 => {:u32, ^empty_map}}} =
              run_analysis(
                %{
