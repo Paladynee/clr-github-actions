@@ -50,12 +50,13 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   test "arg instruction" do
     meta = %{foo: :bar}
 
-    assert %{slots: %{0 => {~l"u32", ^meta}}} = run_analysis(
-      %{
-        {0, :keep} => %Clr.Air.Instruction.Arg{type: ~l"u32", name: "name"}
-      },
-      [meta]
-    )
+    assert %{slots: %{0 => {~l"u32", ^meta}}} =
+             run_analysis(
+               %{
+                 {0, :keep} => %Clr.Air.Instruction.Arg{type: ~l"u32", name: "name"}
+               },
+               [meta]
+             )
   end
 
   test "alloc instruction" do
@@ -69,20 +70,26 @@ defmodule ClrTest.Function.BlockAnalysisTest do
              })
   end
 
-  test "load instruction", %{empty_map: empty_map} do
-    assert %{slots: %{0 => {:u32, ^empty_map}}} =
-             run_analysis(
-               %{
-                 {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
-               },
-               [],
-               %{47 => {{:ptr, :one, :u32, []}, []}}
-             )
+  describe "the load instruction" do
+    test "puts down the type of the pointer in the slot", %{empty_map: empty_map} do
+      assert %{slots: %{0 => {:u32, ^empty_map}}} =
+               run_analysis(
+                 %{
+                   {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
+                 },
+                 [],
+                 %{47 => {{:ptr, :one, :u32, []}, []}}
+               )
+    end
+
+    test "can detect usage of undefined"
+
+    test "can detect a use after free error"
   end
 
   describe "maths functions" do
     test "overflow functions" do
-      assert %{slots: %{0 => {:struct, [~l"u32", ~l"u1"]}}} =
+      assert %{slots: %{0 => {{:struct, [~l"u32", ~l"u1"]}, %{}}}} =
                run_analysis(%{
                  {0, :keep} => %Clr.Air.Instruction.Maths.Overflow{
                    op: :add,
@@ -107,7 +114,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   end
 
   test "boolean comparison function" do
-    assert %{slots: %{0 => ~l"bool"}} =
+    assert %{slots: %{0 => {~l"bool", %{}}}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Tests.Compare{
                  lhs: {8, :clobber},

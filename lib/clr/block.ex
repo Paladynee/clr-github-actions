@@ -22,7 +22,7 @@ defmodule Clr.Block do
   @type t :: %__MODULE__{
           function: term,
           args_meta: [Clr.meta()],
-          reqs: [keyword],
+          reqs: [Clr.meta()],
           return: nil | {Clr.term(), meta :: keyword},
           loc: nil | loc,
           stack: [{loc, term}],
@@ -115,25 +115,19 @@ defmodule Clr.Block do
     end
   end
 
-  @spec flush_awaits(t) :: {:ok, t} | {:error, Exception.t()}
+  @spec flush_awaits(t) :: t
   def flush_awaits(block) do
-    block.awaits
-    |> Enum.reduce({:ok, %{block | awaits: %{}}}, fn
-      {slot, future}, {:ok, block} ->
+    Enum.reduce(block.awaits, %{block | awaits: %{}}, fn
+      {slot, future}, block ->
         case Function.await(future) do
           {:ok, {type, lambda}} ->
             block
             |> put_type(slot, type)
             |> then(lambda)
-            |> then(&{:ok, &1})
 
-          {:error, _} = error ->
-            nil
+          {:error, {exception, stacktrace}} ->
+            reraise exception, stacktrace
         end
-
-      {_, future}, {:error, _} = first_error ->
-        Function.await(future)
-        first_error
     end)
   end
 
@@ -146,7 +140,7 @@ defmodule Clr.Block do
       slots
       |> Enum.zip(reqs)
       |> Enum.reduce(caller_fn, fn {slot, req_list}, caller_fn ->
-        put_meta(caller_fn, slot, req_list)
+        if slot, do: put_meta(caller_fn, slot, req_list), else: caller_fn
       end)
     end
   end

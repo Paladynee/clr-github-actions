@@ -16,14 +16,11 @@ defmodule Clr.Air.Instruction.StoreSafe do
   end
 
   use Clr.Air.Instruction
+  alias Clr.Block
 
-  def analyze(%__MODULE__{loc: {slot, _}, val: {:literal, _type, :undefined}}, _slot, analysis) do
-    %{analysis | slots: Map.update!(analysis.slots, slot, &set_undefined/1)}
+  def analyze(%__MODULE__{loc: {slot, _}, val: {:literal, _type, :undefined}}, _slot, block) do
+    Block.put_meta(block, slot, undefined: true)
   end
 
-  def analyze(_, _, analysis), do: analysis
-
-  defp set_undefined({:ptr, count, type, opts}) do
-    {:ptr, count, type, Keyword.put(opts, :undefined, true)}
-  end
+  def analyze(_, _, block), do: block
 end

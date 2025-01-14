@@ -33,10 +33,16 @@ defmodule Mix.Tasks.Clr do
       |> Stream.resource(&loop/1, &cleanup/1)
       |> Enum.reduce(%FunctionScanner{start_functions: start_functions}, &scan_function/2)
 
-    Enum.each(scanner.await_refs, fn ref ->
+    Enum.each(scanner.await_refs, fn {:future, ref} ->
       case Clr.Function.await(ref) do
         {:error, {error, _stacktrace}} when is_exception(error) ->
           error
+          |> Exception.message()
+          |> Mix.raise()
+
+        {:error, error} ->
+          error
+          |> then(&Exception.normalize(:error, &1))
           |> Exception.message()
           |> Mix.raise()
 
@@ -153,7 +159,7 @@ defmodule Mix.Tasks.Clr do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
       # we don't actually care what the return values of these guys are.
-      Clr.Function.evaluate(function.name, [])
+      Clr.Function.evaluate(function.name, [], [])
     end
   end
 end

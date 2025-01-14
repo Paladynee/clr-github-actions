@@ -1,30 +1,29 @@
 defmodule Clr.StackPtrEscape do
   defexception [:function, :loc]
 
-  def message(exception) do
-    {row, col} = exception.loc
+  def message(%{loc: {row, col}} = exception) do
     "Stack pointer escape detected in function `#{exception.function}` at #{row}:#{col}"
   end
 end
 
 defmodule Clr.UndefinedUsage do
-  defexception [:function, :row, :col]
+  defexception [:function, :loc]
 
-  def message(exception) do
-    "Undefined value used in function `#{exception.function}` at #{exception.row}:#{exception.col}"
+  def message(%{loc: {row, col}} = exception) do
+    "Undefined value used in function `#{exception.function}` at #{row}:#{col}"
   end
 end
 
 defmodule Clr.UseAfterFreeError do
-  defexception [:function, :row, :col]
+  defexception [:function, :loc]
 
-  def message(exception) do
-    "Use after free detected in function `#{exception.function}` at #{exception.row}:#{exception.col}"
+  def message(%{loc: {row, col}} = exception) do
+    "Use after free detected in function `#{exception.function}` at #{row}:#{col}"
   end
 end
 
 defmodule Clr.DoubleFreeError do
-  defexception [:function, :row, :col]
+  defexception [:function, :loc]
 
   def message(exception) do
     "Double free detected in function `#{exception.function}` at #{exception.row}:#{exception.col}"

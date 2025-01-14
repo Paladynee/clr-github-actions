@@ -23,6 +23,6 @@ defmodule Clr.Air.Instruction.Try do
   def analyze(%{src: {src, _}}, slot, analysis) do
     {{:errorable, _, payload}, analysis} = Function.fetch!(analysis, src)
     # for now.  Ultimately, we will need to walk the analysis on this, too.
-    Function.put_type(analysis, slot, payload)
+    Block.put_type(analysis, slot, payload)
   end
 end

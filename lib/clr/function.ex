@@ -8,6 +8,8 @@ defmodule Clr.Function do
 
   use GenServer
 
+  alias Clr.Block
+
   def start_link(opts) do
     name = Keyword.get(opts, :name, __MODULE__)
     GenServer.start_link(__MODULE__, opts, name: name)
@@ -21,7 +23,7 @@ defmodule Clr.Function do
   def init(opts) do
     name = Keyword.get(opts, :name, __MODULE__)
     # allow for analyzer dependency injection here.
-    analyzer = Keyword.get(opts, :analyzer, __MODULE__)
+    analyzer = Keyword.get(opts, :analyzer, Block)
     Process.put(:analyzer, analyzer)
     Process.put(Clr.Function.TableName, name)
     Process.flag(:trap_exit, true)
@@ -30,29 +32,25 @@ defmodule Clr.Function do
     {:ok, %{}, :hibernate}
   end
 
-  # when you "evaluate" a function, you are asking the server to
-  # "evaluate" the function.  
-  alias Clr.Block
-
   @type block_mapper :: (Block.t() -> Block.t())
 
   @spec evaluate(term, [Clr.meta()], [Clr.slot()]) ::
           {:future, reference} | {Clr.type(), block_mapper}
-  def evaluate(function_name, args, arg_slots) do
+  def evaluate(function_name, args_meta, arg_slots) do
     # TODO: remove the next clause
-    Enum.each(args, &(is_map(&1) or raise("did not get metadata")))
+    Enum.each(args_meta, &(is_map(&1) or raise("did not get metadata")))
 
-    case :ets.lookup(table_name(), {function_name, args}) do
+    case :ets.lookup(table_name(), {function_name, args_meta}) do
       [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
-      [] -> GenServer.call(table_name(), {:evaluate, function_name, args, arg_slots})
+      [] -> GenServer.call(table_name(), {:evaluate, function_name, args_meta, arg_slots})
     end
   end
 
   @type future :: {:future, reference}
-  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], GenServer.from(), waiters) ::
+  @spec evaluate_impl(term, [Clr.meta()], [Clr.slot()], GenServer.from(), waiters) ::
           {:reply, future, waiters}
-  defp evaluate_impl(function_name, args, arg_slots, {pid, _ref}, waiters) do
-    waiter_id_key = {function_name, args}
+  defp evaluate_impl(function_name, args_meta, arg_slots, {pid, _ref}, waiters) do
+    waiter_id_key = {function_name, args_meta}
     table_name = table_name()
 
     case Map.fetch(waiters, waiter_id_key) do
@@ -69,15 +67,20 @@ defmodule Clr.Function do
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            with {:ok, block} <- analyzer.do_evaluate(function_name, args),
-                 {:ok, block} <- Block.flush_awaits(block) do
-              # obtain the block remapper and store it in the table.
-              remapper = Block.call_meta_adder(block)
-              :ets.insert(table_name, {waiter_id_key, {block.return, remapper}})
+            function = Clr.Air.Server.get(function_name)
 
-              # return the result, with the arg slots remapped.
-              {:ok, block.return, &remapper.(&1, arg_slots)}
-            end
+            %{return: return} =
+              block =
+              function
+              |> Block.new(args_meta)
+              |> analyzer.analyze(function.code)
+              |> Block.flush_awaits()
+
+            remapper = Block.call_meta_adder(block)
+
+            :ets.insert(table_name, {waiter_id_key, {return, remapper}})
+
+            {:ok, return, &remapper.(&1, arg_slots)}
           end)
 
         future_info = {future.pid, future.ref}
@@ -88,9 +91,10 @@ defmodule Clr.Function do
 
   def debug_get_table(function_name, args) do
     [{_, result}] = :ets.lookup(table_name(), {function_name, args})
-
     result
   end
+
+  def debug_get_table(), do: :ets.tab2list(table_name())
 
   @spec await(reference) :: {:ok, {Clr.type(), block_mapper}}
   def await(ref) when is_reference(ref) do
@@ -108,7 +112,7 @@ defmodule Clr.Function do
   def handle_call({:evaluate, function_name, args, arg_slots}, from, waiters),
     do: evaluate_impl(function_name, args, arg_slots, from, waiters)
 
-  def handle_info({ref, result} = response, waiters) when is_reference(ref) do
+  def handle_info({ref, _result} = response, waiters) when is_reference(ref) do
     function_call =
       Enum.find_value(waiters, fn
         {function_call, {{_task_pid, ^ref}, pids}} ->
@@ -116,6 +120,8 @@ defmodule Clr.Function do
           receive do
             {:DOWN, ^ref, :process, _, _reason} -> :ok
           end
+
+          response |> dbg(limit: 25)
 
           # forward the result to the pids
           Enum.each(pids, &send(&1, response))

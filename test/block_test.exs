@@ -51,7 +51,7 @@ defmodule ClrTest.BlockTest do
 
   describe "the put_reqs/3 function" do
     test "puts a requirement" do
-      %{reqs: [[foo: :bar]]} =
+      %{reqs: [%{foo: :bar}]} =
         %Function{name: ~l"foo.bar"}
         |> Block.new([~l"u8"])
         |> Block.put_reqs(0, foo: :bar)
@@ -76,10 +76,12 @@ defmodule ClrTest.BlockTest do
         |> Block.new([])
         |> Block.put_await(47, future)
 
-      send(self(), {future, {~l"bar.baz", &Block.put_type(&1, 48, ~l"bar.quux")}})
+      send(self(), {future, {:ok, ~l"bar.baz", &Block.put_type(&1, 48, ~l"bar.quux")}})
 
       assert {{~l"bar.baz", _}, %{slots: %{48 => {~l"bar.quux", _}}}} = Block.fetch_up!(block, 47)
     end
+
+    test "can be sent an error"
   end
 
   describe "call_meta_adder/1" do

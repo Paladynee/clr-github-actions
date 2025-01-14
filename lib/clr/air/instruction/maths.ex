@@ -122,9 +122,9 @@ defmodule Clr.Air.Instruction.Maths do
 
   defmodule Overflow do
     use Clr.Air.Instruction
-    alias Clr.Function
+    alias Clr.Block
     defstruct ~w[op type lhs rhs]a
-    def analyze(%{type: type}, slot, analysis), do: Function.put_type(analysis, slot, type)
+    def analyze(%{type: type}, slot, analysis), do: Block.put_type(analysis, slot, type)
   end
 
   Pegasus.parser_from_string(

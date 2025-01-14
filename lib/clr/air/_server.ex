@@ -1,6 +1,8 @@
 defmodule Clr.Air.Server do
   @moduledoc false
 
+  # TODO: move into `Clr.Air` module
+
   # stores parsed AIR functions in an ets table for retrieval.  If you make
   # a request for a function that doesn't exist yet, the gen_server will 
   # register that the request has been made and then it will be able to

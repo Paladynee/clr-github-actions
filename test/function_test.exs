@@ -76,18 +76,27 @@ defmodule ClrTest.FunctionTest do
 
   test "different args have different entries" do
     AnalyzerMock
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [:foo] -> ok_evaluation(:fooresult) end)
-    |> Mox.expect(:do_evaluate, fn :foobar_function, [:bar] -> ok_evaluation(:barresult) end)
+    |> Mox.expect(:do_evaluate, fn :foobar_function, [%{foo: :bar}] ->
+      ok_evaluation(:fooresult)
+    end)
+    |> Mox.expect(:do_evaluate, fn :foobar_function, [%{bar: :baz}] ->
+      ok_evaluation(:barresult)
+    end)
 
-    {:future, foofuture} = Function.evaluate(:foobar_function, [:foo], [1])
+    {:future, foofuture} = Function.evaluate(:foobar_function, [%{foo: :bar}], [1])
 
     Process.sleep(100)
 
-    {:future, barfuture} = Function.evaluate(:foobar_function, [:bar], [1])
+    {:future, barfuture} = Function.evaluate(:foobar_function, [%{bar: :baz}], [1])
 
     assert {:ok, {:fooresult, function1}} = Function.await(foofuture)
     assert is_function(function1, 1)
     assert {:ok, {:barresult, function2}} = Function.await(barfuture)
     assert is_function(function2, 1)
+
+    assert [
+             {{:foobar_function, [%{bar: :baz}]}, {:barresult, _}},
+             {{:foobar_function, [%{foo: :bar}]}, {:fooresult, _}}
+           ] = Enum.sort(Function.debug_get_table())
   end
 end
