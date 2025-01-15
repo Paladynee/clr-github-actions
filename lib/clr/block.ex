@@ -43,6 +43,7 @@ defmodule Clr.Block do
     |> Enum.reduce(block, &analyze_instruction/2)
     |> flush_awaits
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
+    |> check_types
   end
 
   defp transfer_requirements(reqs, block) do
@@ -54,6 +55,26 @@ defmodule Clr.Block do
           Map.merge(req, meta)
       end
     end)
+  end
+
+  if Mix.env() == :test do
+    defp check_types(block) do
+      Enum.each(block.slots, fn
+        {slot, type} ->
+          if !Clr.type?(type) do
+            IO.puts([
+              IO.ANSI.red(),
+              "invalid type detected at slot #{slot}: #{inspect(type)}",
+              IO.ANSI.reset()
+            ])
+
+            System.halt(1)
+          end
+      end)
+    end
+  else
+    @compile {:inline, check_types: 1}
+    defp check_types(block), do: block
   end
 
   # instructions that are always subject to analysis.
