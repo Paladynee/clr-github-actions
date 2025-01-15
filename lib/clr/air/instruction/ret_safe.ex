@@ -29,13 +29,13 @@ defmodule Clr.Air.Instruction.RetSafe do
 
   def analyze(%{val: {src_slot, _}}, _dst_slot, %{function: function} = block) do
     case Block.fetch_up!(block, src_slot) do
-      {{{:ptr, _, _, _}, %{stack: ^function}}, block} ->
+      {{:ptr, _, _, %{stack: ^function}}, block} ->
         raise Clr.StackPtrEscape,
           function: Clr.Air.Lvalue.as_string(function),
           loc: block.loc
 
-      {{type, meta}, block} ->
-        Block.put_return(block, type, meta)
+      {type, block} ->
+        Block.put_return(block, type)
     end
   end
 end

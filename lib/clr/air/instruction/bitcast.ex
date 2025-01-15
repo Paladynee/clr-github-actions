@@ -18,10 +18,10 @@ defmodule Clr.Air.Instruction.Bitcast do
   use Clr.Air.Instruction
   alias Clr.Block
 
-  def analyze(%{type: {:ptr, _, _, _} = type, src: {src_slot, _}}, dst_slot, block) do
+  def analyze(%{src: {src_slot, _}}, dst_slot, block) do
     case Block.fetch_up!(block, src_slot) do
-      {{{:ptr, _, _, _}, meta}, block} ->
-        Block.put_type(block, dst_slot, type, meta)
+      {type, block} ->
+        Block.put_type(block, dst_slot, type)
     end
   end
 end
