@@ -19,7 +19,6 @@ defmodule Clr.Air.Instruction.Load do
 
   use Clr.Air.Instruction
 
-  alias Clr.Function
   alias Clr.Block
 
   def analyze(%{type: type, loc: {src_slot, _}}, slot, block) do

@@ -126,7 +126,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
   describe "ret_safe function" do
     test "returns an lvalue when it's an lvalue" do
-      assert %{return: {:TypeOf, ~l"foo.bar.value"}} =
+      assert %{return: {{:TypeOf, ~l"foo.bar.value"}, %{}}} =
                run_analysis(%{
                  {0, :keep} => %Clr.Air.Instruction.RetSafe{val: ~l"foo.bar.value"}
                })

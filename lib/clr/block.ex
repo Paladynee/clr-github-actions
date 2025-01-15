@@ -23,7 +23,7 @@ defmodule Clr.Block do
           function: term,
           args_meta: [Clr.meta()],
           reqs: [Clr.meta()],
-          return: nil | {Clr.term(), meta :: keyword},
+          return: nil | {Clr.type(), meta :: keyword},
           loc: nil | loc,
           stack: [{loc, term}],
           awaits: %{optional(slot) => reference},
@@ -39,7 +39,21 @@ defmodule Clr.Block do
 
   @spec analyze(t, Clr.Air.codeblock()) :: t
   def analyze(block, code) do
-    Enum.reduce(code, block, &analyze_instruction/2)
+    code
+    |> Enum.reduce(block, &analyze_instruction/2)
+    |> flush_awaits
+    |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
+  end
+
+  defp transfer_requirements(reqs, block) do
+    reqs
+    |> Enum.with_index()
+    |> Enum.map(fn {req, slot} ->
+      case fetch_up!(block, slot) do
+        {{_type, meta}, _} ->
+          Map.merge(req, meta)
+      end
+    end)
   end
 
   # instructions that are always subject to analysis.
@@ -84,8 +98,12 @@ defmodule Clr.Block do
     %{block | awaits: Map.put(block.awaits, line, reference)}
   end
 
-  def put_reqs(block, line, reqs) do
-    %{block | reqs: List.update_at(block.reqs, line, &Enum.into(reqs, &1))}
+  def put_reqs(block, arg, reqs) do
+    %{block | reqs: List.update_at(block.reqs, arg, &Enum.into(reqs, &1))}
+  end
+
+  def put_return(block, type, meta \\ %{}) do
+    %{block | return: {type, meta}}
   end
 
   # used to fetch the type and update the block type.  If the
@@ -135,7 +153,7 @@ defmodule Clr.Block do
   @spec call_meta_adder(t) :: call_meta_adder_fn
   # this function produces a lambda that can be used to add metadata to
   # slots in a block, generated from the requirements of the "called" block.
-  def call_meta_adder(%{reqs: reqs} = called_fn) do
+  def call_meta_adder(%{reqs: reqs}) do
     fn caller_fn, slots ->
       slots
       |> Enum.zip(reqs)

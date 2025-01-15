@@ -67,14 +67,13 @@ defmodule Clr.Function do
           Task.async(fn ->
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
-            function = Clr.Air.Server.get(function_name)  
+            function = Clr.Air.get(function_name)
 
             %{return: return} =
               block =
               function
               |> Block.new(args_meta)
               |> analyzer.analyze(function.code)
-              |> Block.flush_awaits()
 
             remapper = Block.call_meta_adder(block)
 

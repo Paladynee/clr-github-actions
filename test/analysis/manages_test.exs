@@ -5,9 +5,9 @@ defmodule ClrTest.Function.ManagesTest do
   alias Clr.Block
   import Clr.Air.Lvalue
 
-  defp run_analysis(code, args) do
+  defp run_analysis(code, args_meta) do
     %Function{name: ~l"foo.bar"}
-    |> Block.new(args)
+    |> Block.new(args_meta)
     |> Block.analyze(code)
   end
 
@@ -18,25 +18,24 @@ defmodule ClrTest.Function.ManagesTest do
   end
 
   describe "responsibility is marked as transferred" do
-    test "when you pass a pointer to the function"
-    # do
-    #    assert %{
-    #             args: [{:ptr, :one, ~l"u8", [heap: ~l"my_vtable"]}],
-    #             reqs: [[transferred: ~l"foo.bar"]]
-    #           } =
-    #             run_analysis(
-    #               %{
-    #                 {0, :keep} => %Clr.Air.Instruction.Arg{type: {:ptr, :one, ~l"u8", []}},
-    #                 {1, :clobber} => %Clr.Air.Instruction.Call{
-    #                   fn: destructor(~l"my_vtable", 0, "destroy"),
-    #                   args: [
-    #                     {:literal, ~l"mem.Allocator", %{"vtable" => ~l"my_vtable"}},
-    #                     {0, :clobber}
-    #                   ]
-    #                 }
-    #               },
-    #               [{:ptr, :one, ~l"u8", [heap: ~l"my_vtable"]}]
-    #             )
-    #  end
+    test "when you pass a pointer to the function" do
+      assert %{
+               args_meta: [%{heap: ~l"my_vtable"}],
+               reqs: [%{deleted: ~l"foo.bar"}]
+             } =
+               run_analysis(
+                 %{
+                   {0, :keep} => %Clr.Air.Instruction.Arg{type: {:ptr, :one, ~l"u8", []}},
+                   {1, :clobber} => %Clr.Air.Instruction.Call{
+                     fn: destructor(~l"my_vtable", 0, "destroy"),
+                     args: [
+                       {:literal, ~l"mem.Allocator", %{"vtable" => ~l"my_vtable"}},
+                       {0, :clobber}
+                     ]
+                   }
+                 },
+                 [%{heap: ~l"my_vtable"}]
+               )
+    end
   end
 end

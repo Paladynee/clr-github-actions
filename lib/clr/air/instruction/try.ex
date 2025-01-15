@@ -18,11 +18,11 @@ defmodule Clr.Air.Instruction.Try do
   end
 
   use Clr.Air.Instruction
-  alias Clr.Function
+  alias Clr.Block
 
-  def analyze(%{src: {src, _}}, slot, analysis) do
-    {{:errorable, _, payload}, analysis} = Function.fetch!(analysis, src)
+  def analyze(%{src: {src, _}}, slot, block) do
+    {{{:errorable, _, payload}, meta}, block} = Block.fetch_up!(block, src)
     # for now.  Ultimately, we will need to walk the analysis on this, too.
-    Block.put_type(analysis, slot, payload)
+    Block.put_type(block, slot, payload, meta)
   end
 end

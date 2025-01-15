@@ -80,7 +80,7 @@ defmodule ClrTest.FullIntegrationTest do
   describe "responsibility" do
     test "free_after_transfer" do
       assert_errors_with(
-        "Free after transfer detected in function",
+        "Double free detected in function `free_after_transfer.main` at 4:18, function already deleted by `free_after_transfer.function_deletes`",
         "responsibility/free_after_transfer.zig"
       )
     end

@@ -1,3 +1,3 @@
-Clr.Air.Server.start_link([])
+Clr.Air.start_link([])
 
 ExUnit.start()

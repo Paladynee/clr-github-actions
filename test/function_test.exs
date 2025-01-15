@@ -18,7 +18,7 @@ defmodule ClrTest.FunctionTest do
 
     Mox.allow(AnalyzerMock, self(), server)
     Process.put(Clr.Function.TableName, table_name)
-    Clr.Air.Server.put(%Clr.Air.Function{name: :foobar_function})
+    Clr.Air.put(%Clr.Air.Function{name: :foobar_function})
     {:ok, table: table_name}
   end
 

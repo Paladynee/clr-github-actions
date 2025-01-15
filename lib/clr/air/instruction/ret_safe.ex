@@ -17,24 +17,25 @@ defmodule Clr.Air.Instruction.RetSafe do
     {rest, [%__MODULE__{val: value}], context}
   end
 
-  def analyze(%{val: {:lvalue, _} = lvalue}, _dst_slot, analysis) do
-    %{analysis | return: {:TypeOf, lvalue}}
+  alias Clr.Block
+
+  def analyze(%{val: {:lvalue, _} = lvalue}, _dst_slot, block) do
+    Block.put_return(block, {:TypeOf, lvalue})
   end
 
-  def analyze(%{val: {:literal, type, _}}, _dst_slot, analysis) do
-    %{analysis | return: type}
+  def analyze(%{val: {:literal, type, _}}, _dst_slot, block) do
+    Block.put_return(block, type)
   end
 
-  def analyze(%{val: {src_slot, _}}, _dst_slot, %{function: function} = analysis) do
-    # get the type of the value.
-    case Map.fetch!(analysis.slots, src_slot) do
-      {{:ptr, _, _, opts}, %{stack: ^function}} ->
+  def analyze(%{val: {src_slot, _}}, _dst_slot, %{function: function} = block) do
+    case Block.fetch_up!(block, src_slot) do
+      {{{:ptr, _, _, _}, %{stack: ^function}}, block} ->
         raise Clr.StackPtrEscape,
           function: Clr.Air.Lvalue.as_string(function),
-          loc: analysis.loc
+          loc: block.loc
 
-      retval ->
-        %{analysis | return: retval}
+      {{type, meta}, block} ->
+        Block.put_return(block, type, meta)
     end
   end
 end

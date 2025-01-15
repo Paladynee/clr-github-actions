@@ -23,21 +23,25 @@ defmodule Clr.UseAfterFreeError do
 end
 
 defmodule Clr.DoubleFreeError do
-  defexception [:function, :loc]
+  defexception [:previous, :deletion, :loc]
 
-  def message(exception) do
-    "Double free detected in function `#{exception.function}` at #{exception.row}:#{exception.col}"
+  def message(%{previous: function, deletion: function, loc: {row, col}}) do
+    "Double free detected in function `#{function}` at #{row}:#{col}"
+  end
+
+  def message(%{loc: {row, col}} = exception) do
+    "Double free detected in function `#{exception.deletion}` at #{row}:#{col}, function already deleted by `#{exception.previous}`"
   end
 end
 
 defmodule Clr.AllocatorMismatchError do
-  defexception [:original, :attempted, :function, :row, :col]
+  defexception [:original, :attempted, :function, :loc]
 
-  def message(%{original: :stack} = exception) do
-    "Stack memory attempted to be freed by `#{exception.attempted}` in `#{exception.function}` at #{exception.row}:#{exception.col}"
+  def message(%{original: :stack, loc: {row, col}} = exception) do
+    "Stack memory attempted to be freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
   end
 
-  def message(exception) do
-    "Heap memory allocated by `#{exception.original}` freed by `#{exception.attempted}` in `#{exception.function}` at #{exception.row}:#{exception.col}"
+  def message(%{loc: {row, col}} = exception) do
+    "Heap memory allocated by `#{exception.original}` freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
   end
 end

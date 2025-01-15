@@ -63,15 +63,12 @@ defmodule Clr.Air.Instruction.Call do
   defp process_allocator(
          "create" <> _,
          [],
-         {:errorable, e, {:ptr, count, type, opts}},
+         {:errorable, _e, {:ptr, _, _, _}} = type,
          [{:literal, ~l"mem.Allocator", struct}],
          slot,
          analysis
        ) do
-    heap_type =
-      {:errorable, e, {:ptr, count, type, Keyword.put(opts, :heap, Map.fetch!(struct, "vtable"))}}
-
-    Block.put_type(analysis, slot, heap_type)
+    Block.put_type(analysis, slot, type, heap: Map.fetch!(struct, "vtable"))
   end
 
   defp process_allocator(
@@ -80,53 +77,45 @@ defmodule Clr.Air.Instruction.Call do
          ~l"void",
          [{:literal, ~l"mem.Allocator", struct}, {src, _}],
          slot,
-         analysis
+         block
        ) do
-    # Function.process_awaited(analysis)
-
-    {{:ptr, :one, type, opts}, analysis} = Block.fetch!(analysis, src)
     vtable = Map.fetch!(struct, "vtable")
+    this_function = block.function
 
-    case Keyword.fetch(opts, :heap) do
-      {:ok, ^vtable} ->
-        analysis
-        |> Block.put_type(src, {:ptr, :one, type, Keyword.put(opts, :heap, :deleted)})
-        |> Block.put_type(slot, ~l"void")
-        |> maybe_mark_transferred(opts)
-
-      {:ok, :deleted} ->
+    # TODO: consider only flushing the awaits that the function needs.
+    block
+    |> Block.flush_awaits()
+    |> Block.fetch_up!(src)
+    |> case do
+      {{{:ptr, :one, _type, _}, %{deleted: prev_function}}, block} ->
         raise Clr.DoubleFreeError,
-          function: Clr.Air.Lvalue.as_string(analysis.name),
-          row: analysis.row,
-          col: analysis.col
+          previous: Clr.Air.Lvalue.as_string(prev_function),
+          deletion: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
 
-      {:ok, other} ->
+      {{{:ptr, :one, _type, _}, %{heap: ^vtable}}, block} ->
+        block
+        # for now.
+        |> Block.put_meta(src, deleted: this_function)
+        |> Block.put_type(slot, ~l"void")
+
+      {{{:ptr, :one, _type, _}, %{heap: other}}, block} ->
         raise Clr.AllocatorMismatchError,
           original: Clr.Air.Lvalue.as_string(other),
           attempted: Clr.Air.Lvalue.as_string(vtable),
-          function: Clr.Air.Lvalue.as_string(analysis.name),
-          row: analysis.row,
-          col: analysis.col
+          function: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
 
-      :error ->
+      _ ->
         raise Clr.AllocatorMismatchError,
           original: :stack,
           attempted: Clr.Air.Lvalue.as_string(vtable),
-          function: Clr.Air.Lvalue.as_string(analysis.name),
-          row: analysis.row,
-          col: analysis.col
+          function: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
     end
   end
 
   # utility functions
-
-  defp maybe_mark_transferred(analysis, opts) do
-    if index = Keyword.get(opts, :passed_as) do
-      Block.update_req!(analysis, index, &Keyword.put(&1, :transferred, analysis.name))
-    else
-      analysis
-    end
-  end
 
   defp merge_name({:lvalue, lvalue}, function_name) do
     {:lvalue, List.replace_at(lvalue, -1, function_name)}

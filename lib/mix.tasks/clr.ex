@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Clr do
   def run([cmd, file]) do
     Process.flag(:trap_exit, true)
     # start the AIR server
-    Clr.Air.Server.start_link([])
+    Clr.Air.start_link([])
     # start the analysis server
     Clr.Function.start_link([])
 
@@ -123,7 +123,7 @@ defmodule Mix.Tasks.Clr do
       function
       |> IO.iodata_to_binary()
       |> Clr.Air.Function.parse()
-      |> Clr.Air.Server.put()
+      |> Clr.Air.put()
       |> maybe_trigger(state.start_functions)
       |> case do
         {:future, _} = future ->
