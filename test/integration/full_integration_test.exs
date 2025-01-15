@@ -3,7 +3,13 @@ defmodule ClrTest.FullIntegrationTest do
 
   @moduletag :integration
 
+  @file_colon Path.relative_to_cwd(__ENV__.file) <> ":"
+
   def assert_errors_with(msg, prefix) do
+    if match?([_, @file_colon <> _], System.argv()) do
+      Application.put_env(:clr, :debug_prefix, Path.basename(prefix, ".zig"))
+    end
+
     assert_raise Mix.Error, msg, fn ->
       prefix
       |> then(&["run", Path.join("test/integration", &1)])

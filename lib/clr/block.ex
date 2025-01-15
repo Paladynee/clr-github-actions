@@ -71,6 +71,7 @@ defmodule Clr.Block do
             System.halt(1)
           end
       end)
+      block
     end
   else
     @compile {:inline, check_types: 1}
@@ -92,7 +93,9 @@ defmodule Clr.Block do
   # instruction to analysis.
   defp analyze_instruction({{slot, mode}, %always{} = instruction}, block)
        when always in @always or mode == :keep do
-    Instruction.analyze(instruction, slot, block)
+    instruction
+    |> Instruction.analyze(slot, block)
+    |> check_types
   end
 
   # clobbered instructions can be safely ignored.
