@@ -25,6 +25,7 @@ defmodule Clr.Air.Instruction.Call do
 
   alias Clr.Block
   alias Clr.Function
+  alias Clr.Type
   import Clr.Air.Lvalue
 
   def analyze(call, slot, block) do
@@ -41,8 +42,8 @@ defmodule Clr.Air.Instruction.Call do
               {{%{}, nil}, block}
 
             {slot, _}, block ->
-              {{_type, meta}, block} = Block.fetch_up!(block, slot)
-              {{meta, slot}, block}
+              {type, block} = Block.fetch_up!(block, slot)
+              {{Type.get_meta(type), slot}, block}
           end)
 
         {args_meta, slots} = Enum.unzip(metas_slots)

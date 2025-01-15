@@ -111,14 +111,20 @@ defmodule Clr.Type do
 
   @spec put_meta(t, meta | keyword) :: t
   @two_tuple ~w[bool usize]a
-  def put_meta({two, meta}, more) when two in @two_tuple, do: {two, Enum.into(more, meta)}
   @three_tuple ~w[i u f struct TypeOf lvalue optional]a
+  @four_tuple ~w[ptr array comptime_call errorable]a
+
+  def put_meta({two, meta}, more) when two in @two_tuple, do: {two, Enum.into(more, meta)}
   def put_meta({three, a0, meta}, more) when three in @three_tuple,
     do: {three, a0, Enum.into(more, meta)}
 
-  @four_tuple ~w[ptr array comptime_call errorable]a
   def put_meta({four, a0, a1, meta}, more) when four in @four_tuple,
     do: {four, a0, a1, Enum.into(more, meta)}
+
+  @spec get_meta(t) :: meta
+  def get_meta({_, meta}), do: meta
+  def get_meta({_, _, meta}), do: meta
+  def get_meta({_, _, _, meta}), do: meta
 
   def make_numbered(class, int) do
     case Integer.parse(int) do

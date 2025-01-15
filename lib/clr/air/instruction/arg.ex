@@ -6,6 +6,7 @@ defmodule Clr.Air.Instruction.Arg do
   require Pegasus
   require Clr.Air
   alias Clr.Block
+  alias Clr.Type
 
   Clr.Air.import(~w[type int cs dquoted lparen rparen]a)
 
@@ -25,6 +26,6 @@ defmodule Clr.Air.Instruction.Arg do
   def analyze(%{type: type}, slot, block) do
     # note that metadata is conveyed through the args_meta
     arg_meta = Enum.at(block.args_meta, slot) || raise "unreachable"
-    Block.put_type(block, slot, type, arg_meta)
+    Block.put_type(block, slot, Type.from_air(type), arg_meta)
   end
 end
