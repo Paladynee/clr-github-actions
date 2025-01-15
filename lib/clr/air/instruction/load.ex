@@ -20,6 +20,7 @@ defmodule Clr.Air.Instruction.Load do
   use Clr.Air.Instruction
 
   alias Clr.Block
+  alias Clr.Type
 
   def analyze(%{type: type, loc: {src_slot, _}}, slot, block) do
     case Block.fetch_up!(block, src_slot) do
@@ -34,7 +35,7 @@ defmodule Clr.Air.Instruction.Load do
           loc: block.loc
 
       {{:ptr, _, _, _}, block} ->
-        Block.put_type(block, slot, type)
+        Block.put_type(block, slot, Type.from_air(type))
     end
   end
 end

@@ -20,7 +20,7 @@ defmodule Clr.Air.Instruction.Tests do
     import Clr.Air.Lvalue
     alias Clr.Block
 
-    def analyze(_, slot, analysis), do: Block.put_type(analysis, slot, ~l"bool")
+    def analyze(_, slot, analysis), do: Block.put_type(analysis, slot, {:bool, %{}})
   end
 
   Pegasus.parser_from_string(

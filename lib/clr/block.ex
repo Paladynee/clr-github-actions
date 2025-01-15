@@ -95,6 +95,8 @@ defmodule Clr.Block do
   # instruction to analysis.
   defp analyze_instruction({{slot, mode}, %always{} = instruction}, block)
        when always in @always or mode == :keep do
+    #{block, slot} |> dbg(limit: 25)
+
     instruction
     |> Instruction.analyze(slot, block)
     |> check_types

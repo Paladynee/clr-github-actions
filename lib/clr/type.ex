@@ -16,7 +16,7 @@ defmodule Clr.Type do
   @type int_type :: {:i, 0..65535, meta}
   @type uint_type :: {:u, 0..65535, meta}
   @type float_type :: {:f, 16 | 32 | 64 | 80 | 128, meta}
-  @type special_type :: {:bool | :usize, meta}
+  @type special_type :: {:bool | :usize | :void, meta}
   @type typeof_type :: {:TypeOf, term, meta}
   @type lvalue_type :: {:lvalue, term, meta}
   @type comptime_call_type :: {:comptime_call, term, list, meta}
@@ -38,7 +38,8 @@ defmodule Clr.Type do
       lvalue_type?(maybe_type) or
       comptime_call_type?(maybe_type) or
       optional_type?(maybe_type) or
-      errorable_type?(maybe_type)
+      errorable_type?(maybe_type) or 
+      void_type?(maybe_type)
   end
 
   defp ptr_type?(maybe_type) do
@@ -71,6 +72,7 @@ defmodule Clr.Type do
 
   defp bool_type?(maybe_type), do: match?({:bool, %{}}, maybe_type)
   defp usize_type?(maybe_type), do: match?({:usize, %{}}, maybe_type)
+  defp void_type?(maybe_type), do: maybe_type == {:void, %{}}
 
   defp typeof_type?(maybe_type), do: match?({:TypeOf, _lvalue, %{}}, maybe_type)
 
@@ -93,6 +95,8 @@ defmodule Clr.Type do
 
   def from_air({:array, count, child, meta}), do: {:array, count, from_air(child), Map.new(meta)}
 
+  def from_air({:struct, fields}), do: {:struct, Enum.map(fields, &from_air/1), %{}}
+
   def from_air({:lvalue, [one]} = lvalue) do
     case one do
       "usize" -> {:usize, %{}}
@@ -109,8 +113,10 @@ defmodule Clr.Type do
 
   def from_air({:errorable, errors, child}), do: {:errorable, errors, from_air(child), %{}}
 
+  def void, do: {:void, %{}}
+
   @spec put_meta(t, meta | keyword) :: t
-  @two_tuple ~w[bool usize]a
+  @two_tuple ~w[bool usize void]a
   @three_tuple ~w[i u f struct TypeOf lvalue optional]a
   @four_tuple ~w[ptr array comptime_call errorable]a
 

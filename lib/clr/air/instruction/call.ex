@@ -64,12 +64,18 @@ defmodule Clr.Air.Instruction.Call do
   defp process_allocator(
          "create" <> _,
          [],
-         {:errorable, _e, {:ptr, _, _, _}} = type,
+         {:errorable, e, {:ptr, _, _, _} = ptr_type},
          [{:literal, ~l"mem.Allocator", struct}],
          slot,
          analysis
        ) do
-    Block.put_type(analysis, slot, type, heap: Map.fetch!(struct, "vtable"))
+
+    type = ptr_type
+    |> Type.from_air()
+    |> Type.put_meta(heap: Map.fetch!(struct, "vtable"))
+    |> then(&{:errorable, e, &1, %{}})
+
+    Block.put_type(analysis, slot, type)
   end
 
   defp process_allocator(
@@ -87,20 +93,21 @@ defmodule Clr.Air.Instruction.Call do
     block
     |> Block.flush_awaits()
     |> Block.fetch_up!(src)
+    |> dbg(limit: 25)
     |> case do
-      {{{:ptr, :one, _type, _}, %{deleted: prev_function}}, block} ->
+      {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
         raise Clr.DoubleFreeError,
           previous: Clr.Air.Lvalue.as_string(prev_function),
           deletion: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      {{{:ptr, :one, _type, _}, %{heap: ^vtable}}, block} ->
+      {{:ptr, :one, _type, %{heap: ^vtable}}, block} ->
         block
         # for now.
         |> Block.put_meta(src, deleted: this_function)
-        |> Block.put_type(slot, ~l"void")
+        |> Block.put_type(slot, Type.void())
 
-      {{{:ptr, :one, _type, _}, %{heap: other}}, block} ->
+      {{:ptr, :one, _type, %{heap: other}}, block} ->
         raise Clr.AllocatorMismatchError,
           original: Clr.Air.Lvalue.as_string(other),
           attempted: Clr.Air.Lvalue.as_string(vtable),
