@@ -4,6 +4,7 @@ defmodule Clr.Block do
   alias Clr.Air.Function
   alias Clr.Air.Instruction
   alias Clr.Function
+  alias Clr.Type
 
   @enforce_keys ~w[function args_meta reqs]a
   defstruct @enforce_keys ++
@@ -61,7 +62,7 @@ defmodule Clr.Block do
     defp check_types(block) do
       Enum.each(block.slots, fn
         {slot, type} ->
-          if !Clr.type?(type) do
+          if !Clr.Type.valid?(type) do
             IO.puts([
               IO.ANSI.red(),
               "invalid type detected at slot #{slot}: #{inspect(type)}",
@@ -71,6 +72,7 @@ defmodule Clr.Block do
             System.halt(1)
           end
       end)
+
       block
     end
   else
@@ -104,18 +106,11 @@ defmodule Clr.Block do
   # general block operations
 
   def put_type(block, line, type, meta \\ []) do
-    meta = Map.new(meta)
-    %{block | slots: Map.put(block.slots, line, {type, meta})}
+    %{block | slots: Map.put(block.slots, line, Type.put_meta(type, meta))}
   end
 
   def put_meta(block, line, meta) do
-    %{
-      block
-      | slots:
-          Map.update!(block.slots, line, fn {type, old_meta} ->
-            {type, Enum.into(meta, old_meta)}
-          end)
-    }
+    %{block | slots: Map.update!(block.slots, line, &Type.put_meta(&1, meta))}
   end
 
   def put_await(block, line, reference) do

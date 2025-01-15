@@ -4,6 +4,8 @@ defmodule Clr.Air.Instruction.Alloc do
   require Pegasus
   require Clr.Air
 
+  alias Clr.Type
+
   Clr.Air.import(~w[type slotref lparen rparen]a)
 
   Pegasus.parser_from_string(
@@ -12,7 +14,7 @@ defmodule Clr.Air.Instruction.Alloc do
   )
 
   def alloc(rest, [type, "alloc"], context, _slot, _bytes) do
-    {rest, [%__MODULE__{type: type}], context}
+    {rest, [%__MODULE__{type: Type.from_air(type)}], context}
   end
 
   use Clr.Air.Instruction

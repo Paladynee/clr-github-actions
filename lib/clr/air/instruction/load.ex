@@ -23,17 +23,17 @@ defmodule Clr.Air.Instruction.Load do
 
   def analyze(%{type: type, loc: {src_slot, _}}, slot, block) do
     case Block.fetch_up!(block, src_slot) do
-      {{_, %{undefined: _src}}, block} ->
+      {{:ptr, _, _, %{undefined: _src}}, block} ->
         raise Clr.UndefinedUsage,
           function: Clr.Air.Lvalue.as_string(block.function),
           loc: block.loc
 
-      {{_, %{deleted: _src}}, block} ->
+      {{:ptr, _, _, %{deleted: _src}}, block} ->
         raise Clr.UseAfterFreeError,
           function: Clr.Air.Lvalue.as_string(block.function),
           loc: block.loc
 
-      {{{:ptr, _, _, _}, _}, block} ->
+      {{:ptr, _, _, _}, block} ->
         Block.put_type(block, slot, type)
     end
   end
