@@ -7,19 +7,19 @@ defprotocol Clr.Air.Instruction do
 after
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline br dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
-                arg ptr_elem_val ptr_add bitcast alloc store load optional_payload cond_br block 
+                arg ptr_elem_val bitcast alloc store load optional_payload cond_br block  
                 repeat loop slice slice_ptr struct_field_val switch_br call int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
                 ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
                 unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
                 intcast memset memcpy 
-                wrap_errunion_payload wrap_errunion_err array_to_slice ret_ptr ret_load
+                wrap_errunion_payload wrap_errunion_err array_to_slice ret_load
                 optional_payload_ptr try set_union_tag get_union_tag
                 errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
                 int_from_bool error_name trunc
                 memset_safe frame_addr ptr_slice_ptr_ptr
                 cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                try_cold ptr_sub maths tests atomics],
+                try_cold controls pointers maths tests atomics],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -45,12 +45,12 @@ after
     instruction <- # debug
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
-                   br / trap / cond_br / repeat / switch_br / call / unreach / ret / ret_safe / ret_ptr /
+                   br / trap / cond_br / repeat / switch_br / call / unreach / ret / ret_safe /
                    ret_addr / ret_load / try / try_ptr / try_cold / loop /
                    # pointer operations
-                   ptr_elem_val / ptr_add / slice / slice_ptr / slice_len / slice_elem_val /
+                   ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
-                   ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr / ptr_sub / ptr_slice_len_ptr / 
+                   ptr_elem_ptr / frame_addr / ptr_slice_ptr_ptr / ptr_slice_len_ptr / 
                    struct_field_val / array_elem_val /
                    # memory operations
                    alloc / store / load / store_safe /
@@ -66,10 +66,14 @@ after
                    optional_payload / 
                    # names
                    tag_name / error_name /
+                   # control operations
+                   controls /
                    # atomic operations
                    atomics /
                    # vector operations
                    reduce / cmp_vector /
+                   # pointer operations
+                   pointers /
                    # test
                    tests /
                    # math

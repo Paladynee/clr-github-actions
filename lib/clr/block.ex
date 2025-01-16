@@ -60,7 +60,7 @@ defmodule Clr.Block do
 
   if Mix.env() == :test do
     defp check_types(block) do
-      #Enum.each(block.slots, fn
+      # Enum.each(block.slots, fn
       #  {slot, type} ->
       #    if !Clr.Type.valid?(type) do
       #      IO.puts([
@@ -68,10 +68,10 @@ defmodule Clr.Block do
       #        "invalid type detected at slot #{slot}: #{inspect(type)}",
       #        IO.ANSI.reset()
       #      ])
-#
+      #
       #      System.halt(1)
       #    end
-      #end)
+      # end)
 
       block
     end

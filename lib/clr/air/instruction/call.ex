@@ -69,11 +69,11 @@ defmodule Clr.Air.Instruction.Call do
          slot,
          analysis
        ) do
-
-    type = ptr_type
-    |> Type.from_air()
-    |> Type.put_meta(heap: Map.fetch!(struct, "vtable"))
-    |> then(&{:errorable, e, &1, %{}})
+    type =
+      ptr_type
+      |> Type.from_air()
+      |> Type.put_meta(heap: Map.fetch!(struct, "vtable"))
+      |> then(&{:errorable, e, &1, %{}})
 
     Block.put_type(analysis, slot, type)
   end

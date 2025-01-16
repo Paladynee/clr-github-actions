@@ -38,7 +38,7 @@ defmodule Clr.Type do
       lvalue_type?(maybe_type) or
       comptime_call_type?(maybe_type) or
       optional_type?(maybe_type) or
-      errorable_type?(maybe_type) or 
+      errorable_type?(maybe_type) or
       void_type?(maybe_type)
   end
 
@@ -121,6 +121,7 @@ defmodule Clr.Type do
   @four_tuple ~w[ptr array comptime_call errorable]a
 
   def put_meta({two, meta}, more) when two in @two_tuple, do: {two, Enum.into(more, meta)}
+
   def put_meta({three, a0, meta}, more) when three in @three_tuple,
     do: {three, a0, Enum.into(more, meta)}
 

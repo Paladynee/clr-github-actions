@@ -14,14 +14,29 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("add(%19, @Air.Inst.Ref.one_usize)")
     end
 
-    test "add_sat" do
-      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :sat} =
-               Instruction.parse("add_sat(%19, @Air.Inst.Ref.one_usize)")
+    test "add_safe" do
+      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :safe} =
+               Instruction.parse("add_safe(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    test "add_optimized" do
+      assert %Binary{
+               op: :add,
+               lhs: {19, :keep},
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               mode: :optimized
+             } =
+               Instruction.parse("add_optimized(%19, @Air.Inst.Ref.one_usize)")
     end
 
     test "add_wrap" do
       assert %Binary{op: :add, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :wrap} =
                Instruction.parse("add_wrap(%206!, %207!)")
+    end
+
+    test "add_sat" do
+      assert %Binary{op: :add, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :sat} =
+               Instruction.parse("add_sat(%19, @Air.Inst.Ref.one_usize)")
     end
 
     # sub and friends
@@ -31,14 +46,29 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("sub(%19, @Air.Inst.Ref.one_usize)")
     end
 
-    test "sub_sat" do
-      assert %Binary{op: :sub, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
-               Instruction.parse("sub_sat(%206!, %207!)")
+    test "sub_safe" do
+      assert %Binary{op: :sub, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :safe} =
+               Instruction.parse("sub_safe(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    test "sub_optimized" do
+      assert %Binary{
+               op: :sub,
+               lhs: {19, :keep},
+               rhs: ~l"@Air.Inst.Ref.one_usize",
+               mode: :optimized
+             } =
+               Instruction.parse("sub_optimized(%19, @Air.Inst.Ref.one_usize)")
     end
 
     test "sub_wrap" do
       assert %Binary{op: :sub, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :wrap} =
                Instruction.parse("sub_wrap(%206!, %207!)")
+    end
+
+    test "sub_sat" do
+      assert %Binary{op: :sub, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
+               Instruction.parse("sub_sat(%206!, %207!)")
     end
 
     # mul and friends
@@ -48,9 +78,14 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("mul(%206!, %207!)")
     end
 
-    test "mul_sat" do
-      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
-               Instruction.parse("mul_sat(%206!, %207!)")
+    test "mul_safe" do
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :safe} =
+               Instruction.parse("mul_safe(%206!, %207!)")
+    end
+
+    test "mul_optimized" do
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :optimized} =
+               Instruction.parse("mul_optimized(%206!, %207!)")
     end
 
     test "mul_wrap" do
@@ -58,38 +93,128 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("mul_wrap(%206!, %207!)")
     end
 
+    test "mul_sat" do
+      assert %Binary{op: :mul, lhs: {206, :clobber}, rhs: {207, :clobber}, mode: :sat} =
+               Instruction.parse("mul_sat(%206!, %207!)")
+    end
+
     # division operations
 
-    test "mod" do
-      assert %Binary{op: :mod, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}} =
-               Instruction.parse("mod(%206!, <usize, 8>)")
+    test "div_float" do
+      assert %Binary{
+               op: :div_float,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: nil
+             } =
+               Instruction.parse("div_float(%206!, <usize, 8>)")
     end
 
-    test "rem" do
-      assert %Binary{op: :rem, lhs: {96, :keep}, rhs: {97, :keep}} =
-               Instruction.parse("rem(%96, %97)")
-    end
-
-    test "div_exact" do
-      assert %Binary{op: :div, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}, mode: :exact} =
-               Instruction.parse("div_exact(%206!, <usize, 8>)")
+    test "div_float_optimized" do
+      assert %Binary{
+               op: :div_float,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: :optimized
+             } =
+               Instruction.parse("div_float_optimized(%206!, <usize, 8>)")
     end
 
     test "div_trunc" do
-      assert %Binary{op: :div, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}, mode: :trunc} =
+      assert %Binary{
+               op: :div_trunc,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: nil
+             } =
                Instruction.parse("div_trunc(%206!, <usize, 8>)")
+    end
+
+    test "div_trunc_optimized" do
+      assert %Binary{
+               op: :div_trunc,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: :optimized
+             } =
+               Instruction.parse("div_trunc_optimized(%206!, <usize, 8>)")
+    end
+
+    test "div_floor" do
+      assert %Binary{
+               op: :div_floor,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: nil
+             } =
+               Instruction.parse("div_floor(%206!, <usize, 8>)")
+    end
+
+    test "div_floor_optimized" do
+      assert %Binary{
+               op: :div_floor,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: :optimized
+             } =
+               Instruction.parse("div_floor_optimized(%206!, <usize, 8>)")
+    end
+
+    test "div_exact" do
+      assert %Binary{
+               op: :div_exact,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: nil
+             } =
+               Instruction.parse("div_exact(%206!, <usize, 8>)")
+    end
+
+    test "div_exact_optimized" do
+      assert %Binary{
+               op: :div_exact,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: :optimized
+             } =
+               Instruction.parse("div_exact_optimized(%206!, <usize, 8>)")
+    end
+
+    test "mod" do
+      assert %Binary{op: :mod, lhs: {206, :clobber}, rhs: {:literal, ~l"usize", 8}, mode: nil} =
+               Instruction.parse("mod(%206!, <usize, 8>)")
+    end
+
+    test "mod_optimized" do
+      assert %Binary{
+               op: :mod,
+               lhs: {206, :clobber},
+               rhs: {:literal, ~l"usize", 8},
+               mode: :optimized
+             } =
+               Instruction.parse("mod_optimized(%206!, <usize, 8>)")
+    end
+
+    test "rem" do
+      assert %Binary{op: :rem, lhs: {96, :keep}, rhs: {97, :keep}, mode: nil} =
+               Instruction.parse("rem(%96, %97)")
+    end
+
+    test "rem_optimized" do
+      assert %Binary{op: :rem, lhs: {96, :keep}, rhs: {97, :keep}, mode: :optimized} =
+               Instruction.parse("rem_optimized(%96, %97)")
     end
 
     # min/max
 
-    test "min" do
-      assert %Binary{op: :min, lhs: {96, :keep}, rhs: {97, :keep}} =
-               Instruction.parse("min(%96, %97)")
-    end
-
     test "max" do
       assert %Binary{op: :max, lhs: {96, :keep}, rhs: {97, :keep}} =
                Instruction.parse("max(%96, %97)")
+    end
+
+    test "min" do
+      assert %Binary{op: :min, lhs: {96, :keep}, rhs: {97, :keep}} =
+               Instruction.parse("min(%96, %97)")
     end
 
     # shift operations

@@ -21,19 +21,28 @@ defmodule Clr.Air.Instruction.Maths do
     """
     binary_instruction <- binary_op lparen argument cs argument rparen
 
-    binary_op <- add_op / sub_op / mul_op / div_op / rem / mod /
+    binary_op <- add_op / sub_op / mul_op / div_op / rem_op / mod_op /
                  min / max / shl / shr /
                  bit_and / bit_or / xor /
                  bool_and / bool_or
 
-    add_op <- add (sat / wrap)?
+    add_op <- add (optimized / safe / sat / wrap)?
     add <- 'add'
-    sub_op <- sub (sat / wrap)?
+    sub_op <- sub (optimized / safe / sat / wrap)?
     sub <- 'sub'
-    mul_op <- mul (sat / wrap)?
+    mul_op <- mul (optimized / safe / sat / wrap)?
     mul <- 'mul'
-    div_op <- div (exact / trunc)
-    div <- 'div'
+    div_op <- div_float_op / div_trunc_op / div_floor_op / div_exact_op
+    div_exact_op <- div_exact optimized?
+    div_float_op <- div_float optimized?
+    div_floor_op <- div_floor optimized?
+    div_trunc_op <- div_trunc optimized?
+    div_float <- 'div_float'
+    div_trunc <- 'div_trunc'
+    div_floor <- 'div_floor'
+    div_exact <- 'div_exact'
+    rem_op <- rem optimized?
+    mod_op <- mod optimized?
     rem <- 'rem'
     mod <- 'mod'
     min <- 'min'
@@ -46,11 +55,10 @@ defmodule Clr.Air.Instruction.Maths do
     bool_and <- 'bool_and'
     bool_or <- 'bool_or'
 
-    mode <- sat / wrap
-    sat <- '_sat'
+    safe <- '_safe'
+    optimized <- '_optimized'
     wrap <- '_wrap'
-    exact <- '_exact'
-    trunc <- '_trunc'
+    sat <- '_sat'
     """,
     binary_instruction: [post_traverse: :binary_instruction],
     add: [token: :add],
@@ -60,7 +68,10 @@ defmodule Clr.Air.Instruction.Maths do
     mul: [token: :mul],
     mul_sat: [token: :mul_sat],
     mul_wrap: [token: :mul_wrap],
-    div: [token: :div],
+    div_float: [token: :div_float],
+    div_trunc: [token: :div_trunc],
+    div_floor: [token: :div_floor],
+    div_exact: [token: :div_exact],
     rem: [token: :rem],
     mod: [token: :mod],
     min: [token: :min],
@@ -72,13 +83,15 @@ defmodule Clr.Air.Instruction.Maths do
     xor: [token: :xor],
     bool_and: [token: :bool_and],
     bool_or: [token: :bool_or],
+    safe: [token: :safe],
+    optimized: [token: :optimized],
     sat: [token: :sat],
     wrap: [token: :wrap],
     exact: [token: :exact],
     trunc: [token: :trunc]
   )
 
-  @modes ~w[sat wrap exact trunc]a
+  @modes ~w[safe optimized wrap sat]a
   def binary_instruction(rest, [rhs, lhs, mode, op], context, _slot, _bytes)
       when mode in @modes do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op, mode: mode}], context}
@@ -126,7 +139,9 @@ defmodule Clr.Air.Instruction.Maths do
     alias Clr.Type
 
     defstruct ~w[op type lhs rhs]a
-    def analyze(%{type: type}, slot, analysis), do: Block.put_type(analysis, slot, Type.from_air(type))
+
+    def analyze(%{type: type}, slot, analysis),
+      do: Block.put_type(analysis, slot, Type.from_air(type))
   end
 
   Pegasus.parser_from_string(

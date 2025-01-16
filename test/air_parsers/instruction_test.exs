@@ -175,12 +175,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
     end
 
-    alias Clr.Air.Instruction.RetPtr
-
-    test "ret_ptr" do
-      assert %RetPtr{type: {:ptr, :one, ~l"fs.File", []}} = Instruction.parse("ret_ptr(*fs.File)")
-    end
-
     alias Clr.Air.Instruction.RetLoad
 
     test "ret_load" do
@@ -257,28 +251,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                type: {:ptr, :one, {:optional, ~l"debug.Dwarf.Section"}, []}
              } =
                Instruction.parse("ptr_elem_ptr(*?debug.Dwarf.Section, %79, <usize, 13>)")
-    end
-
-    alias Clr.Air.Instruction.PtrAdd
-
-    test "ptr_add" do
-      assert %PtrAdd{
-               type: {:ptr, :many, ~l"usize", []},
-               src: {0, :keep},
-               val: ~l"@Air.Inst.Ref.zero_usize"
-             } =
-               Instruction.parse("ptr_add([*]usize, %0, @Air.Inst.Ref.zero_usize)")
-    end
-
-    alias Clr.Air.Instruction.PtrSub
-
-    test "ptr_sub" do
-      assert %PtrSub{
-               type: {:ptr, :many, ~l"usize", []},
-               src: {0, :keep},
-               val: ~l"@Air.Inst.Ref.zero_usize"
-             } =
-               Instruction.parse("ptr_sub([*]usize, %0, @Air.Inst.Ref.zero_usize)")
     end
 
     alias Clr.Air.Instruction.Slice
