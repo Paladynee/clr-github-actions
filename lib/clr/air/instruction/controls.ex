@@ -2,11 +2,13 @@ defmodule Clr.Air.Instruction.Controls do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[argument cs slotref lparen rparen type lvalue literal clobbers space codeblock]a)
+  Clr.Air.import(
+    ~w[argument cs slotref lparen rparen type lvalue literal clobbers space codeblock]a
+  )
 
   Pegasus.parser_from_string(
     """
-    controls <- return / block
+    controls <- return / block / loop / repeat
     """,
     controls: [export: true]
   )
@@ -48,5 +50,38 @@ defmodule Clr.Air.Instruction.Controls do
 
   def block(rest, [{:clobbers, clobbers}, codeblock, type], context, _slot, _bytes) do
     {rest, [%Block{type: type, code: codeblock, clobbers: clobbers}], context}
+  end
+
+  defmodule Loop do
+    defstruct [:type, :code]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    loop <- loop_str lparen type cs codeblock rparen
+    loop_str <- 'loop'
+    """,
+    loop: [post_traverse: :loop],
+    loop_str: [ignore: true]
+  )
+
+  def loop(rest, [codeblock, type], context, _slot, _bytes) do
+    {rest, [%Loop{type: type, code: codeblock}], context}
+  end
+
+  defmodule Repeat do
+    defstruct [:goto]
+  end
+
+  Pegasus.parser_from_string("""
+    repeat <- repeat_str lparen slotref rparen
+    repeat_str <- 'repeat'
+    """,
+    repeat: [post_traverse: :repeat],
+    repeat_str: [ignore: true]
+  )
+
+  def repeat(rest, [goto], context, _slot, _bytes) do
+    {rest, [%Repeat{goto: goto}], context}
   end
 end

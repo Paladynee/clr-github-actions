@@ -31,4 +31,15 @@ defmodule ClrTest.AirParsers.ControlsTest do
                """)
     end
   end
+
+  alias Clr.Air.Instruction.Controls.Loop
+
+  test "loop" do
+    assert %Loop{type: ~l"void"} =
+             Instruction.parse("""
+             loop(void, { 
+               %7!= dbg_stmt(2:13) 
+             })
+             """)
+  end
 end

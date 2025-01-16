@@ -82,17 +82,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Trap{} = Instruction.parse("trap()")
     end
 
-    alias Clr.Air.Instruction.Loop
-
-    test "loop" do
-      assert %Loop{type: ~l"void"} =
-               Instruction.parse("""
-               loop(void, { 
-                 %7!= dbg_stmt(2:13) 
-               })
-               """)
-    end
-
     alias Clr.Air.Instruction.CondBr
 
     test "cond_br without clobbers" do
@@ -118,7 +107,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
                """)
     end
 
-    alias Clr.Air.Instruction.Repeat
+    alias Clr.Air.Instruction.Controls.Repeat
 
     test "repeat" do
       assert %Repeat{goto: {23, :keep}} =
