@@ -7,12 +7,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   setup(do: {:ok, empty_map: %{}})
 
   describe "debug instructions" do
-    alias Clr.Air.Instruction.DbgStmt
-
-    test "dbg_stmt" do
-      assert %DbgStmt{row: 9, col: 10} = Instruction.parse("dbg_stmt(9:10)")
-    end
-
     alias Clr.Air.Instruction.DbgInlineBlock
 
     test "dbg_inline_block" do

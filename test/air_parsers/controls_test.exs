@@ -171,16 +171,16 @@ defmodule ClrTest.AirParsers.ControlsTest do
 
     test "try_cold" do
       assert %Try{src: {28, :keep}, error_code: %{}, clobbers: [28], cold: true} =
-        Instruction.parse("""
-        try_cold(%28, {
-          %24! %4! %1! %0!
-          %29 = unwrap_errunion_err(error{OutOfMemory}, %28!)
-          %30!= dbg_stmt(8:13)
-          %31 = wrap_errunion_err(error{OutOfMemory}!void, %29!)
-          %32!= ret_safe(%31!)
-        } %28!)
-        """)
-      end
+               Instruction.parse("""
+               try_cold(%28, {
+                 %24! %4! %1! %0!
+                 %29 = unwrap_errunion_err(error{OutOfMemory}, %28!)
+                 %30!= dbg_stmt(8:13)
+                 %31 = wrap_errunion_err(error{OutOfMemory}!void, %29!)
+                 %32!= ret_safe(%31!)
+               } %28!)
+               """)
+    end
   end
 
   describe "try_ptr" do

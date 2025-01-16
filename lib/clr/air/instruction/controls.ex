@@ -404,7 +404,8 @@ defmodule Clr.Air.Instruction.Controls do
   )
 
   defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
-    {rest, [%Try{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}], context}
+    {rest, [%Try{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}],
+     context}
   end
 
   defp cold?([:cold]), do: true
@@ -436,6 +437,8 @@ defmodule Clr.Air.Instruction.Controls do
   )
 
   defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
-    {rest, [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}], context}
+    {rest,
+     [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}],
+     context}
   end
 end

@@ -144,7 +144,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
                    "Stack pointer escape detected in function `foo.bar` at 0:1",
                    fn ->
                      run_analysis(%{
-                       {0, :clobber} => %Clr.Air.Instruction.DbgStmt{row: 0, col: 1},
+                       {0, :clobber} => %Clr.Air.Instruction.Dbg.Stmt{loc: {0, 1}},
                        {1, :keep} => %ClrTest.Instruction{},
                        {2, :clobber} => %Clr.Air.Instruction.RetSafe{val: {1, :clobber}}
                      })
