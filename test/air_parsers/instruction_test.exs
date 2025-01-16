@@ -67,15 +67,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "control flow instructions" do
-    alias Clr.Air.Instruction.Br
-
-    test "br" do
-      assert %Br{
-               value: ~l"@Air.Inst.Ref.void_value",
-               goto: {5, :keep}
-             } = Instruction.parse("br(%5, @Air.Inst.Ref.void_value)")
-    end
-
     alias Clr.Air.Instruction.Trap
 
     test "trap" do

@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    controls <- return / block / loop / repeat
+    controls <- return / block / loop / repeat / br
     """,
     controls: [export: true]
   )
@@ -84,4 +84,22 @@ defmodule Clr.Air.Instruction.Controls do
   def repeat(rest, [goto], context, _slot, _bytes) do
     {rest, [%Repeat{goto: goto}], context}
   end
+
+  defmodule Br do
+    defstruct [:goto, :value]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    br <- br_str lparen slotref cs argument rparen
+    br_str <- 'br'
+    """,
+    br: [post_traverse: :br],
+    br_str: [ignore: true]
+  )
+
+  def br(rest, [value, goto], context, _, _) do
+    {rest, [%Br{goto: goto, value: value}], context}
+  end
+
 end

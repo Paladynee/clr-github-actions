@@ -42,4 +42,13 @@ defmodule ClrTest.AirParsers.ControlsTest do
              })
              """)
   end
+
+  alias Clr.Air.Instruction.Controls.Br
+
+  test "br" do
+    assert %Br{
+             value: ~l"@Air.Inst.Ref.void_value",
+             goto: {5, :keep}
+           } = Instruction.parse("br(%5, @Air.Inst.Ref.void_value)")
+  end
 end
