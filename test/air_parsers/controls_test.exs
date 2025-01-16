@@ -51,4 +51,28 @@ defmodule ClrTest.AirParsers.ControlsTest do
              goto: {5, :keep}
            } = Instruction.parse("br(%5, @Air.Inst.Ref.void_value)")
   end
+
+  alias Clr.Air.Instruction.Controls.FrameAddr
+
+  test "frame_addr" do
+    assert %FrameAddr{} = Instruction.parse("frame_addr()")
+  end
+
+  alias Clr.Air.Instruction.Controls.Call
+
+  test "call" do
+    assert %Call{
+             fn: {:literal, {:fn, _, _, _}, {:function, "initStatic"}},
+             args: [{74, :keep}]
+           } =
+             Instruction.parse(
+               "call(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+             )
+
+    assert %Call{fn: {10, :keep}, args: []} = Instruction.parse("call(%10, [])")
+
+    assert Instruction.parse(
+             "call(<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>, [<os.linux.rlimit_resource__enum_2617, .STACK>])"
+           )
+  end
 end
