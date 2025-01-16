@@ -11,7 +11,6 @@ defmodule ClrTest.AirParsers.DbgTest do
 
   test "breakpoint"
 
-
   test "dbg_stmt" do
     assert %Dbg.Stmt{loc: {9, 10}} = Instruction.parse("dbg_stmt(9:10)")
   end

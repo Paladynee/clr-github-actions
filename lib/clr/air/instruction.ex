@@ -6,7 +6,7 @@ defprotocol Clr.Air.Instruction do
   def analyze(instruction, slot, state)
 after
   @modules Map.new(
-             ~w[dbg_arg_inline dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly 
+             ~w[dbg_arg_inline dbg_inline_block dbg_var_val dbg_var_ptr assembly 
                 arg ptr_elem_val alloc store load optional_payload  
                 slice slice_ptr struct_field_val int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
@@ -43,7 +43,7 @@ after
     """
     # TODO: reorganize this by category.
     instruction <- # debug
-                   dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
+                   dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr /  
                    # control flow
                    unreach / ret / ret_safe /
                    ret_load /

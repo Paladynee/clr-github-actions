@@ -6,7 +6,7 @@ defmodule Clr.Air.Instruction.Dbg do
 
   Pegasus.parser_from_string(
     """
-    dbg <- trap / dbg_stmt
+    dbg <- trap / dbg_stmt / dbg_empty_stmt
     """,
     dbg: [export: true]
   )
@@ -53,5 +53,22 @@ defmodule Clr.Air.Instruction.Dbg do
 
   defp dbg_stmt(rest, [col, row], context, _slot, _bytes) do
     {rest, [%Stmt{loc: {row, col}}], context}
+  end
+
+  defmodule EmptyStmt do
+    defstruct []
+  end
+
+  Pegasus.parser_from_string(
+    """
+    dbg_empty_stmt <- dbg_empty_stmt_str
+    dbg_empty_stmt_str <- 'dbg_empty_stmt()'
+    """,
+    dbg_empty_stmt: [post_traverse: :dbg_empty_stmt],
+    dbg_empty_stmt_str: [ignore: true]
+  )
+
+  def dbg_empty_stmt(rest, [], context, _, _) do
+    {rest, [%EmptyStmt{}], context}
   end
 end
