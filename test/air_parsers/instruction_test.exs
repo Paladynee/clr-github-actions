@@ -572,28 +572,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     end
   end
 
-  describe "block" do
-    alias Clr.Air.Instruction.Block
-
-    test "generic" do
-      assert %Block{} =
-               Instruction.parse("""
-               block(void, {
-                 %7!= dbg_stmt(2:13)
-               })
-               """)
-    end
-
-    test "with clobbers" do
-      assert %Block{clobbers: [8, 9]} =
-               Instruction.parse("""
-               block(void, {
-                 %7!= dbg_stmt(2:13)
-               } %8! %9!)
-               """)
-    end
-  end
-
   describe "test operations" do
     # TODO: set off into "vector" domain
     alias Clr.Air.Instruction.CmpVector

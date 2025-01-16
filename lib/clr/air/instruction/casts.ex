@@ -25,7 +25,8 @@ defmodule Clr.Air.Instruction.Casts do
 
   Clr.Air.import(~w[argument lvalue type slotref cs lparen rparen]a)
 
-  Pegasus.parser_from_string("""
+  Pegasus.parser_from_string(
+    """
     bitcast_instr <- bitcast lparen type cs argument rparen
     bitcast <- 'bitcast'
     """,

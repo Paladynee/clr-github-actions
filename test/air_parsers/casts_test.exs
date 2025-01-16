@@ -8,6 +8,6 @@ defmodule ClrTest.AirParsers.CastsTest do
 
   test "bitcast" do
     assert %Bitcast{type: {:ptr, :many, ~l"elf.Elf64_auxv_t", []}, src: {65, :clobber}} =
-      Instruction.parse("bitcast([*]elf.Elf64_auxv_t, %65!)")
+             Instruction.parse("bitcast([*]elf.Elf64_auxv_t, %65!)")
   end
 end
