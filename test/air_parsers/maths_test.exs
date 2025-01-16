@@ -224,9 +224,24 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("shr(%19, @Air.Inst.Ref.one_usize)")
     end
 
+    test "shr_exact" do
+      assert %Binary{op: :shr, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :exact} =
+               Instruction.parse("shr_exact(%19, @Air.Inst.Ref.one_usize)")
+    end
+
     test "shl" do
       assert %Binary{op: :shl, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize"} =
                Instruction.parse("shl(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    test "shl_exact" do
+      assert %Binary{op: :shl, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :exact} =
+               Instruction.parse("shl_exact(%19, @Air.Inst.Ref.one_usize)")
+    end
+
+    test "shl_sat" do
+      assert %Binary{op: :shl, lhs: {19, :keep}, rhs: ~l"@Air.Inst.Ref.one_usize", mode: :sat} =
+               Instruction.parse("shl_sat(%19, @Air.Inst.Ref.one_usize)")
     end
 
     # bitwise operations

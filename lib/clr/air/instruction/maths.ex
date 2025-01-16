@@ -22,7 +22,7 @@ defmodule Clr.Air.Instruction.Maths do
     binary_instruction <- binary_op lparen argument cs argument rparen
 
     binary_op <- add_op / sub_op / mul_op / div_op / rem_op / mod_op /
-                 min / max / shl / shr /
+                 min / max / shr_op / shl_op/
                  bit_and / bit_or / xor /
                  bool_and / bool_or
 
@@ -47,14 +47,17 @@ defmodule Clr.Air.Instruction.Maths do
     mod <- 'mod'
     min <- 'min'
     max <- 'max'
-    shl <- 'shl'
+    shr_op <- shr exact?
     shr <- 'shr'
+    shl_op <- shl (exact / sat)?
+    shl <- 'shl'
     bit_and <- 'bit_and'
     bit_or <- 'bit_or'
     xor <- 'xor'
     bool_and <- 'bool_and'
     bool_or <- 'bool_or'
 
+    exact <- '_exact'
     safe <- '_safe'
     optimized <- '_optimized'
     wrap <- '_wrap'
@@ -87,11 +90,10 @@ defmodule Clr.Air.Instruction.Maths do
     optimized: [token: :optimized],
     sat: [token: :sat],
     wrap: [token: :wrap],
-    exact: [token: :exact],
-    trunc: [token: :trunc]
+    exact: [token: :exact]
   )
 
-  @modes ~w[safe optimized wrap sat]a
+  @modes ~w[safe optimized wrap sat exact]a
   def binary_instruction(rest, [rhs, lhs, mode, op], context, _slot, _bytes)
       when mode in @modes do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op, mode: mode}], context}
