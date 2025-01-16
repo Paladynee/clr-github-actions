@@ -7,16 +7,14 @@ defmodule ClrTest.AirParsers.TestsTest do
   describe "compare operations" do
     alias Clr.Air.Instruction.Tests.Compare
 
-    # add and friends
-
-    test "cmp_neq" do
-      assert %Compare{op: :neq, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}} =
-               Instruction.parse("cmp_neq(%95!, <u64, 0>)")
-    end
-
     test "cmp_lt" do
       assert %Compare{op: :lt, lhs: {95, :clobber}, rhs: {96, :clobber}} =
                Instruction.parse("cmp_lt(%95!, %96!)")
+    end
+
+    test "cmp_lt_optimized" do
+      assert %Compare{op: :lt, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_lt_optimized(%95!, <u64, 0>)")
     end
 
     test "cmp_lte" do
@@ -24,14 +22,49 @@ defmodule ClrTest.AirParsers.TestsTest do
                Instruction.parse("cmp_lte(%95!, %96!)")
     end
 
-    test "cmp_gt" do
-      assert %Compare{op: :gt, lhs: {95, :clobber}, rhs: {96, :clobber}} =
-               Instruction.parse("cmp_gt(%95!, %96!)")
+    test "cmp_lte_optimized" do
+      assert %Compare{op: :lte, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_lte_optimized(%95!, <u64, 0>)")
+    end
+
+    test "cmp_eq" do
+      assert %Compare{op: :eq, lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_eq(%95!, %96!)")
+    end
+
+    test "cmp_eq_optimized" do
+      assert %Compare{op: :eq, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_eq_optimized(%95!, <u64, 0>)")
     end
 
     test "cmp_gte" do
       assert %Compare{op: :gte, lhs: {95, :clobber}, rhs: {96, :clobber}} =
                Instruction.parse("cmp_gte(%95!, %96!)")
+    end
+
+    test "cmp_gte_optimized" do
+      assert %Compare{op: :gte, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_gte_optimized(%95!, <u64, 0>)")
+    end
+
+    test "cmp_gt" do
+      assert %Compare{op: :gt, lhs: {95, :clobber}, rhs: {96, :clobber}} =
+               Instruction.parse("cmp_gt(%95!, %96!)")
+    end
+
+    test "cmp_gt_optimized" do
+      assert %Compare{op: :gt, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_gt_optimized(%95!, <u64, 0>)")
+    end
+
+    test "cmp_neq" do
+      assert %Compare{op: :neq, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}} =
+               Instruction.parse("cmp_neq(%95!, <u64, 0>)")
+    end
+
+    test "cmp_neq_optimized" do
+      assert %Compare{op: :neq, lhs: {95, :clobber}, rhs: {:literal, ~l"u64", 0}, optimized: true} =
+               Instruction.parse("cmp_neq_optimized(%95!, <u64, 0>)")
     end
   end
 
@@ -67,4 +100,8 @@ defmodule ClrTest.AirParsers.TestsTest do
                Instruction.parse("is_null(%95!)")
     end
   end
+
+  test "cmp_vector"
+
+  test "cmp_vector_optimized"
 end

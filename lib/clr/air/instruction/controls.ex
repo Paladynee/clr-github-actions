@@ -140,7 +140,7 @@ defmodule Clr.Air.Instruction.Controls do
   defmodule Call do
     use Clr.Air.Instruction
 
-    defstruct [:fn, :args]
+    defstruct [:fn, :args, :opt]
 
     alias Clr.Block
     alias Clr.Type
@@ -220,7 +220,6 @@ defmodule Clr.Air.Instruction.Controls do
             loc: block.loc
 
         {{:ptr, :one, _type, %{heap: ^vtable}}, block} ->
-
           block
           |> Block.put_meta(src, deleted: this_function)
           |> Block.put_type(slot, Type.void())
@@ -250,15 +249,27 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    call <- call_str lparen (fn_literal / slotref) cs lbrack (argument (cs argument)*)? rbrack rparen
+    call <- call_str (always_tail / never_tail / never_inline)? 
+      lparen (fn_literal / slotref) cs lbrack (argument (cs argument)*)? rbrack rparen
     call_str <- 'call'
+    always_tail <- '_always_tail'
+    never_tail <- '_never_tail'
+    never_inline <- '_never_inline'
     """,
     call: [post_traverse: :call],
-    call_str: [ignore: true]
+    call_str: [ignore: true],
+    always_tail: [token: :always_tail],
+    never_tail: [token: :never_tail],
+    never_inline: [token: :never_inline]
   )
+
+  @call_opts ~w[always_tail never_tail never_inline]a
 
   def call(rest, args, context, _, _) do
     case Enum.reverse(args) do
+      [opt, fun | args] when opt in @call_opts ->
+        {rest, [%Call{fn: fun, args: args, opt: opt}], context}
+
       [fun | args] ->
         {rest, [%Call{fn: fun, args: args}], context}
     end

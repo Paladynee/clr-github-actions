@@ -292,6 +292,11 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("clz(usize, %96)")
     end
 
+    test "popcount" do
+      assert %UnaryTyped{op: :popcount, operand: {96, :keep}, type: ~l"usize"} =
+               Instruction.parse("popcount(usize, %96)")
+    end
+
     test "byte_swap" do
       assert %UnaryTyped{op: :byte_swap, type: ~l"u64", operand: {0, :keep}} =
                Instruction.parse("byte_swap(u64, %0)")
@@ -300,6 +305,72 @@ defmodule ClrTest.AirParsers.MathsTest do
     test "bit_reverse" do
       assert %UnaryTyped{op: :bit_reverse, type: ~l"u64", operand: {0, :keep}} =
                Instruction.parse("bit_reverse(u64, %0)")
+    end
+  end
+
+  describe "unary operations" do
+    alias Clr.Air.Instruction.Maths.Unary
+
+    test "sqrt" do
+      assert %Unary{op: :sqrt, operand: {96, :keep}} = Instruction.parse("sqrt(%96)")
+    end
+
+    test "sin" do
+      assert %Unary{op: :sin, operand: {96, :keep}} = Instruction.parse("sin(%96)")
+    end
+
+    test "cos" do
+      assert %Unary{op: :cos, operand: {96, :keep}} = Instruction.parse("cos(%96)")
+    end
+
+    test "tan" do
+      assert %Unary{op: :tan, operand: {96, :keep}} = Instruction.parse("tan(%96)")
+    end
+
+    test "exp" do
+      assert %Unary{op: :exp, operand: {96, :keep}} = Instruction.parse("exp(%96)")
+    end
+
+    test "exp2" do
+      assert %Unary{op: :exp2, operand: {96, :keep}} = Instruction.parse("exp2(%96)")
+    end
+
+    test "log" do
+      assert %Unary{op: :log, operand: {96, :keep}} = Instruction.parse("log(%96)")
+    end
+
+    test "log2" do
+      assert %Unary{op: :log2, operand: {96, :keep}} = Instruction.parse("log2(%96)")
+    end
+
+    test "log10" do
+      assert %Unary{op: :log10, operand: {96, :keep}} = Instruction.parse("log10(%96)")
+    end
+
+    test "floor" do
+      assert %Unary{op: :floor, operand: {96, :keep}} = Instruction.parse("floor(%96)")
+    end
+
+    test "ceil" do
+      assert %Unary{op: :ceil, operand: {96, :keep}} = Instruction.parse("ceil(%96)")
+    end
+
+    test "round" do
+      assert %Unary{op: :round, operand: {96, :keep}} = Instruction.parse("round(%96)")
+    end
+
+    test "trunc_float" do
+      assert %Unary{op: :trunc_float, operand: {96, :keep}} =
+               Instruction.parse("trunc_float(%96)")
+    end
+
+    test "neg" do
+      assert %Unary{op: :neg, operand: {96, :keep}} = Instruction.parse("neg(%96)")
+    end
+
+    test "neg_optimized" do
+      assert %Unary{op: :neg, operand: {96, :keep}, optimized: true} =
+               Instruction.parse("neg_optimized(%96)")
     end
   end
 

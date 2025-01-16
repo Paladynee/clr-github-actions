@@ -16,7 +16,7 @@ defmodule Clr.Air.Instruction.Tests do
   defmodule Compare do
     use Clr.Air.Instruction
 
-    defstruct ~w[lhs rhs op]a
+    defstruct ~w[lhs rhs op optimized]a
     import Clr.Air.Lvalue
     alias Clr.Block
 
@@ -29,7 +29,7 @@ defmodule Clr.Air.Instruction.Tests do
 
     cmp_prefix <- 'cmp_'
 
-    compare_op <- eq / gte / gt / lte / lt / neq
+    compare_op <- (eq / gte / gt / lte / lt / neq) optimized?
 
     neq <- 'neq'
     lt <- 'lt'
@@ -37,6 +37,7 @@ defmodule Clr.Air.Instruction.Tests do
     eq <- 'eq'
     gt <- 'gt'
     gte <- 'gte'
+    optimized <- '_optimized'
     """,
     compare_instruction: [post_traverse: :compare_instruction],
     cmp_prefix: [ignore: true],
@@ -45,11 +46,16 @@ defmodule Clr.Air.Instruction.Tests do
     lte: [token: :lte],
     eq: [token: :eq],
     gt: [token: :gt],
-    gte: [token: :gte]
+    gte: [token: :gte],
+    optimized: [token: :optimized]
   )
 
   def compare_instruction(rest, [rhs, lhs, op], context, _slot, _bytes) do
     {rest, [%Compare{lhs: lhs, rhs: rhs, op: op}], context}
+  end
+
+  def compare_instruction(rest, [rhs, lhs, :optimized, op], context, _slot, _bytes) do
+    {rest, [%Compare{lhs: lhs, rhs: rhs, op: op, optimized: true}], context}
   end
 
   defmodule Is do

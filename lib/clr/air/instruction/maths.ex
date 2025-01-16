@@ -4,7 +4,7 @@ defmodule Clr.Air.Instruction.Maths do
 
   Pegasus.parser_from_string(
     """
-    maths <- binary_instruction / unary_type_instruction / overflow_instruction
+    maths <- binary_instruction / unary_type_instruction / unary_instruction / overflow_instruction
     """,
     maths: [export: true]
   )
@@ -113,11 +113,12 @@ defmodule Clr.Air.Instruction.Maths do
     """
     unary_type_instruction <- unary_type_op lparen type cs argument rparen
 
-    unary_type_op <- not / abs / clz / byte_swap / bit_reverse
+    unary_type_op <- not / abs / clz / popcount / byte_swap / bit_reverse
 
     abs <- 'abs'
     not <- 'not'
     clz <- 'clz'
+    popcount <- 'popcount'
     byte_swap <- 'byte_swap'
     bit_reverse <- 'bit_reverse'
     """,
@@ -125,12 +126,70 @@ defmodule Clr.Air.Instruction.Maths do
     not: [token: :not],
     abs: [token: :abs],
     clz: [token: :clz],
+    popcount: [token: :popcount],
     byte_swap: [token: :byte_swap],
     bit_reverse: [token: :bit_reverse]
   )
 
   def unary_type_instruction(rest, [operand, type, op], context, _slot, _bytes) do
     {rest, [%UnaryTyped{operand: operand, type: type, op: op}], context}
+  end
+
+  # unary operations
+
+  defmodule Unary do
+    defstruct ~w[op operand optimized]a
+  end
+
+  Pegasus.parser_from_string(
+    """
+    unary_instruction <- unary_op lparen argument rparen
+
+    unary_op <- sqrt / sin / cos / tan / exp2 / exp / log10 / log2 / log / 
+      floor / ceil / round / trunc_float / (neg optimized?)
+
+    sqrt <- 'sqrt'
+    sin <- 'sin'
+    cos <- 'cos'
+    tan <- 'tan'
+    exp <- 'exp'
+    exp2 <- 'exp2'
+    log <- 'log'
+    log2 <- 'log2'
+    log10 <- 'log10'
+    floor <- 'floor'
+    ceil <- 'ceil'
+    round <- 'round'
+    trunc_float <- 'trunc_float'
+    neg <- 'neg'
+    optimized <- '_optimized'
+    """,
+    unary_instruction: [post_traverse: :unary_instruction],
+    sqrt: [token: :sqrt],
+    sin: [token: :sin],
+    cos: [token: :cos],
+    tan: [token: :tan],
+    exp: [token: :exp],
+    exp2: [token: :exp2],
+    log: [token: :log],
+    log2: [token: :log2],
+    log10: [token: :log10],
+    floor: [token: :floor],
+    ceil: [token: :ceil],
+    round: [token: :round],
+    trunc_float: [token: :trunc_float],
+    neg: [token: :neg],
+    optimized: [token: :optimized]
+  )
+
+  def unary_instruction(rest, args, context, _slot, _bytes) do
+    op =
+      case args do
+        [operand, :optimized, :neg] -> %Unary{operand: operand, op: :neg, optimized: true}
+        [operand, operator] -> %Unary{operand: operand, op: operator}
+      end
+
+    {rest, [op], context}
   end
 
   # Overflow operations

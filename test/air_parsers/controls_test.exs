@@ -60,19 +60,50 @@ defmodule ClrTest.AirParsers.ControlsTest do
 
   alias Clr.Air.Instruction.Controls.Call
 
-  test "call" do
-    assert %Call{
-             fn: {:literal, {:fn, _, _, _}, {:function, "initStatic"}},
-             args: [{74, :keep}]
-           } =
-             Instruction.parse(
-               "call(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
-             )
+  describe "call" do
+    test "plain" do
+      assert %Call{
+               fn: {:literal, {:fn, _, _, _}, {:function, "initStatic"}},
+               args: [{74, :keep}]
+             } =
+               Instruction.parse(
+                 "call(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+               )
 
-    assert %Call{fn: {10, :keep}, args: []} = Instruction.parse("call(%10, [])")
+      assert %Call{fn: {10, :keep}, args: []} = Instruction.parse("call(%10, [])")
 
-    assert Instruction.parse(
-             "call(<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>, [<os.linux.rlimit_resource__enum_2617, .STACK>])"
-           )
+      assert %Call{
+               args: [
+                 {:literal, {:lvalue, ["os", "linux", "rlimit_resource__enum_2617"]},
+                  {:enum, "STACK"}}
+               ],
+               opt: nil,
+               fn: _
+             } =
+               Instruction.parse(
+                 "call(<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>, [<os.linux.rlimit_resource__enum_2617, .STACK>])"
+               )
+    end
+
+    test "always_tail" do
+      assert %Call{opt: :always_tail} =
+               Instruction.parse(
+                 "call_always_tail(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+               )
+    end
+
+    test "never_tail" do
+      assert %Call{opt: :never_tail} =
+               Instruction.parse(
+                 "call_never_tail(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+               )
+    end
+
+    test "never inline" do
+      assert %Call{opt: :never_inline} =
+               Instruction.parse(
+                 "call_never_inline(<fn ([]elf.Elf64_Phdr) void, (function 'initStatic')>, [%74])"
+               )
+    end
   end
 end
