@@ -19,10 +19,10 @@ defmodule ClrTest.Function.BlockAnalysisTest do
       empty_map: empty_map
     } do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, block ->
-        Block.put_type(block, line, :foobar)
+        Block.put_type(block, line, {:void, %{}})
       end)
 
-      assert %{slots: %{0 => {:foobar, ^empty_map}}} =
+      assert %{slots: %{0 => {:void, ^empty_map}}} =
                run_analysis(%{{0, :keep} => %ClrTest.Instruction{}})
     end
 
@@ -30,16 +30,19 @@ defmodule ClrTest.Function.BlockAnalysisTest do
       assert %{slots: ^empty_map} = run_analysis(%{{0, :clobber} => %ClrTest.Instruction{}})
     end
 
-    test "a subsequent instruction gets the types passed", %{empty_map: empty_map} do
+    test "a subsequent instruction gets the types passed" do
+      foo_bar = %{foo: :bar}
+      bar_baz = %{bar: :baz}
+
       ClrTest.InstructionHandler
       |> Mox.expect(:analyze, fn _, line, analysis ->
-        Block.put_type(analysis, line, :foobar)
+        Block.put_type(analysis, line, {:u, 1, foo_bar})
       end)
-      |> Mox.expect(:analyze, fn _, line, %{slots: %{0 => {:foobar, ^empty_map}}} = analysis ->
-        Block.put_type(analysis, line, :barbaz)
+      |> Mox.expect(:analyze, fn _, line, %{slots: %{0 => {:u, 1, ^foo_bar}}} = analysis ->
+        Block.put_type(analysis, line, {:u, 2, bar_baz})
       end)
 
-      assert %{slots: %{0 => {:foobar, ^empty_map}, 1 => {:barbaz, ^empty_map}}} =
+      assert %{slots: %{0 => {:u, 1, ^foo_bar}, 1 => {:u, 2, ^bar_baz}}} =
                run_analysis(%{
                  {0, :keep} => %ClrTest.Instruction{},
                  {1, :keep} => %ClrTest.Instruction{}
@@ -50,7 +53,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   test "arg instruction" do
     meta = %{foo: :bar}
 
-    assert %{slots: %{0 => {~l"u32", ^meta}}} =
+    assert %{slots: %{0 => {:u, 32, ^meta}}} =
              run_analysis(
                %{
                  {0, :keep} => %Clr.Air.Instruction.Arg{type: ~l"u32", name: "name"}
@@ -59,10 +62,10 @@ defmodule ClrTest.Function.BlockAnalysisTest do
              )
   end
 
-  test "alloc instruction" do
+  test "alloc instruction", %{empty_map: empty_map} do
     meta = %{stack: ~l"foo.bar"}
 
-    assert %{slots: %{0 => {{:ptr, :one, ~l"u32", []}, ^meta}}} =
+    assert %{slots: %{0 => {:ptr, :one, {:u, 32, ^empty_map}, ^meta}}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Alloc{
                  type: {:ptr, :one, {:lvalue, ["u32"]}, []}
@@ -72,13 +75,13 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
   describe "the load instruction" do
     test "puts down the type of the pointer in the slot", %{empty_map: empty_map} do
-      assert %{slots: %{0 => {:u32, ^empty_map}}} =
+      assert %{slots: %{0 => {:u, 32, ^empty_map}}} =
                run_analysis(
                  %{
-                   {0, :keep} => %Clr.Air.Instruction.Load{type: :u32, loc: {47, :keep}}
+                   {0, :keep} => %Clr.Air.Instruction.Load{type: ~l"u32", loc: {47, :keep}}
                  },
                  [],
-                 %{47 => {{:ptr, :one, :u32, []}, []}}
+                 %{47 => {:ptr, :one, {:u, 32, %{}}, %{}}}
                )
     end
 
@@ -89,7 +92,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
   describe "maths functions" do
     test "overflow functions" do
-      assert %{slots: %{0 => {{:struct, [~l"u32", ~l"u1"]}, %{}}}} =
+      assert %{slots: %{0 => {:struct, [{:u, 32, _}, {:u, 1, _}], %{}}}} =
                run_analysis(%{
                  {0, :keep} => %Clr.Air.Instruction.Maths.Overflow{
                    op: :add,
@@ -103,18 +106,18 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
   test "struct_field_val function", %{empty_map: empty_map} do
     Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
-      Block.put_type(analysis, line, {:struct, [~l"u32", ~l"u1"]})
+      Block.put_type(analysis, line, {:struct, [{:u, 32, %{}}, {:u, 1, %{}}], %{}})
     end)
 
-    assert %{slots: %{1 => {~l"u1", ^empty_map}}} =
+    assert %{slots: %{1 => {:u, 1, ^empty_map}}} =
              run_analysis(%{
                {0, :keep} => %ClrTest.Instruction{},
                {1, :keep} => %Clr.Air.Instruction.StructFieldVal{src: {0, :keep}, index: 1}
              })
   end
 
-  test "boolean comparison function" do
-    assert %{slots: %{0 => {~l"bool", %{}}}} =
+  test "boolean comparison function", %{empty_map: empty_map} do
+    assert %{slots: %{0 => {:bool, ^empty_map}}} =
              run_analysis(%{
                {0, :keep} => %Clr.Air.Instruction.Tests.Compare{
                  lhs: {8, :clobber},
@@ -134,7 +137,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
     test "fails on pointer types which escape a stack pointer" do
       Mox.expect(ClrTest.InstructionHandler, :analyze, fn _, line, analysis ->
-        Block.put_type(analysis, line, {:ptr, :one, ~l"u32", []}, %{stack: ~l"foo.bar"})
+        Block.put_type(analysis, line, {:ptr, :one, ~l"u32", %{stack: ~l"foo.bar"}})
       end)
 
       assert_raise Clr.StackPtrEscape,

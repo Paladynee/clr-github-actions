@@ -8,31 +8,31 @@ defmodule ClrTest.BlockTest do
 
   describe "for the put_type/3,4 function" do
     test "we can put a basic type and no metadata are added" do
-      slots = %{47 => {~l"foo.type", %{}}}
+      slots = %{47 => {:u, 32, %{}}}
 
       assert %{slots: ^slots} =
                %Function{name: ~l"foo.bar"}
                |> Block.new([])
-               |> Block.put_type(47, ~l"foo.type")
+               |> Block.put_type(47, {:u, 32, %{}})
     end
 
     test "metadata can be added too" do
-      slots = %{47 => {~l"foo.type", %{foo: :bar}}}
+      slots = %{47 => {:u, 32, %{foo: :bar}}}
 
       assert %{slots: ^slots} =
                %Function{name: ~l"foo.bar"}
                |> Block.new([])
-               |> Block.put_type(47, ~l"foo.type", foo: :bar)
+               |> Block.put_type(47, {:u, 32, %{}}, foo: :bar)
     end
   end
 
   describe "the put_meta/3 function" do
     test "can be used to add metadata to an existing slot" do
-      slots = %{47 => {~l"foo.type", %{foo: :bar}}}
+      slots = %{47 => {:u, 32, %{foo: :bar}}}
 
       %Function{name: ~l"foo.bar"}
       |> Block.new([])
-      |> Block.put_type(47, ~l"foo.type")
+      |> Block.put_type(47, {:u, 32, %{}})
       |> Block.put_meta(47, foo: :bar)
     end
   end
@@ -63,9 +63,9 @@ defmodule ClrTest.BlockTest do
       block =
         %Function{name: ~l"foo.bar"}
         |> Block.new([])
-        |> Block.put_type(47, ~l"foo.type", foo: :bar)
+        |> Block.put_type(47, {:u, 32, %{foo: :bar}})
 
-      assert {{~l"foo.type", %{foo: :bar}}, %Block{}} = Block.fetch_up!(block, 47)
+      assert {{:u, 32, %{foo: :bar}}, %Block{}} = Block.fetch_up!(block, 47)
     end
 
     test "can be used to retrieve awaited information, which can arbitrarily alter the block" do
@@ -76,9 +76,9 @@ defmodule ClrTest.BlockTest do
         |> Block.new([])
         |> Block.put_await(47, future)
 
-      send(self(), {future, {:ok, ~l"bar.baz", &Block.put_type(&1, 48, ~l"bar.quux")}})
+      send(self(), {future, {:ok, {:u, 32, %{}}, &Block.put_type(&1, 48, {:u, 64, %{}})}})
 
-      assert {{~l"bar.baz", _}, %{slots: %{48 => {~l"bar.quux", _}}}} = Block.fetch_up!(block, 47)
+      assert {{:u, 32, _}, %{slots: %{48 => {:u, 64, _}}}} = Block.fetch_up!(block, 47)
     end
 
     test "can be sent an error"
@@ -95,13 +95,13 @@ defmodule ClrTest.BlockTest do
       caller_block =
         %Function{name: ~l"bar.baz"}
         |> Block.new([])
-        |> Block.put_type(47, ~l"foo.type")
-        |> Block.put_type(48, ~l"foo.type")
+        |> Block.put_type(47, {:u, 32, %{}})
+        |> Block.put_type(48, {:u, 32, %{}})
 
       lambda = Block.call_meta_adder(called_block)
 
       assert %Block{
-               slots: %{47 => {~l"foo.type", %{foo: :bar}}, 48 => {~l"foo.type", %{baz: :quux}}}
+               slots: %{47 => {:u, 32, %{foo: :bar}}, 48 => {:u, 32, %{baz: :quux}}}
              } = lambda.(caller_block, [47, 48])
     end
   end

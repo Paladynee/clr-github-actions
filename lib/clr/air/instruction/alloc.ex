@@ -14,7 +14,7 @@ defmodule Clr.Air.Instruction.Alloc do
   )
 
   def alloc(rest, [type, "alloc"], context, _slot, _bytes) do
-    {rest, [%__MODULE__{type: Type.from_air(type)}], context}
+    {rest, [%__MODULE__{type: type}], context}
   end
 
   use Clr.Air.Instruction
@@ -22,6 +22,6 @@ defmodule Clr.Air.Instruction.Alloc do
   alias Clr.Block
 
   def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis) do
-    Block.put_type(analysis, slot, type, stack: analysis.function)
+    Block.put_type(analysis, slot, Type.from_air(type), stack: analysis.function)
   end
 end

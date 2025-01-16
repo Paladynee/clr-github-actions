@@ -93,7 +93,6 @@ defmodule Clr.Air.Instruction.Call do
     block
     |> Block.flush_awaits()
     |> Block.fetch_up!(src)
-    |> dbg(limit: 25)
     |> case do
       {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
         raise Clr.DoubleFreeError,

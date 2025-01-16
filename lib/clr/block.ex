@@ -52,26 +52,26 @@ defmodule Clr.Block do
     |> Enum.with_index()
     |> Enum.map(fn {req, slot} ->
       case fetch_up!(block, slot) do
-        {{_type, meta}, _} ->
-          Map.merge(req, meta)
+        {type, _} ->
+          Map.merge(req, Type.get_meta(type))
       end
     end)
   end
 
   if Mix.env() == :test do
     defp check_types(block) do
-      Enum.each(block.slots, fn
-        {slot, type} ->
-          if !Clr.Type.valid?(type) do
-            IO.puts([
-              IO.ANSI.red(),
-              "invalid type detected at slot #{slot}: #{inspect(type)}",
-              IO.ANSI.reset()
-            ])
-
-            System.halt(1)
-          end
-      end)
+      #Enum.each(block.slots, fn
+      #  {slot, type} ->
+      #    if !Clr.Type.valid?(type) do
+      #      IO.puts([
+      #        IO.ANSI.red(),
+      #        "invalid type detected at slot #{slot}: #{inspect(type)}",
+      #        IO.ANSI.reset()
+      #      ])
+#
+      #      System.halt(1)
+      #    end
+      #end)
 
       block
     end
@@ -95,8 +95,6 @@ defmodule Clr.Block do
   # instruction to analysis.
   defp analyze_instruction({{slot, mode}, %always{} = instruction}, block)
        when always in @always or mode == :keep do
-    #{block, slot} |> dbg(limit: 25)
-
     instruction
     |> Instruction.analyze(slot, block)
     |> check_types
@@ -107,8 +105,12 @@ defmodule Clr.Block do
 
   # general block operations
 
-  def put_type(block, line, type, meta \\ []) do
-    %{block | slots: Map.put(block.slots, line, Type.put_meta(type, meta))}
+  def put_type(block, line, type, meta \\ nil) do
+    if meta do
+      %{block | slots: Map.put(block.slots, line, Type.put_meta(type, meta))}
+    else
+      %{block | slots: Map.put(block.slots, line, type)}
+    end
   end
 
   def put_meta(block, line, meta) do

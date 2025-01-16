@@ -4,6 +4,8 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
   import Clr.Air.Lvalue
 
+  setup(do: {:ok, empty_map: %{}})
+
   describe "debug instructions" do
     alias Clr.Air.Instruction.DbgStmt
 
