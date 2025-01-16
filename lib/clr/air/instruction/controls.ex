@@ -3,12 +3,13 @@ defmodule Clr.Air.Instruction.Controls do
   require Clr.Air
 
   Clr.Air.import(
-    ~w[argument cs slotref lparen rparen type lvalue literal fn_literal rbrack lbrack clobbers space codeblock]a
+    ~w[argument cs slotref lparen rparen type lvalue literal fn_literal rbrack lbrack clobbers space codeblock
+      codeblock_clobbers fatarrow elision newline]a
   )
 
   Pegasus.parser_from_string(
     """
-    controls <- return / block / loop / repeat / br / frame_addr / call
+    controls <- return / block / loop / repeat / br / frame_addr / call / cond_br / switch_br
     """,
     controls: [export: true]
   )
@@ -273,5 +274,107 @@ defmodule Clr.Air.Instruction.Controls do
       [fun | args] ->
         {rest, [%Call{fn: fun, args: args}], context}
     end
+  end
+
+  defmodule CondBr do
+    defstruct [:cond, :true_branch, :false_branch]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    cond_br <- 'cond_br' lparen slotref cs branch cs branch rparen
+
+    branch <- branchtype space codeblock_clobbers
+    branchtype <- likelypoi / unlikelypoi / coldpoi / likely / unlikely / cold / poi 
+
+    poi <- 'poi'
+    likely <- 'likely'
+    unlikely <- 'unlikely'
+    cold <- 'cold'
+    likelypoi <- 'likely poi'
+    unlikelypoi <- 'unlikely poi'
+    coldpoi <- 'cold poi'
+    """,
+    cond_br: [export: true, post_traverse: :cond_br],
+    poi: [token: :poi],
+    likely: [token: :likely],
+    cold: [token: :cold],
+    likelypoi: [token: :likelypoi],
+    coldpoi: [token: :coldpoi],
+    unlikely: [token: :unlikely],
+    unlikelypoi: [token: :unlikelypoi]
+  )
+
+  def cond_br(
+        rest,
+        [false_branch, _false_type, true_branch, _true_type, slotref, "cond_br"],
+        context,
+        _slot,
+        _bytes
+      ) do
+    {rest, [%CondBr{cond: slotref, true_branch: true_branch, false_branch: false_branch}],
+     context}
+  end
+
+  defmodule SwitchBr do
+    defstruct [:test, :cases]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    switch_br <- switch_br_str lparen slotref (cs switch_case)* (cs else_case)? (newline space*)? rparen
+
+    switch_case <- lbrack case_value (cs case_value)* rbrack (space modifier)? space fatarrow space codeblock_clobbers 
+    case_value <- range / literal / lvalue
+    else_case <- else (space modifier)? space fatarrow space codeblock_clobbers
+
+    range <- (literal / lvalue) elision (literal / lvalue)
+
+    modifier <- cold / unlikely
+
+    switch_br_str <- 'switch_br'
+    else <- 'else'
+
+    unlikely <- '.unlikely'
+    cold <- '.cold'
+    """,
+    switch_br: [export: true, post_traverse: :switch_br],
+    switch_br_str: [ignore: true],
+    else: [token: :else],
+    switch_case: [post_traverse: :switch_case],
+    else_case: [post_traverse: :else_case],
+    cold: [token: :cold],
+    unlikely: [token: :unlikely]
+  )
+
+  defp switch_br(rest, args, context, _slot, _bytes) do
+    case Enum.reverse(args) do
+      [test | cases] ->
+        {rest, [%SwitchBr{test: test, cases: Map.new(cases)}], context}
+    end
+  end
+
+  @modifiers ~w[cold unlikely]a
+
+  defp switch_case(rest, [codeblock, modifier | compares], context, _slot, _bytes)
+       when modifier in @modifiers do
+    {rest, [{compares, codeblock}], context}
+  end
+
+  defp switch_case(rest, [codeblock, rhs, :..., lhs], context, _slot, _bytes) do
+    {rest, [{{:range, lhs, rhs}, codeblock}], context}
+  end
+
+  defp switch_case(rest, [codeblock | compares], context, _slot, _bytes) do
+    {rest, [{compares, codeblock}], context}
+  end
+
+  defp else_case(rest, [codeblock, modifier, :else], context, _slot, _bytes)
+       when modifier in @modifiers do
+    {rest, [{:else, codeblock}], context}
+  end
+
+  defp else_case(rest, [codeblock, :else], context, _slot, _bytes) do
+    {rest, [{:else, codeblock}], context}
   end
 end

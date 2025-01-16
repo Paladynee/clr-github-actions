@@ -106,4 +106,41 @@ defmodule ClrTest.AirParsers.ControlsTest do
                )
     end
   end
+
+  describe "cond_br" do
+    alias Clr.Air.Instruction.Controls.CondBr
+
+    test "plain" do
+      assert %CondBr{} =
+               Instruction.parse("""
+               cond_br(%146!, poi {
+                 %147!= unwrap_errunion_payload(void, %107)
+                 %148!= br(%104, @Air.Inst.Ref.void_value)
+               }, poi {
+                 %2! %1!
+                 %149!= unwrap_errunion_err(error{Unexpected,DiskQuota,FileTooBig,InputOutput,NoSpaceLeft,DeviceBusy,InvalidArgument,AccessDenied,BrokenPipe,SystemResources,OperationAborted,NotOpenForWriting,LockViolation,WouldBlock,ConnectionResetByPeer,ProcessNotFound}, %107)
+                 %150!= dbg_stmt(88:64)
+                 %151!= call(<fn () noreturn, (function 'abort')>, [])
+                 %152!= unreach()
+               })
+               """)
+    end
+
+    test "other cond_br features"
+  end
+
+  describe "switch_br" do
+    alias Clr.Air.Instruction.Controls.SwitchBr
+    test "switch_br" do
+      assert %SwitchBr{test: {104, :clobber}} =
+               Instruction.parse("""
+               switch_br(%104!, [<u64, 5>] => {
+                   %120!= br(%109, @Air.Inst.Ref.void_value)
+                 }
+               )
+               """)
+    end
+
+    test "other switch_br features"
+  end
 end

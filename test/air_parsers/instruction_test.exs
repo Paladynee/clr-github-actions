@@ -67,7 +67,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "control flow instructions" do
-    alias Clr.Air.Instruction.CondBr
+    alias Clr.Air.Instruction.Controls.CondBr
 
     test "cond_br without clobbers" do
       assert %CondBr{cond: {104, :clobber}} =
@@ -97,18 +97,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "repeat" do
       assert %Repeat{goto: {23, :keep}} =
                Instruction.parse("repeat(%23)")
-    end
-
-    alias Clr.Air.Instruction.SwitchBr
-
-    test "basic switch" do
-      assert %SwitchBr{test: {104, :clobber}} =
-               Instruction.parse("""
-               switch_br(%104!, [<u64, 5>] => {
-                   %120!= br(%109, @Air.Inst.Ref.void_value)
-                 }
-               )
-               """)
     end
 
     alias Clr.Air.Instruction.Unreach

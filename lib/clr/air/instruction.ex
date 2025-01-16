@@ -7,8 +7,8 @@ defprotocol Clr.Air.Instruction do
 after
   @modules Map.new(
              ~w[dbg_stmt dbg_arg_inline dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly 
-                arg ptr_elem_val alloc store load optional_payload cond_br  
-                slice slice_ptr struct_field_val switch_br int_from_ptr 
+                arg ptr_elem_val alloc store load optional_payload  
+                slice slice_ptr struct_field_val int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
                 ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
                 unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
@@ -45,7 +45,7 @@ after
     instruction <- # debug
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
-                   cond_br / switch_br / unreach / ret / ret_safe /
+                   unreach / ret / ret_safe /
                    ret_load / try / try_ptr / try_cold / 
                    # pointer operations
                    ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
