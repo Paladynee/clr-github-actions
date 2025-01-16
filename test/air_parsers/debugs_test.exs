@@ -7,4 +7,6 @@ defmodule ClrTest.AirParsers.DebugsTest do
   test "trap" do
     assert %Trap{} = Instruction.parse("trap()")
   end
+
+  test "breakpoint"
 end

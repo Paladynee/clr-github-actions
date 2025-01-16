@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    controls <- return / block / loop / repeat / br / frame_addr / call / cond_br / switch_br
+    controls <- return / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / try / try_ptr
     """,
     controls: [export: true]
   )
@@ -376,5 +376,66 @@ defmodule Clr.Air.Instruction.Controls do
 
   defp else_case(rest, [codeblock, :else], context, _slot, _bytes) do
     {rest, [{:else, codeblock}], context}
+  end
+
+  defmodule Try do
+    defstruct [:src, :error_code, clobbers: [], ptr: false, cold: false]
+
+    use Clr.Air.Instruction
+    alias Clr.Block
+
+    def analyze(%{src: {src, _}}, slot, block) do
+      {{:errorable, _, payload, _meta}, block} = Block.fetch_up!(block, src)
+      # for now.  Ultimately, we will need to walk the analysis on this, too.
+      Block.put_type(block, slot, payload)
+    end
+  end
+
+  Pegasus.parser_from_string(
+    """
+    try <- try_str cold_mod? lparen slotref cs codeblock_clobbers (space clobbers)? rparen
+
+    try_str <- 'try'
+    cold_mod <- '_cold'
+    """,
+    try: [post_traverse: :try],
+    try_str: [ignore: true],
+    cold_mod: [token: :cold]
+  )
+
+  defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
+    {rest, [%Try{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}], context}
+  end
+
+  defp cold?([:cold]), do: true
+  defp cold?([]), do: false
+
+  defmodule TryPtr do
+    defstruct [:src, :type, :error_code, clobbers: [], cold: false]
+
+    use Clr.Air.Instruction
+    alias Clr.Block
+
+    def analyze(%{src: {src, _}}, slot, block) do
+      {{:errorable, _, payload, _meta}, block} = Block.fetch_up!(block, src)
+      # for now.  Ultimately, we will need to walk the analysis on this, too.
+      Block.put_type(block, slot, payload)
+    end
+  end
+
+  Pegasus.parser_from_string(
+    """
+    # NB: cold_mod is in the previous parser
+
+    try_ptr <- try_ptr_str cold_mod? lparen slotref cs codeblock_clobbers (space clobbers)? rparen
+
+    try_ptr_str <- 'try_ptr'
+    """,
+    try: [post_traverse: :try],
+    try_ptr_str: [ignore: true]
+  )
+
+  defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
+    {rest, [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}], context}
   end
 end

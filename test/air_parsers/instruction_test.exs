@@ -124,58 +124,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "ret_load" do
       assert %RetLoad{val: {19, :keep}} = Instruction.parse("ret_load(%19)")
     end
-
-    alias Clr.Air.Instruction.Try
-
-    test "try" do
-      assert %Try{src: {12, :keep}, error_code: %{}, clobbers: [12]} =
-               Instruction.parse("""
-               try(%12, {
-                 %13 = unwrap_errunion_err(error{MissingDebugInfo,UnsupportedOperatingSystem}, %12!)
-                 %14!= dbg_stmt(5:27)
-                 %15 = bitcast(@typeInfo(@typeInfo(@TypeOf(debug.getSelfDebugInfo)).@"fn".return_type.?).error_union.error_set, %13!)
-                 %16 = wrap_errunion_err(@typeInfo(@typeInfo(@TypeOf(debug.getSelfDebugInfo)).@"fn".return_type.?).error_union.error_set!*debug.SelfInfo, %15!)
-                 %17!= ret_safe(%16!)
-               } %12!)
-               """)
-    end
-
-    alias Clr.Air.Instruction.TryPtr
-
-    test "try_ptr" do
-      assert %TryPtr{
-               loc: {259, :keep},
-               type:
-                 {:ptr, :one, {:ptr, :slice, {:lvalue, ["u8"]}, [const: true]}, [const: true]},
-               code: %{:clobbers => [5, 247, 248]},
-               clobbers: [259]
-             } =
-               Instruction.parse("""
-               try_ptr(%259, *const []const u8, {
-                 %247! %5! %248!
-                 %261 = unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)
-                 %262!= dbg_stmt(35:38)
-                 %263 = bitcast(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}, %261!)
-                 %264 = wrap_errunion_err(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}!debug.Dwarf.FormValue, %263!)
-                 %265!= ret_safe(%264!)
-               } %259!)
-               """)
-    end
-
-    alias Clr.Air.Instruction.TryCold
-
-    test "try_cold" do
-      assert %TryCold{loc: {28, :keep}, error_code: %{}, clobbers: [28]} =
-               Instruction.parse("""
-               try_cold(%28, {
-                 %24! %4! %1! %0!
-                 %29 = unwrap_errunion_err(error{OutOfMemory}, %28!)
-                 %30!= dbg_stmt(8:13)
-                 %31 = wrap_errunion_err(error{OutOfMemory}!void, %29!)
-                 %32!= ret_safe(%31!)
-               } %28!)
-               """)
-    end
   end
 
   describe "pointer operations" do

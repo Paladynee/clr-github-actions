@@ -14,12 +14,12 @@ after
                 unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
                 intcast memset memcpy 
                 wrap_errunion_payload wrap_errunion_err array_to_slice ret_load
-                optional_payload_ptr try set_union_tag get_union_tag
+                optional_payload_ptr set_union_tag get_union_tag
                 errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
                 int_from_bool error_name trunc
                 memset_safe ptr_slice_ptr_ptr
-                cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                try_cold casts debugs controls pointers maths tests atomics],
+                cmp_vector reduce unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
+                casts debugs controls pointers maths tests atomics],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -46,7 +46,7 @@ after
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
                    unreach / ret / ret_safe /
-                   ret_load / try / try_ptr / try_cold / 
+                   ret_load /
                    # pointer operations
                    ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
