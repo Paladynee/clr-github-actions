@@ -17,7 +17,7 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    return <- ret_ptr
+    return <- ret_ptr / ret_addr
     ret_ptr <- 'ret_ptr' lparen type rparen
     """,
     ret_ptr: [export: true, post_traverse: :ret_ptr]
@@ -29,6 +29,23 @@ defmodule Clr.Air.Instruction.Controls do
 
   def ret_ptr(rest, [value, "ret_ptr"], context, _slot, _bytes) do
     {rest, [%RetPtr{type: value}], context}
+  end
+
+  defmodule RetAddr do
+    defstruct []
+  end
+
+  Pegasus.parser_from_string(
+    """
+    ret_addr <- ret_addr_str
+    ret_addr_str <- 'ret_addr()'
+    """,
+    ret_addr: [post_traverse: :ret_addr],
+    ret_addr_str: [ignore: true]
+  )
+
+  def ret_addr(rest, [], context, _, _) do
+    {rest, [%RetAddr{}], context}
   end
 
   defmodule Block do
@@ -73,7 +90,8 @@ defmodule Clr.Air.Instruction.Controls do
     defstruct [:goto]
   end
 
-  Pegasus.parser_from_string("""
+  Pegasus.parser_from_string(
+    """
     repeat <- repeat_str lparen slotref rparen
     repeat_str <- 'repeat'
     """,
@@ -101,5 +119,4 @@ defmodule Clr.Air.Instruction.Controls do
   def br(rest, [value, goto], context, _, _) do
     {rest, [%Br{goto: goto, value: value}], context}
   end
-
 end

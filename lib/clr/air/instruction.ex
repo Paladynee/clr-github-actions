@@ -6,7 +6,7 @@ defprotocol Clr.Air.Instruction do
   def analyze(instruction, slot, state)
 after
   @modules Map.new(
-             ~w[dbg_stmt dbg_arg_inline dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly trap 
+             ~w[dbg_stmt dbg_arg_inline dbg_inline_block dbg_var_val dbg_var_ptr dbg_empty_stmt assembly 
                 arg ptr_elem_val alloc store load optional_payload cond_br  
                 slice slice_ptr struct_field_val switch_br call int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
@@ -19,7 +19,7 @@ after
                 int_from_bool error_name trunc
                 memset_safe frame_addr ptr_slice_ptr_ptr
                 cmp_vector reduce try_ptr unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                try_cold casts controls pointers maths tests atomics],
+                try_cold casts debugs controls pointers maths tests atomics],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -45,8 +45,8 @@ after
     instruction <- # debug
                    dbg_stmt / dbg_inline_block / dbg_arg_inline / dbg_var_val / dbg_var_ptr / dbg_empty_stmt / 
                    # control flow
-                   trap / cond_br / switch_br / call / unreach / ret / ret_safe /
-                   ret_addr / ret_load / try / try_ptr / try_cold / 
+                   cond_br / switch_br / call / unreach / ret / ret_safe /
+                   ret_load / try / try_ptr / try_cold / 
                    # pointer operations
                    ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
@@ -66,6 +66,8 @@ after
                    optional_payload / 
                    # names
                    tag_name / error_name /
+                   # debug operations
+                   debugs /
                    # casting operations
                    casts /
                    # control operations

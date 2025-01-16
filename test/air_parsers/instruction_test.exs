@@ -67,12 +67,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "control flow instructions" do
-    alias Clr.Air.Instruction.Trap
-
-    test "trap" do
-      assert %Trap{} = Instruction.parse("trap()")
-    end
-
     alias Clr.Air.Instruction.CondBr
 
     test "cond_br without clobbers" do

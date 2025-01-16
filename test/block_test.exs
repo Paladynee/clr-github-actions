@@ -30,7 +30,7 @@ defmodule ClrTest.BlockTest do
     test "can be used to add metadata to an existing slot" do
       slots = %{47 => {:u, 32, %{foo: :bar}}}
 
-      %Function{name: ~l"foo.bar"}
+      assert %{slots: ^slots} = %Function{name: ~l"foo.bar"}
       |> Block.new([])
       |> Block.put_type(47, {:u, 32, %{}})
       |> Block.put_meta(47, foo: :bar)
