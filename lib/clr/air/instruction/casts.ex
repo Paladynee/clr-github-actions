@@ -1,6 +1,8 @@
 defmodule Clr.Air.Instruction.Casts do
+  alias Clr.Air
+
   require Pegasus
-  require Clr.Air
+  require Air
 
   Pegasus.parser_from_string(
     """
@@ -23,7 +25,7 @@ defmodule Clr.Air.Instruction.Casts do
     end
   end
 
-  Clr.Air.import(~w[argument lvalue type slotref cs lparen rparen literal]a)
+  Air.import(~w[argument lvalue type slotref cs lparen rparen literal]a)
 
   Pegasus.parser_from_string(
     """
@@ -39,36 +41,14 @@ defmodule Clr.Air.Instruction.Casts do
   end
 
   defmodule IntFromPtr do
-    defstruct [:val]
+    defstruct [:src]
   end
 
-  Pegasus.parser_from_string(
-    """
-    int_from_ptr <- int_from_ptr_str lparen (literal / slotref) rparen
-    int_from_ptr_str <- 'int_from_ptr'
-    """,
-    int_from_ptr: [post_traverse: :int_from_ptr],
-    int_from_ptr_str: [ignore: true]
-  )
-
-  def int_from_ptr(rest, [value], context, _slot, _bytes) do
-    {rest, [%IntFromPtr{val: value}], context}
-  end
+  Air.un_op(:int_from_ptr, IntFromPtr)
 
   defmodule IntFromBool do
-    defstruct [:val]
+    defstruct [:src]
   end
 
-  Pegasus.parser_from_string(
-    """
-    int_from_bool <- int_from_bool_str lparen (literal / slotref) rparen
-    int_from_bool_str <- 'int_from_bool'
-    """,
-    int_from_bool: [post_traverse: :int_from_bool],
-    int_from_bool_str: [ignore: true]
-  )
-
-  def int_from_bool(rest, [value], context, _slot, _bytes) do
-    {rest, [%IntFromBool{val: value}], context}
-  end
+  Air.un_op(:int_from_bool, IntFromBool)
 end

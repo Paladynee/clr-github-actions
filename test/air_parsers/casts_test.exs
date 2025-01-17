@@ -14,7 +14,7 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction.Casts.IntFromPtr
 
   test "int_from_ptr" do
-    assert %IntFromPtr{val: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, ~l"__init_array_end"}}}} =
+    assert %IntFromPtr{src: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, ~l"__init_array_end"}}}} =
              Instruction.parse(
                "int_from_ptr(<[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_end))>)"
              )
@@ -23,6 +23,6 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction.Casts.IntFromBool
 
   test "int_from_bool" do
-    assert %IntFromBool{val: {218, :clobber}} = Instruction.parse("int_from_bool(%218!)")
+    assert %IntFromBool{src: {218, :clobber}} = Instruction.parse("int_from_bool(%218!)")
   end
 end
