@@ -7,7 +7,7 @@ defprotocol Clr.Air.Instruction do
 after
   @modules Map.new(
              ~w[assembly 
-                arg ptr_elem_val alloc store load optional_payload  
+                arg ptr_elem_val alloc store optional_payload  
                 slice slice_ptr struct_field_val int_from_ptr 
                 slice_len slice_elem_val store_safe unreach aggregate_init
                 ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
@@ -19,7 +19,7 @@ after
                 int_from_bool error_name trunc
                 memset_safe ptr_slice_ptr_ptr
                 cmp_vector reduce unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
-                casts dbg controls pointers maths tests atomics],
+                casts dbg controls pointers maths tests atomics mem],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -51,8 +51,10 @@ after
                    ptr_elem_ptr / ptr_slice_ptr_ptr / ptr_slice_len_ptr / 
                    struct_field_val / array_elem_val /
                    # memory operations
-                   alloc / store / load / store_safe /
+                   alloc / store / store_safe /
                    memset / memcpy / memset_safe /
+                   # memory operations
+                   mem /
                    # inits
                    union_init / aggregate_init / 
                    # casting operations

@@ -74,11 +74,14 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   end
 
   describe "the load instruction" do
+
+    alias Clr.Air.Instruction.Mem.Load
+
     test "puts down the type of the pointer in the slot", %{empty_map: empty_map} do
       assert %{slots: %{0 => {:u, 32, ^empty_map}}} =
                run_analysis(
                  %{
-                   {0, :keep} => %Clr.Air.Instruction.Load{type: ~l"u32", loc: {47, :keep}}
+                   {0, :keep} => %Load{type: ~l"u32", loc: {47, :keep}}
                  },
                  [],
                  %{47 => {:ptr, :one, {:u, 32, %{}}, %{}}}

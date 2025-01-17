@@ -100,7 +100,7 @@ defmodule ClrTest.AirParsers.TestsTest do
                Instruction.parse("is_non_null_ptr(%95!)")
     end
 
-    test "is_err" do 
+    test "is_err" do
       assert %Is{op: :err, operand: {95, :clobber}} =
                Instruction.parse("is_err(%95!)")
     end

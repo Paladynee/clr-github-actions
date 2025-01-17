@@ -195,12 +195,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("store(%19, @Air.Inst.Ref.zero_usize)")
     end
 
-    alias Clr.Air.Instruction.Load
-
-    test "load" do
-      assert %Load{type: {:ptr, :many, ~l"usize", []}, loc: {19, :keep}} =
-               Instruction.parse("load([*]usize, %19)")
-    end
 
     alias Clr.Air.Instruction.OptionalPayload
 
