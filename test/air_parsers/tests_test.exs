@@ -80,14 +80,19 @@ defmodule ClrTest.AirParsers.TestsTest do
   describe "is operations" do
     alias Clr.Air.Instruction.Tests.Is
 
+    test "is_null" do
+      assert %Is{op: :null, operand: {95, :clobber}} =
+               Instruction.parse("is_null(%95!)")
+    end
+
     test "is_non_null" do
       assert %Is{op: :non_null, operand: {95, :clobber}} =
                Instruction.parse("is_non_null(%95!)")
     end
 
-    test "is_non_err" do
-      assert %Is{op: :non_err, operand: {95, :clobber}} =
-               Instruction.parse("is_non_err(%95!)")
+    test "is_null_ptr" do
+      assert %Is{op: :null_ptr, operand: {95, :clobber}} =
+               Instruction.parse("is_null_ptr(%95!)")
     end
 
     test "is_non_null_ptr" do
@@ -95,9 +100,24 @@ defmodule ClrTest.AirParsers.TestsTest do
                Instruction.parse("is_non_null_ptr(%95!)")
     end
 
-    test "is_null" do
-      assert %Is{op: :null, operand: {95, :clobber}} =
-               Instruction.parse("is_null(%95!)")
+    test "is_err" do 
+      assert %Is{op: :err, operand: {95, :clobber}} =
+               Instruction.parse("is_err(%95!)")
+    end
+
+    test "is_non_err" do
+      assert %Is{op: :non_err, operand: {95, :clobber}} =
+               Instruction.parse("is_non_err(%95!)")
+    end
+
+    test "is_err_ptr" do
+      assert %Is{op: :err_ptr, operand: {95, :clobber}} =
+               Instruction.parse("is_err_ptr(%95!)")
+    end
+
+    test "is_non_err_ptr" do
+      assert %Is{op: :non_err_ptr, operand: {95, :clobber}} =
+               Instruction.parse("is_non_err_ptr(%95!)")
     end
   end
 

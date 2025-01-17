@@ -10,7 +10,7 @@ defmodule Clr.Air.Instruction.Dbg do
 
   Pegasus.parser_from_string(
     """
-    dbg <- trap / dbg_stmt / dbg_empty_stmt / dbg_inline_block / dbg_var_ptr
+    dbg <- trap / dbg_stmt / dbg_empty_stmt / dbg_inline_block / dbg_var_ptr / dbg_var_val / dbg_arg_inline
     """,
     dbg: [export: true]
   )

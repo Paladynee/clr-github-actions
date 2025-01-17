@@ -68,19 +68,27 @@ defmodule Clr.Air.Instruction.Tests do
 
     is_prefix <- 'is_'
 
-    is_op <- non_err / non_null_ptr / non_null / null
+    is_op <- err_ptr / err / non_err_ptr / non_err / non_null_ptr / non_null / null_ptr / null
 
-    non_null <- 'non_null'
-    non_err <- 'non_err'
-    non_null_ptr <- 'non_null_ptr'
     null <- 'null'
+    non_null <- 'non_null'
+    null_ptr <- 'null_ptr'
+    non_null_ptr <- 'non_null_ptr'
+    err <- 'err'
+    non_err <- 'non_err'
+    err_ptr <- 'err_ptr'
+    non_err_ptr <- 'non_err_ptr'
     """,
     is_instruction: [post_traverse: :is_instruction],
     is_prefix: [ignore: true],
+    null: [token: :null],
     non_null: [token: :non_null],
-    non_err: [token: :non_err],
+    null_ptr: [token: :null_ptr],
     non_null_ptr: [token: :non_null_ptr],
-    null: [token: :null]
+    err: [token: :err],
+    non_err: [token: :non_err],
+    err_ptr: [token: :err_ptr],
+    non_err_ptr: [token: :non_err_ptr]
   )
 
   def is_instruction(rest, [operand, op], context, _slot, _bytes) do
