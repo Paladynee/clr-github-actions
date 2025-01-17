@@ -74,7 +74,6 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   end
 
   describe "the load instruction" do
-
     alias Clr.Air.Instruction.Mem.Load
 
     test "puts down the type of the pointer in the slot", %{empty_map: empty_map} do

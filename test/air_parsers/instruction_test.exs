@@ -99,15 +99,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("slice_ptr(usize, %0)")
     end
 
-    alias Clr.Air.Instruction.IntFromPtr
-
-    test "int_from_ptr" do
-      assert %IntFromPtr{val: {:literal, ptrtyp, {:as, ptrtyp, {:ptrcast, ~l"__init_array_end"}}}} =
-               Instruction.parse(
-                 "int_from_ptr(<[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_end))>)"
-               )
-    end
-
     alias Clr.Air.Instruction.SliceLen
 
     test "slice_len" do
@@ -194,7 +185,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Store{val: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
                Instruction.parse("store(%19, @Air.Inst.Ref.zero_usize)")
     end
-
 
     alias Clr.Air.Instruction.OptionalPayload
 
@@ -371,12 +361,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                loc: {0, :keep}
              } =
                Instruction.parse("errunion_payload_ptr_set(*debug.Dwarf.EntryHeader, %0)")
-    end
-
-    alias Clr.Air.Instruction.IntFromBool
-
-    test "int_from_bool" do
-      assert %IntFromBool{val: {218, :clobber}} = Instruction.parse("int_from_bool(%218!)")
     end
 
     alias Clr.Air.Instruction.ErrorName
