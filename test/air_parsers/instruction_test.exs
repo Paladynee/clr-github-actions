@@ -6,60 +6,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
   setup(do: {:ok, empty_map: %{}})
 
-  describe "debug instructions" do
-    alias Clr.Air.Instruction.DbgInlineBlock
-
-    test "dbg_inline_block" do
-      assert %DbgInlineBlock{
-               type: ~l"void",
-               what: {:literal, {:fn, _, _, _}, {:function, "isRISCV"}},
-               code: %{}
-             } =
-               Instruction.parse("""
-               dbg_inline_block(void, <fn (Target.Cpu.Arch) callconv(.@"inline") bool, (function 'isRISCV')>, {
-                 %7!= dbg_stmt(2:13)
-               })
-               """)
-    end
-
-    test "dbg_inline_block with clobbers" do
-      assert %DbgInlineBlock{} =
-               Instruction.parse("""
-               dbg_inline_block(void, <fn (usize, [*][*:0]u8, [][*:0]u8) callconv(.@"inline") u8, (function 'callMainWithArgs')>, {
-                 %240!= dbg_arg_inline(%2, "argc")
-               } %8! %2! %54!)
-               """)
-    end
-
-    alias Clr.Air.Instruction.DbgArgInline
-
-    test "dbg_arg_inline" do
-      assert %DbgArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}}, key: "arch"} =
-               Instruction.parse("dbg_arg_inline(<Target.Cpu.Arch, .x86_64>, \"arch\")")
-    end
-
-    alias Clr.Air.Instruction.DbgVarVal
-
-    test "dbg_var_val" do
-      assert %DbgVarVal{src: {0, :keep}, val: "argc"} =
-               Instruction.parse(~S/dbg_var_val(%0, "argc")/)
-
-      # more complex case
-
-      assert %DbgVarVal{} =
-               Instruction.parse(
-                 ~S/dbg_var_val(<?[*]*const fn () callconv(.c) void, @as([*]*const fn () callconv(.c) void, @ptrCast(__init_array_start))>, "opt_init_array_start")/
-               )
-    end
-
-    alias Clr.Air.Instruction.DbgVarPtr
-
-    test "dbg_var_ptr" do
-      assert %DbgVarPtr{src: {0, :keep}, val: "envp_count"} =
-               Instruction.parse(~S/dbg_var_ptr(%0, "envp_count")/)
-    end
-  end
-
   describe "control flow instructions" do
     alias Clr.Air.Instruction.Controls.CondBr
 
