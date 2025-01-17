@@ -36,6 +36,7 @@ defmodule Clr.Air do
 
   defmacro un_op(op, module) do
     op_str = :"#{op}_str"
+
     parser = """
     #{op} <- #{op_str} lparen argument rparen
     #{op_str} <- '#{op}'
@@ -48,12 +49,33 @@ defmodule Clr.Air do
 
     quote do
       Pegasus.parser_from_string(unquote(parser), unquote(opts))
-    
+
       def unquote(op)(rest, [value], context, _slot, _bytes) do
         {rest, [%unquote(module){src: value}], context}
       end
     end
-    |> tap(&(&1 |> Macro.to_string |> IO.puts))
+  end
+
+  defmacro ty_op(op, module) do
+    op_str = :"#{op}_str"
+
+    opts = [
+      {op, post_traverse: op},
+      {op_str, ignore: true}
+    ]
+
+    parser = """
+    #{op} <- #{op_str} lparen type cs argument rparen
+    #{op_str} <- '#{op}'
+    """
+
+    quote do
+      Pegasus.parser_from_string(unquote(parser), unquote(opts))
+
+      def unquote(op)(rest, [slot, type], context, _slot, _bytes) do
+        {rest, [%unquote(module){type: type, src: slot}], context}
+      end
+    end
   end
 
   alias Clr.Air.Instruction

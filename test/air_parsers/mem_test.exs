@@ -7,7 +7,7 @@ defmodule ClrTest.AirParsers.MemTest do
   alias Clr.Air.Instruction.Mem.Load
 
   test "load" do
-    assert %Load{type: {:ptr, :many, ~l"usize", []}, loc: {19, :keep}} =
+    assert %Load{type: {:ptr, :many, ~l"usize", []}, src: {19, :keep}} =
              Instruction.parse("load([*]usize, %19)")
   end
 end

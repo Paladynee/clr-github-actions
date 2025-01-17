@@ -27,18 +27,11 @@ defmodule Clr.Air.Instruction.Casts do
 
   Air.import(~w[argument lvalue type slotref cs lparen rparen literal]a)
 
-  Pegasus.parser_from_string(
-    """
-    bitcast <- bitcast_str lparen type cs argument rparen
-    bitcast_str <- 'bitcast'
-    """,
-    bitcast: [post_traverse: :bitcast],
-    bitcast_str: [ignore: true]
-  )
-
-  def bitcast(rest, [slot, type], context, _slot, _bytes) do
-    {rest, [%Bitcast{type: type, src: slot}], context}
+  defmodule Bitcast do
+    defstruct [:type, :src]
   end
+
+  Air.ty_op(:bitcast, Bitcast)
 
   defmodule IntFromPtr do
     defstruct [:src]

@@ -80,7 +80,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
       assert %{slots: %{0 => {:u, 32, ^empty_map}}} =
                run_analysis(
                  %{
-                   {0, :keep} => %Load{type: ~l"u32", loc: {47, :keep}}
+                   {0, :keep} => %Load{type: ~l"u32", src: {47, :keep}}
                  },
                  [],
                  %{47 => {:ptr, :one, {:u, 32, %{}}, %{}}}

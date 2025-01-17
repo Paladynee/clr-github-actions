@@ -53,7 +53,7 @@ defmodule Clr.Air.Instruction.Maths do
     shl <- 'shl'
     bit_and <- 'bit_and'
     bit_or <- 'bit_or'
-    xor <- 'xor'
+    xor <- 'xor'    
     bool_and <- 'bool_and'
     bool_or <- 'bool_or'
 
