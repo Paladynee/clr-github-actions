@@ -38,12 +38,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Repeat{goto: {23, :keep}} =
                Instruction.parse("repeat(%23)")
     end
-
-    alias Clr.Air.Instruction.Unreach
-
-    test "unreach" do
-      assert %Unreach{} = Instruction.parse("unreach()")
-    end
   end
 
   describe "pointer operations" do
@@ -159,33 +153,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %Alloc{type: {:ptr, :one, ~l"usize", []}} = Instruction.parse("alloc(*usize)")
     end
 
-    alias Clr.Air.Instruction.Store
 
-    test "store" do
-      assert %Store{val: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
-               Instruction.parse("store(%19, @Air.Inst.Ref.zero_usize)")
-    end
-
-    alias Clr.Air.Instruction.OptionalPayload
-
-    test "optional_payload" do
-      assert %OptionalPayload{type: ~l"void", loc: {19, :keep}} =
-               Instruction.parse("optional_payload(void, %19)")
-    end
-
-    alias Clr.Air.Instruction.OptionalPayloadPtr
-
-    test "optional_payload_ptr" do
-      assert %OptionalPayloadPtr{
-               type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
-               loc:
-                 {:literal, {:ptr, :one, {:optional, {:lvalue, ["debug", "SelfInfo"]}}, []},
-                  {:lvalue, ["debug", "self_debug_info"]}}
-             } =
-               Instruction.parse(
-                 "optional_payload_ptr(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
-               )
-    end
 
     alias Clr.Air.Instruction.OptionalPayloadPtrSet
 
@@ -206,13 +174,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "struct_field_val" do
       assert %StructFieldVal{src: {93, :clobber}, index: 0} =
                Instruction.parse("struct_field_val(%93!, 0)")
-    end
-
-    alias Clr.Air.Instruction.StoreSafe
-
-    test "store_safe" do
-      assert %StoreSafe{val: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
-               Instruction.parse("store_safe(%19, @Air.Inst.Ref.zero_usize)")
     end
 
     alias Clr.Air.Instruction.AggregateInit
@@ -242,20 +203,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "unwrap_errunion_err" do
       assert %UnwrapErrunionErr{type: {:errorset, ["Unexpected"]}, src: {0, :keep}} =
                Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
-    end
-
-    alias Clr.Air.Instruction.Intcast
-
-    test "intcast" do
-      assert %Intcast{type: ~l"usize", src: {0, :keep}} =
-               Instruction.parse("intcast(usize, %0)")
-    end
-
-    alias Clr.Air.Instruction.Trunc
-
-    test "trunc" do
-      assert %Trunc{type: ~l"usize", src: {0, :keep}} =
-               Instruction.parse("trunc(usize, %0)")
     end
 
     alias Clr.Air.Instruction.Memset

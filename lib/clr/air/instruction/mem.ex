@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.Mem do
 
   Pegasus.parser_from_string(
     """
-    mem <- load
+    mem <- load / store
     """,
     mem: [export: true]
   )
@@ -41,4 +41,23 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   Air.ty_op(:load, Load)
+
+  defmodule Store do
+    defstruct [:loc, :src]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    store <- store_str safe? lparen (slotref / literal) cs argument rparen
+    store_str <- 'store'
+    safe <- '_safe'
+    """,
+    store: [post_traverse: :store],
+    store_str: [ignore: true],
+    safe: [ignore: true]
+  )
+
+  def store(rest, [src, loc], context, _slot, _bytes) do
+    {rest, [%Store{src: src, loc: loc}], context}
+  end
 end

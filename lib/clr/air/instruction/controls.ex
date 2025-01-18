@@ -9,7 +9,8 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    controls <- ret / ret_info / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / try / try_ptr
+    controls <- ret / ret_info / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / 
+      try / try_ptr / unreach
     """,
     controls: [export: true]
   )
@@ -492,5 +493,22 @@ defmodule Clr.Air.Instruction.Controls do
       end
 
     {rest, [%Ret{val: value, mode: mode}], context}
+  end
+
+  defmodule Unreach do
+    defstruct []
+  end
+
+  Pegasus.parser_from_string(
+    """
+    unreach <- unreach_str
+    unreach_str <- 'unreach()'  
+    """,
+    unreach: [post_traverse: :unreach],
+    unreach_str: [ignore: true]
+  )
+
+  def unreach(rest, [], context, _, _) do
+    {rest, [%Unreach{}], context}
   end
 end

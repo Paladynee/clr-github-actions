@@ -226,4 +226,10 @@ defmodule ClrTest.AirParsers.ControlsTest do
       assert %Ret{val: {19, :keep}, mode: :load} = Instruction.parse("ret_load(%19)")
     end
   end
+
+  test "unreach" do
+    alias Clr.Air.Instruction.Controls.Unreach
+
+    assert %Unreach{} = Instruction.parse("unreach()")
+  end
 end

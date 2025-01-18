@@ -6,7 +6,8 @@ defmodule Clr.Air.Instruction.Casts do
 
   Pegasus.parser_from_string(
     """
-    casts <- bitcast / int_from_ptr / int_from_bool
+    casts <- bitcast / int_from_ptr / int_from_bool / intcast / trunc /
+      optional_payload_ptr / optional_payload
     """,
     casts: [export: true]
   )
@@ -44,4 +45,28 @@ defmodule Clr.Air.Instruction.Casts do
   end
 
   Air.un_op(:int_from_bool, IntFromBool)
+
+  defmodule Intcast do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:intcast, Intcast)
+
+  defmodule Trunc do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:trunc, Trunc)
+
+  defmodule OptionalPayload do
+    defstruct [:type, :src] 
+  end
+
+  Air.ty_op(:optional_payload, OptionalPayload)
+
+  defmodule OptionalPayloadPtr do
+    defstruct [:type, :src] 
+  end
+
+  Air.ty_op(:optional_payload_ptr, OptionalPayloadPtr)
 end

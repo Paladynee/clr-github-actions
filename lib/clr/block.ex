@@ -57,7 +57,6 @@ defmodule Clr.Block do
     end)
   end
 
-
   # instructions that are always subject to analysis.
   # generally, any control flow instruction or dbg_stmt instruction must be
   # analyzed.

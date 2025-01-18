@@ -7,16 +7,16 @@ defprotocol Clr.Air.Instruction do
 after
   @modules Map.new(
              ~w[assembly 
-                arg ptr_elem_val alloc store optional_payload  
+                arg ptr_elem_val alloc  
                 slice slice_ptr struct_field_val 
-                slice_len slice_elem_val store_safe unreach aggregate_init
+                slice_len slice_elem_val aggregate_init
                 slice_elem_ptr struct_field_ptr struct_field_ptr_index
                 unwrap_errunion_payload unwrap_errunion_err wrap_optional
-                intcast memset memcpy 
+                memset memcpy 
                 wrap_errunion_payload wrap_errunion_err array_to_slice ret_load
-                optional_payload_ptr set_union_tag get_union_tag
+                set_union_tag get_union_tag
                 errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
-                error_name trunc
+                error_name 
                 memset_safe ptr_slice_ptr_ptr
                 cmp_vector reduce unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
                 casts dbg controls pointers maths tests atomics mem],
@@ -42,27 +42,24 @@ after
   Pegasus.parser_from_string(
     """
     # TODO: reorganize this by category.
-    instruction <- # control flow
-                   unreach /
-                   # pointer operations
+    instruction <- # pointer operations
                    ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
                    ptr_elem_ptr / ptr_slice_ptr_ptr / ptr_slice_len_ptr / 
                    struct_field_val / array_elem_val /
                    # memory operations
-                   alloc / store / store_safe /
+                   alloc /
                    memset / memcpy / memset_safe /
                    # memory operations
                    mem /
                    # inits
                    union_init / aggregate_init / 
                    # casting operations
-                   intcast / array_to_slice / trunc /
+                    array_to_slice / 
                    unwrap_errunion_payload / unwrap_errunion_err /
                    unwrap_errunion_err_ptr / wrap_optional / wrap_errunion_payload /
-                   wrap_errunion_err / optional_payload_ptr / optional_payload_ptr_set /
+                   wrap_errunion_err / optional_payload_ptr_set /
                    get_union_tag / set_union_tag / errunion_payload_ptr_set /
-                   optional_payload / 
                    # names
                    tag_name / error_name /
                    # debug operations
