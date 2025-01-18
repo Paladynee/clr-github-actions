@@ -44,7 +44,6 @@ defmodule Clr.Block do
     |> Enum.reduce(block, &analyze_instruction/2)
     |> flush_awaits
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
-    |> check_types
   end
 
   defp transfer_requirements(reqs, block) do
@@ -58,27 +57,6 @@ defmodule Clr.Block do
     end)
   end
 
-  if Mix.env() == :test do
-    defp check_types(block) do
-      # Enum.each(block.slots, fn
-      #  {slot, type} ->
-      #    if !Clr.Type.valid?(type) do
-      #      IO.puts([
-      #        IO.ANSI.red(),
-      #        "invalid type detected at slot #{slot}: #{inspect(type)}",
-      #        IO.ANSI.reset()
-      #      ])
-      #
-      #      System.halt(1)
-      #    end
-      # end)
-
-      block
-    end
-  else
-    @compile {:inline, check_types: 1}
-    defp check_types(block), do: block
-  end
 
   # instructions that are always subject to analysis.
   # generally, any control flow instruction or dbg_stmt instruction must be
@@ -95,9 +73,7 @@ defmodule Clr.Block do
   # instruction to analysis.
   defp analyze_instruction({{slot, mode}, %always{} = instruction}, block)
        when always in @always or mode == :keep do
-    instruction
-    |> Instruction.analyze(slot, block)
-    |> check_types
+    Instruction.analyze(instruction, slot, block)
   end
 
   # clobbered instructions can be safely ignored.

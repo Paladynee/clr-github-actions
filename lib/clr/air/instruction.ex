@@ -10,8 +10,8 @@ after
                 arg ptr_elem_val alloc store optional_payload  
                 slice slice_ptr struct_field_val 
                 slice_len slice_elem_val store_safe unreach aggregate_init
-                ret slice_elem_ptr struct_field_ptr struct_field_ptr_index
-                unwrap_errunion_payload unwrap_errunion_err ret_safe ret_addr wrap_optional
+                slice_elem_ptr struct_field_ptr struct_field_ptr_index
+                unwrap_errunion_payload unwrap_errunion_err wrap_optional
                 intcast memset memcpy 
                 wrap_errunion_payload wrap_errunion_err array_to_slice ret_load
                 optional_payload_ptr set_union_tag get_union_tag
@@ -43,8 +43,7 @@ after
     """
     # TODO: reorganize this by category.
     instruction <- # control flow
-                   unreach / ret / ret_safe /
-                   ret_load /
+                   unreach /
                    # pointer operations
                    ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
                    slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /

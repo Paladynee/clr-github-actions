@@ -44,26 +44,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     test "unreach" do
       assert %Unreach{} = Instruction.parse("unreach()")
     end
-
-    alias Clr.Air.Instruction.Ret
-
-    test "ret" do
-      assert %Ret{val: ~l"@Air.Inst.Ref.void_value"} =
-               Instruction.parse("ret(@Air.Inst.Ref.void_value)")
-    end
-
-    alias Clr.Air.Instruction.RetSafe
-
-    test "ret_safe" do
-      assert %RetSafe{val: ~l"@Air.Inst.Ref.void_value"} =
-               Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
-    end
-
-    alias Clr.Air.Instruction.RetLoad
-
-    test "ret_load" do
-      assert %RetLoad{val: {19, :keep}} = Instruction.parse("ret_load(%19)")
-    end
   end
 
   describe "pointer operations" do

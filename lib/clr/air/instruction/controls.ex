@@ -9,7 +9,7 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    controls <- return / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / try / try_ptr
+    controls <- ret / ret_info / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / try / try_ptr
     """,
     controls: [export: true]
   )
@@ -18,7 +18,7 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    return <- ret_ptr / ret_addr
+    ret_info <- ret_ptr / ret_addr
     ret_ptr <- 'ret_ptr' lparen type rparen
     """,
     ret_ptr: [export: true, post_traverse: :ret_ptr]
@@ -440,5 +440,57 @@ defmodule Clr.Air.Instruction.Controls do
     {rest,
      [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}],
      context}
+  end
+
+  defmodule Ret do
+    defstruct [:val, :mode]
+
+    use Clr.Air.Instruction
+
+    alias Clr.Block
+
+    def analyze(%{mode: :safe, val: {:lvalue, _} = lvalue}, _dst_slot, block) do
+      Block.put_return(block, {:TypeOf, lvalue})
+    end
+
+    def analyze(%{mode: :safe, val: {:literal, type, _}}, _dst_slot, block) do
+      Block.put_return(block, type)
+    end
+
+    def analyze(%{mode: :safe, val: {src_slot, _}}, _dst_slot, %{function: function} = block) do
+      case Block.fetch_up!(block, src_slot) do
+        {{:ptr, _, _, %{stack: ^function}}, block} ->
+          raise Clr.StackPtrEscape,
+            function: Clr.Air.Lvalue.as_string(function),
+            loc: block.loc
+
+        {type, block} ->
+          Block.put_return(block, type)
+      end
+    end
+  end
+
+  Pegasus.parser_from_string(
+    """
+    ret <- ret_str (safe / load)? lparen argument rparen
+    ret_str <- 'ret'
+    safe <- '_safe'
+    load <- '_load'
+    """,
+    ret: [post_traverse: :ret],
+    ret_str: [ignore: true],
+    safe: [token: :safe],
+    load: [token: :load]
+  )
+
+  def ret(rest, [value | rest_args], context, _slot, _bytes) do
+    mode =
+      case rest_args do
+        [:safe] -> :safe
+        [:load] -> :load
+        [] -> nil
+      end
+
+    {rest, [%Ret{val: value, mode: mode}], context}
   end
 end

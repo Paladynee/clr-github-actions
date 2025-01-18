@@ -208,4 +208,22 @@ defmodule ClrTest.AirParsers.ControlsTest do
 
     test "try_ptr_cold"
   end
+
+  describe "ret functions" do
+    alias Clr.Air.Instruction.Controls.Ret
+
+    test "ret" do
+      assert %Ret{val: ~l"@Air.Inst.Ref.void_value", mode: nil} =
+               Instruction.parse("ret(@Air.Inst.Ref.void_value)")
+    end
+
+    test "ret_safe" do
+      assert %Ret{val: ~l"@Air.Inst.Ref.void_value", mode: :safe} =
+               Instruction.parse("ret_safe(@Air.Inst.Ref.void_value)")
+    end
+
+    test "ret_load" do
+      assert %Ret{val: {19, :keep}, mode: :load} = Instruction.parse("ret_load(%19)")
+    end
+  end
 end
