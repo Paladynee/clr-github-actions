@@ -59,90 +59,11 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("ptr_elem_ptr(*?debug.Dwarf.Section, %79, <usize, 13>)")
     end
 
-    alias Clr.Air.Instruction.Slice
-
-    test "slice" do
-      assert %Slice{type: ~l"usize", src: {0, :keep}, len: {2, :clobber}} =
-               Instruction.parse("slice(usize, %0, %2!)")
-    end
-
-    alias Clr.Air.Instruction.SlicePtr
-
-    test "slice_ptr" do
-      assert %SlicePtr{type: ~l"usize", src: {0, :keep}} =
-               Instruction.parse("slice_ptr(usize, %0)")
-    end
-
-    alias Clr.Air.Instruction.SliceLen
-
-    test "slice_len" do
-      assert %SliceLen{type: ~l"usize", src: {0, :keep}} =
-               Instruction.parse("slice_len(usize, %0)")
-    end
-
     alias Clr.Air.Instruction.SliceElemVal
 
     test "slice_elem_val" do
       assert %SliceElemVal{src: {0, :keep}, index: {2, :clobber}} =
                Instruction.parse("slice_elem_val(%0, %2!)")
-    end
-
-    alias Clr.Air.Instruction.StructFieldPtrIndex
-
-    test "struct_field_ptr_index_0" do
-      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 0} =
-               Instruction.parse("struct_field_ptr_index_0(*u32, %0)")
-    end
-
-    test "struct_field_ptr_index_1" do
-      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 1} =
-               Instruction.parse("struct_field_ptr_index_1(*u32, %0)")
-    end
-
-    test "struct_field_ptr_index_2" do
-      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 2} =
-               Instruction.parse("struct_field_ptr_index_2(*u32, %0)")
-    end
-
-    test "struct_field_ptr_index_3" do
-      assert %StructFieldPtrIndex{type: {:ptr, :one, ~l"u32", []}, src: {0, :keep}, index: 3} =
-               Instruction.parse("struct_field_ptr_index_3(*u32, %0)")
-    end
-
-    alias Clr.Air.Instruction.WrapOptional
-
-    test "wrap_optional" do
-      assert %WrapOptional{type: {:optional, ~l"usize"}, src: {0, :keep}} =
-               Instruction.parse("wrap_optional(?usize, %0)")
-    end
-
-    alias Clr.Air.Instruction.PtrSlicePtrPtr
-
-    test "ptr_slice_ptr_ptr" do
-      assert %PtrSlicePtrPtr{
-               type: {:ptr, :slice, {:ptr, :one, ~l"u8", []}, []},
-               src: {13, :clobber}
-             } =
-               Instruction.parse("ptr_slice_ptr_ptr([]*u8, %13!)")
-    end
-
-    alias Clr.Air.Instruction.PtrSliceLenPtr
-
-    test "ptr_slice_len_ptr" do
-      assert %PtrSliceLenPtr{type: {:ptr, :one, {:lvalue, ["usize"]}, []}, src: {20, :clobber}} =
-               Instruction.parse("ptr_slice_len_ptr(*usize, %20!)")
-    end
-
-    alias Clr.Air.Instruction.UnwrapErrunionErrPtr
-
-    test "unwrap_errunion_err_ptr" do
-      assert %UnwrapErrunionErrPtr{
-               type: {:errorset, ~w[InvalidBuffer EndOfBuffer Overflow]},
-               src: {259, :clobber}
-             } =
-               Instruction.parse(
-                 "unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)"
-               )
     end
   end
 
@@ -151,29 +72,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "alloc" do
       assert %Alloc{type: {:ptr, :one, ~l"usize", []}} = Instruction.parse("alloc(*usize)")
-    end
-
-
-
-    alias Clr.Air.Instruction.OptionalPayloadPtrSet
-
-    test "optional_payload_ptr_set" do
-      assert %OptionalPayloadPtrSet{
-               type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
-               loc:
-                 {:literal, {:ptr, :one, {:optional, {:lvalue, ["debug", "SelfInfo"]}}, []},
-                  {:lvalue, ["debug", "self_debug_info"]}}
-             } =
-               Instruction.parse(
-                 "optional_payload_ptr_set(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
-               )
-    end
-
-    alias Clr.Air.Instruction.StructFieldVal
-
-    test "struct_field_val" do
-      assert %StructFieldVal{src: {93, :clobber}, index: 0} =
-               Instruction.parse("struct_field_val(%93!, 0)")
     end
 
     alias Clr.Air.Instruction.AggregateInit
@@ -189,20 +87,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     test "union_init" do
       assert %UnionInit{src: {18, :clobber}, val: 0} = Instruction.parse("union_init(0, %18!)")
-    end
-
-    alias Clr.Air.Instruction.UnwrapErrunionPayload
-
-    test "unwrap_errunion_payload" do
-      assert %UnwrapErrunionPayload{type: ~l"usize", src: {0, :keep}} =
-               Instruction.parse("unwrap_errunion_payload(usize, %0)")
-    end
-
-    alias Clr.Air.Instruction.UnwrapErrunionErr
-
-    test "unwrap_errunion_err" do
-      assert %UnwrapErrunionErr{type: {:errorset, ["Unexpected"]}, src: {0, :keep}} =
-               Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
     end
 
     alias Clr.Air.Instruction.Memset
@@ -226,26 +110,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("memcpy(%104!, %112!)")
     end
 
-    alias Clr.Air.Instruction.WrapErrunionPayload
-
-    test "wrap_errunion_payload" do
-      assert %WrapErrunionPayload{
-               type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
-               src: {16, :clobber}
-             } =
-               Instruction.parse("wrap_errunion_payload(error{Unexpected}!os.linux.rlimit, %16!)")
-    end
-
-    alias Clr.Air.Instruction.WrapErrunionErr
-
-    test "wrap_errunion_err" do
-      assert %WrapErrunionErr{
-               type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
-               src: {16, :clobber}
-             } =
-               Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")
-    end
-
     alias Clr.Air.Instruction.ArrayToSlice
 
     test "array_to_slice" do
@@ -262,15 +126,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                )
     end
 
-    alias Clr.Air.Instruction.SetUnionTag
-
-    test "set_union_tag" do
-      assert %SetUnionTag{loc: {14, :keep}, val: {:literal, _, _}} =
-               Instruction.parse(
-                 "set_union_tag(%14, <@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, .unsigned>)"
-               )
-    end
-
     alias Clr.Air.Instruction.GetUnionTag
 
     test "get_union_tag" do
@@ -278,16 +133,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse(
                  "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
                )
-    end
-
-    alias Clr.Air.Instruction.ErrunionPayloadPtrSet
-
-    test "errunion_payload_ptr_set" do
-      assert %ErrunionPayloadPtrSet{
-               type: {:ptr, :one, ~l"debug.Dwarf.EntryHeader", []},
-               loc: {0, :keep}
-             } =
-               Instruction.parse("errunion_payload_ptr_set(*debug.Dwarf.EntryHeader, %0)")
     end
 
     alias Clr.Air.Instruction.ErrorName

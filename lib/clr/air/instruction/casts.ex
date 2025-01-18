@@ -7,7 +7,10 @@ defmodule Clr.Air.Instruction.Casts do
   Pegasus.parser_from_string(
     """
     casts <- bitcast / int_from_ptr / int_from_bool / intcast / trunc /
-      optional_payload_ptr / optional_payload
+      optional_payload_ptr_set / optional_payload_ptr / optional_payload /
+      wrap_optional / unwrap_errunion_payload_ptr / unwrap_errunion_payload / 
+      unwrap_errunion_err_ptr / unwrap_errunion_err / errunion_payload_ptr_set /
+      wrap_errunion_err / wrap_errunion_payload
     """,
     casts: [export: true]
   )
@@ -59,14 +62,68 @@ defmodule Clr.Air.Instruction.Casts do
   Air.ty_op(:trunc, Trunc)
 
   defmodule OptionalPayload do
-    defstruct [:type, :src] 
+    defstruct [:type, :src]
   end
 
   Air.ty_op(:optional_payload, OptionalPayload)
 
   defmodule OptionalPayloadPtr do
-    defstruct [:type, :src] 
+    defstruct [:type, :src]
   end
 
   Air.ty_op(:optional_payload_ptr, OptionalPayloadPtr)
+
+  defmodule OptionalPayloadPtrSet do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:optional_payload_ptr_set, OptionalPayloadPtrSet)
+
+  defmodule WrapOptional do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:wrap_optional, WrapOptional)
+
+  defmodule UnwrapErrunionPayload do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:unwrap_errunion_payload, UnwrapErrunionPayload)
+
+  defmodule UnwrapErrunionErr do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:unwrap_errunion_err, UnwrapErrunionErr)
+
+  defmodule UnwrapErrunionPayloadPtr do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:unwrap_errunion_payload_ptr, UnwrapErrunionPayloadPtr)
+
+  defmodule UnwrapErrunionErrPtr do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:unwrap_errunion_err_ptr, UnwrapErrunionErrPtr)
+
+  defmodule ErrunionPayloadPtrSet do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:errunion_payload_ptr_set, ErrunionPayloadPtrSet)
+
+  defmodule WrapErrunionPayload do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:wrap_errunion_payload, WrapErrunionPayload)
+
+  defmodule WrapErrunionErr do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:wrap_errunion_err, WrapErrunionErr)
 end

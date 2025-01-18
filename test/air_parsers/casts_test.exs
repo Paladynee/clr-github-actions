@@ -51,7 +51,6 @@ defmodule ClrTest.AirParsers.CastsTest do
              Instruction.parse("optional_payload(void, %19)")
   end
 
-
   alias Clr.Air.Instruction.Casts.OptionalPayloadPtr
 
   test "optional_payload_ptr" do
@@ -64,5 +63,84 @@ defmodule ClrTest.AirParsers.CastsTest do
              Instruction.parse(
                "optional_payload_ptr(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
              )
+  end
+
+  alias Clr.Air.Instruction.Casts.OptionalPayloadPtrSet
+
+  test "optional_payload_ptr_set" do
+    assert %OptionalPayloadPtrSet{
+             type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
+             src:
+               {:literal, {:ptr, :one, {:optional, {:lvalue, ["debug", "SelfInfo"]}}, []},
+                {:lvalue, ["debug", "self_debug_info"]}}
+           } =
+             Instruction.parse(
+               "optional_payload_ptr_set(*debug.SelfInfo, <*?debug.SelfInfo, debug.self_debug_info>)"
+             )
+  end
+
+  alias Clr.Air.Instruction.Casts.WrapOptional
+
+  test "wrap_optional" do
+    assert %WrapOptional{type: {:optional, ~l"usize"}, src: {0, :keep}} =
+             Instruction.parse("wrap_optional(?usize, %0)")
+  end
+
+  alias Clr.Air.Instruction.Casts.UnwrapErrunionPayload
+
+  test "unwrap_errunion_payload" do
+    assert %UnwrapErrunionPayload{type: ~l"usize", src: {0, :keep}} =
+             Instruction.parse("unwrap_errunion_payload(usize, %0)")
+  end
+
+  alias Clr.Air.Instruction.Casts.UnwrapErrunionErr
+
+  test "unwrap_errunion_err" do
+    assert %UnwrapErrunionErr{type: {:errorset, ["Unexpected"]}, src: {0, :keep}} =
+             Instruction.parse("unwrap_errunion_err(error{Unexpected}, %0)")
+  end
+
+  test "unwrap_errunion_payload_ptr"
+
+  alias Clr.Air.Instruction.Casts.UnwrapErrunionErrPtr
+
+  test "unwrap_errunion_err_ptr" do
+    assert %UnwrapErrunionErrPtr{
+             type: {:errorset, ~w[InvalidBuffer EndOfBuffer Overflow]},
+             src: {259, :clobber}
+           } =
+             Instruction.parse(
+               "unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)"
+             )
+  end
+
+  alias Clr.Air.Instruction.Casts.ErrunionPayloadPtrSet
+
+  test "errunion_payload_ptr_set" do
+    assert %ErrunionPayloadPtrSet{
+             type: {:ptr, :one, ~l"debug.Dwarf.EntryHeader", []},
+             src: {0, :keep}
+           } =
+             Instruction.parse("errunion_payload_ptr_set(*debug.Dwarf.EntryHeader, %0)")
+  end
+
+  alias Clr.Air.Instruction.Casts.WrapErrunionPayload
+
+  test "wrap_errunion_payload" do
+    assert %WrapErrunionPayload{
+             type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+             src: {16, :clobber}
+           } =
+             Instruction.parse("wrap_errunion_payload(error{Unexpected}!os.linux.rlimit, %16!)")
+  end
+
+  alias Clr.Air.Instruction.Casts.WrapErrunionErr
+
+  test "wrap_errunion_err" do
+    assert %WrapErrunionErr{
+             type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+             src: {16, :clobber}
+           } =
+             Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")
   end
 end

@@ -114,7 +114,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     assert %{slots: %{1 => {:u, 1, ^empty_map}}} =
              run_analysis(%{
                {0, :keep} => %ClrTest.Instruction{},
-               {1, :keep} => %Clr.Air.Instruction.StructFieldVal{src: {0, :keep}, index: 1}
+               {1, :keep} => %Clr.Air.Instruction.Mem.StructFieldVal{src: {0, :keep}, index: 1}
              })
   end
 

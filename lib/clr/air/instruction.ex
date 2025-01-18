@@ -8,17 +8,15 @@ after
   @modules Map.new(
              ~w[assembly 
                 arg ptr_elem_val alloc  
-                slice slice_ptr struct_field_val 
-                slice_len slice_elem_val aggregate_init
-                slice_elem_ptr struct_field_ptr struct_field_ptr_index
-                unwrap_errunion_payload unwrap_errunion_err wrap_optional
+                slice_elem_val aggregate_init
+                slice_elem_ptr
                 memset memcpy 
-                wrap_errunion_payload wrap_errunion_err array_to_slice ret_load
-                set_union_tag get_union_tag
-                errunion_payload_ptr_set optional_payload_ptr_set array_elem_val ptr_elem_ptr
+                array_to_slice ret_load
+                get_union_tag
+                array_elem_val ptr_elem_ptr
                 error_name 
                 memset_safe ptr_slice_ptr_ptr
-                cmp_vector reduce unwrap_errunion_err_ptr ptr_slice_len_ptr tag_name union_init
+                cmp_vector reduce ptr_slice_len_ptr tag_name union_init
                 casts dbg controls pointers maths tests atomics mem],
              fn instruction ->
                {String.to_atom(instruction),
@@ -43,10 +41,10 @@ after
     """
     # TODO: reorganize this by category.
     instruction <- # pointer operations
-                   ptr_elem_val / slice / slice_ptr / slice_len / slice_elem_val /
-                   slice_elem_ptr / struct_field_ptr / struct_field_ptr_index /
-                   ptr_elem_ptr / ptr_slice_ptr_ptr / ptr_slice_len_ptr / 
-                   struct_field_val / array_elem_val /
+                   ptr_elem_val / slice_elem_val /
+                   slice_elem_ptr /
+                   ptr_elem_ptr /
+                   array_elem_val /
                    # memory operations
                    alloc /
                    memset / memcpy / memset_safe /
@@ -56,10 +54,7 @@ after
                    union_init / aggregate_init / 
                    # casting operations
                     array_to_slice / 
-                   unwrap_errunion_payload / unwrap_errunion_err /
-                   unwrap_errunion_err_ptr / wrap_optional / wrap_errunion_payload /
-                   wrap_errunion_err / optional_payload_ptr_set /
-                   get_union_tag / set_union_tag / errunion_payload_ptr_set /
+                   get_union_tag /  
                    # names
                    tag_name / error_name /
                    # debug operations
