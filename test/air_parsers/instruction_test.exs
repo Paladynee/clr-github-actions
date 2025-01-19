@@ -41,27 +41,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "memory operations" do
-    alias Clr.Air.Instruction.AggregateInit
-
-    test "aggregate_init" do
-      assert %AggregateInit{} =
-               Instruction.parse(
-                 "aggregate_init(struct { comptime @Type(.enum_literal) = .mmap, comptime usize = 0, usize, comptime usize = 3, comptime u32 = 34, comptime usize = 18446744073709551615, comptime u64 = 0 }, [<@Type(.enum_literal), .mmap>, @Air.Inst.Ref.zero_usize, %44!, <usize, 3>, <u32, 34>, <usize, 18446744073709551615>, <u64, 0>])"
-               )
-    end
-
-    alias Clr.Air.Instruction.UnionInit
-
-    test "union_init" do
-      assert %UnionInit{src: {18, :clobber}, val: 0} = Instruction.parse("union_init(0, %18!)")
-    end
-
-    alias Clr.Air.Instruction.Memcpy
-
-    test "memcpy" do
-      assert %Memcpy{loc: {104, :clobber}, val: {112, :clobber}} =
-               Instruction.parse("memcpy(%104!, %112!)")
-    end
 
     alias Clr.Air.Instruction.GetUnionTag
 

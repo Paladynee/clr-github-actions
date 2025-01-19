@@ -4,11 +4,13 @@ defmodule Clr.Air.Instruction.Mem do
   alias Clr.Air
   require Air
 
-  Air.import(~w[slotref cs lparen rparen type literal argument int lvalue]a)
+  Air.import(
+    ~w[slotref cs lparen rparen type literal argument int lvalue enum_value space rbrace lbrace rbrack lbrack]a
+  )
 
   Pegasus.parser_from_string(
     """
-    mem <- alloc / load / store / struct_field_val / set_union_tag / memset / tag_name / error_name
+    mem <- alloc / load / store / struct_field_val / set_union_tag / memset / memcpy / tag_name / error_name / aggregate_init
     safe <- '_safe'
     """,
     mem: [export: true],
@@ -41,7 +43,7 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%Alloc{type: type}], context}
   end
 
-  Air.ty_op(:load, Load) do
+  Air.ty_op :load, Load do
     alias Clr.Block
     alias Clr.Type
 
@@ -130,13 +132,13 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%SetUnionTag{src: src, val: val}], context}
   end
 
-  defmodule Memset do
+  defmodule Set do
     defstruct [:src, :val, :safe]
   end
 
   Pegasus.parser_from_string(
     """
-    memset <- memset_str safe? lparen (lvalue / slotref) cs lvalue rparen
+    memset <- memset_str safe? lparen argument cs argument rparen
     memset_str <- 'memset'
     """,
     memset: [post_traverse: :memset],
@@ -150,10 +152,74 @@ defmodule Clr.Air.Instruction.Mem do
         [:safe] -> true
       end
 
-    {rest, [%Memset{src: src, val: val, safe: safe}], context}
+    {rest, [%Set{src: src, val: val, safe: safe}], context}
+  end
+
+  defmodule Cpy do
+    defstruct [:loc, :val]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    memcpy <- memcpy_str lparen argument cs argument rparen
+    memcpy_str <- 'memcpy'
+    """,
+    memcpy: [post_traverse: :memcpy],
+    memcpy_str: [ignore: true]
+  )
+
+  def memcpy(rest, [val, loc], context, _slot, _bytes) do
+    {rest, [%Cpy{loc: loc, val: val}], context}
   end
 
   Air.un_op(:tag_name, TagName)
 
   Air.un_op(:error_name, ErrorName)
+
+  defmodule AggregateInit do
+    defstruct [:init, :params]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    aggregate_init <- aggregate_init_str lparen (struct_init / lvalue / type) cs params rparen
+
+    struct_init <- struct_str space lbrace space initializer (cs initializer)* space rbrace 
+
+    initializer <- assigned_type / type
+    assigned_type <- type space '=' space value
+    value <- lvalue / int / enum_value
+
+    aggregate_init_str <- 'aggregate_init'
+    struct_str <- 'struct'
+
+    params <- lbrack argument (cs argument)* rbrack
+    """,
+    aggregate_init: [post_traverse: :aggregate_init],
+    struct_init: [post_traverse: :struct_init],
+    initializer: [post_traverse: :initializer],
+    aggregate_init_str: [ignore: true],
+    struct_str: [ignore: true],
+    params: [post_traverse: :params]
+  )
+
+  defp aggregate_init(rest, [params, init], context, _slot, _bytes) do
+    {rest, [%AggregateInit{params: params, init: init}], context}
+  end
+
+  defp struct_init(rest, params, context, _slot, _bytes) do
+    {rest, [Enum.reverse(params)], context}
+  end
+
+  defp initializer(rest, [val, "=", type], context, _slot, _bytes) do
+    {rest, [{type, val}], context}
+  end
+
+  defp initializer(rest, [type], context, _slot, _bytes) do
+    {rest, [type], context}
+  end
+
+  defp params(rest, params, context, _slot, _bytes) do
+    {rest, [Enum.reverse(params)], context}
+  end
 end

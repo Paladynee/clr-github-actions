@@ -50,16 +50,23 @@ defmodule ClrTest.AirParsers.MemTest do
 
   test "get_union_tag"
 
-  alias Clr.Air.Instruction.Mem.Memset
+  alias Clr.Air.Instruction.Mem.Set
 
   test "memset" do
-    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: false} =
+    assert %Set{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: false} =
              Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
   end
 
   test "memset_safe" do
-    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: true} =
+    assert %Set{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: true} =
              Instruction.parse("memset_safe(%0, @Air.Inst.Ref.zero_u8)")
+  end
+
+  alias Clr.Air.Instruction.Mem.Cpy
+
+  test "memcpy" do
+    assert %Cpy{loc: {104, :clobber}, val: {112, :clobber}} =
+             Instruction.parse("memcpy(%104!, %112!)")
   end
 
   alias Clr.Air.Instruction.Mem.TagName
@@ -74,7 +81,14 @@ defmodule ClrTest.AirParsers.MemTest do
     assert %ErrorName{src: {39, :clobber}} = Instruction.parse("error_name(%39!)")
   end
 
-  test "aggregate_init"
+  alias Clr.Air.Instruction.Mem.AggregateInit
+
+  test "aggregate_init" do
+    assert %AggregateInit{} =
+             Instruction.parse(
+               "aggregate_init(struct { comptime @Type(.enum_literal) = .mmap, comptime usize = 0, usize, comptime usize = 3, comptime u32 = 34, comptime usize = 18446744073709551615, comptime u64 = 0 }, [<@Type(.enum_literal), .mmap>, @Air.Inst.Ref.zero_usize, %44!, <usize, 3>, <u32, 34>, <usize, 18446744073709551615>, <u64, 0>])"
+             )
+  end
 
   test "union_init"
 
