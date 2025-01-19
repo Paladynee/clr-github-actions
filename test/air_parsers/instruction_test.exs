@@ -7,7 +7,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
   setup(do: {:ok, empty_map: %{}})
 
   describe "control flow instructions" do
-    alias Clr.Air.Instruction.Controls.CondBr
+    alias Clr.Air.Instruction.ControlFlow.CondBr
 
     test "cond_br without clobbers" do
       assert %CondBr{cond: {104, :clobber}} =
@@ -32,7 +32,7 @@ defmodule ClrTest.AirParsers.InstructionTest do
                """)
     end
 
-    alias Clr.Air.Instruction.Controls.Repeat
+    alias Clr.Air.Instruction.ControlFlow.Repeat
 
     test "repeat" do
       assert %Repeat{goto: {23, :keep}} =

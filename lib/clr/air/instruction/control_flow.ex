@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Controls do
+defmodule Clr.Air.Instruction.ControlFlow do
   require Pegasus
   require Clr.Air
 
@@ -9,10 +9,10 @@ defmodule Clr.Air.Instruction.Controls do
 
   Pegasus.parser_from_string(
     """
-    controls <- ret / ret_info / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / 
+    control_flow <- ret / ret_info / block / loop / repeat / br / frame_addr / call / cond_br / switch_br / 
       try / try_ptr / unreach
     """,
-    controls: [export: true]
+    control_flow: [export: true]
   )
 
   # returns

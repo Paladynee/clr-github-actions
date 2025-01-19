@@ -65,7 +65,7 @@ defmodule Clr.Block do
     Clr.Air.Instruction.RetSafe,
     Clr.Air.Instruction.StoreSafe,
     Clr.Air.Instruction.DbgStmt,
-    Clr.Air.Instruction.Controls.Call
+    Clr.Air.Instruction.ControlFlow.Call
   ]
 
   # if we have a "keep" instruction or a required instruction, subject the

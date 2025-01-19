@@ -1,17 +1,17 @@
-defmodule ClrTest.AirParsers.ControlsTest do
+defmodule ClrTest.AirParsers.ControlFlowTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
 
   import Clr.Air.Lvalue
 
-  alias Clr.Air.Instruction.Controls.RetPtr
+  alias Clr.Air.Instruction.ControlFlow.RetPtr
 
   test "ret_ptr" do
     assert %RetPtr{type: {:ptr, :one, ~l"fs.File", []}} = Instruction.parse("ret_ptr(*fs.File)")
   end
 
   describe "block" do
-    alias Clr.Air.Instruction.Controls.Block
+    alias Clr.Air.Instruction.ControlFlow.Block
 
     test "generic" do
       assert %Block{} =
@@ -32,7 +32,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
     end
   end
 
-  alias Clr.Air.Instruction.Controls.Loop
+  alias Clr.Air.Instruction.ControlFlow.Loop
 
   test "loop" do
     assert %Loop{type: ~l"void"} =
@@ -43,7 +43,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
              """)
   end
 
-  alias Clr.Air.Instruction.Controls.Br
+  alias Clr.Air.Instruction.ControlFlow.Br
 
   test "br" do
     assert %Br{
@@ -52,13 +52,13 @@ defmodule ClrTest.AirParsers.ControlsTest do
            } = Instruction.parse("br(%5, @Air.Inst.Ref.void_value)")
   end
 
-  alias Clr.Air.Instruction.Controls.FrameAddr
+  alias Clr.Air.Instruction.ControlFlow.FrameAddr
 
   test "frame_addr" do
     assert %FrameAddr{} = Instruction.parse("frame_addr()")
   end
 
-  alias Clr.Air.Instruction.Controls.Call
+  alias Clr.Air.Instruction.ControlFlow.Call
 
   describe "call" do
     test "plain" do
@@ -108,7 +108,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   describe "cond_br" do
-    alias Clr.Air.Instruction.Controls.CondBr
+    alias Clr.Air.Instruction.ControlFlow.CondBr
 
     test "plain" do
       assert %CondBr{} =
@@ -130,7 +130,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   describe "switch_br" do
-    alias Clr.Air.Instruction.Controls.SwitchBr
+    alias Clr.Air.Instruction.ControlFlow.SwitchBr
 
     test "switch_br" do
       assert %SwitchBr{test: {104, :clobber}} =
@@ -154,7 +154,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   describe "try" do
-    alias Clr.Air.Instruction.Controls.Try
+    alias Clr.Air.Instruction.ControlFlow.Try
 
     test "basic" do
       assert %Try{src: {12, :keep}, error_code: %{}, clobbers: [12]} =
@@ -184,7 +184,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   describe "try_ptr" do
-    alias Clr.Air.Instruction.Controls.TryPtr
+    alias Clr.Air.Instruction.ControlFlow.TryPtr
 
     test "basic" do
       assert %TryPtr{
@@ -210,7 +210,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   describe "ret functions" do
-    alias Clr.Air.Instruction.Controls.Ret
+    alias Clr.Air.Instruction.ControlFlow.Ret
 
     test "ret" do
       assert %Ret{val: ~l"@Air.Inst.Ref.void_value", mode: nil} =
@@ -228,7 +228,7 @@ defmodule ClrTest.AirParsers.ControlsTest do
   end
 
   test "unreach" do
-    alias Clr.Air.Instruction.Controls.Unreach
+    alias Clr.Air.Instruction.ControlFlow.Unreach
 
     assert %Unreach{} = Instruction.parse("unreach()")
   end

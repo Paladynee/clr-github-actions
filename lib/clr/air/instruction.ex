@@ -6,13 +6,7 @@ defprotocol Clr.Air.Instruction do
   def analyze(instruction, slot, state)
 after
   @modules Map.new(
-             ~w[assembly 
-                arg alloc  
-                aggregate_init
-                memcpy 
-                cmp_vector union_init
-                vector 
-                casts dbg controls pointers maths tests atomics mem],
+             ~w[assembly vector casts dbg control_flow pointers maths tests atomics mem],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -34,33 +28,8 @@ after
 
   Pegasus.parser_from_string(
     """
-    # TODO: reorganize this by category.
-    instruction <- # memory operations
-                   alloc /
-                   memcpy /
-                   # memory operations
-                   mem /
-                   # inits
-                   union_init / aggregate_init /
-                   # debug operations
-                   dbg /
-                   # casting operations
-                   casts /
-                   # control operations
-                   controls /
-                   # atomic operations
-                   atomics /
-                   # vector operations
-                   vector /
-                   cmp_vector /
-                   # pointer operations
-                   pointers /
-                   # test
-                   tests /
-                   # math
-                   maths /
-                   # etc
-                   assembly / arg /
+    instruction <- mem / dbg / casts / control_flow / atomics / vector /
+                   pointers / tests / maths / assembly /
                    # debug 
                    unknown_instruction
 

@@ -133,7 +133,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     test "returns an lvalue when it's an lvalue" do
       assert %{return: {{:TypeOf, ~l"foo.bar.value"}, %{}}} =
                run_analysis(%{
-                 {0, :keep} => %Clr.Air.Instruction.Controls.Ret{
+                 {0, :keep} => %Clr.Air.Instruction.ControlFlow.Ret{
                    val: ~l"foo.bar.value",
                    mode: :safe
                  }
@@ -151,7 +151,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
                      run_analysis(%{
                        {0, :clobber} => %Clr.Air.Instruction.Dbg.Stmt{loc: {0, 1}},
                        {1, :keep} => %ClrTest.Instruction{},
-                       {2, :clobber} => %Clr.Air.Instruction.Controls.Ret{
+                       {2, :clobber} => %Clr.Air.Instruction.ControlFlow.Ret{
                          val: {1, :clobber},
                          mode: :safe
                        }
