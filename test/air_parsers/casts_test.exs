@@ -26,9 +26,17 @@ defmodule ClrTest.AirParsers.CastsTest do
     assert %IntFromBool{src: {218, :clobber}} = Instruction.parse("int_from_bool(%218!)")
   end
 
-  test "fptrunc"
+  alias Clr.Air.Instruction.Casts.Fptrunc
 
-  test "fpext"
+  test "fptrunc" do
+    assert %Fptrunc{type: ~l"f16", src: {12, :clobber}} = Instruction.parse("fptrunc(f16, %12!)")
+  end
+
+  alias Clr.Air.Instruction.Casts.Fpext
+
+  test "fpext" do
+    assert %Fptrunc{type: ~l"f64", src: {9, :clobber}} = Instruction.parse("fpext(f64, %9!)")
+  end
 
   alias Clr.Air.Instruction.Casts.Intcast
 
@@ -147,13 +155,15 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction.Casts.IntFromFloat
 
   test "int_from_float" do
-    assert %IntFromFloat{type: ~l"u8", src: {9, :keep}} = Instruction.parse("int_from_float(u8, %9)")
+    assert %IntFromFloat{type: ~l"u8", src: {9, :keep}} =
+             Instruction.parse("int_from_float(u8, %9)")
   end
 
   alias Clr.Air.Instruction.Casts.FloatFromInt
 
   test "float_from_int" do
-    assert %FloatFromInt{type: ~l"f32", src: {12, :keep}} = Instruction.parse("float_from_int(f32, %12)")
+    assert %FloatFromInt{type: ~l"f32", src: {12, :keep}} =
+             Instruction.parse("float_from_int(f32, %12)")
   end
 
   test "addrspace_cast" do

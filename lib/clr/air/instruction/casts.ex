@@ -11,7 +11,7 @@ defmodule Clr.Air.Instruction.Casts do
       wrap_optional / unwrap_errunion_payload_ptr / unwrap_errunion_payload / 
       unwrap_errunion_err_ptr / unwrap_errunion_err / errunion_payload_ptr_set /
       wrap_errunion_err / wrap_errunion_payload / int_from_float / float_from_int /
-      addrspace_cast
+      addrspace_cast / fpext / fptrunc
     """,
     casts: [export: true]
   )
@@ -90,6 +90,10 @@ defmodule Clr.Air.Instruction.Casts do
   end
 
   Air.ty_op(:float_from_int, FloatFromInt)
+
+  Air.ty_op(:fpext, Fpext)
+
+  Air.ty_op(:fptrunc, Fptrunc)
 
   Air.unimplemented(:addrspace_cast)
 end

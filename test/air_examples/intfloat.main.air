@@ -1,7 +1,7 @@
 # Begin Function AIR: intfloat.main:
-# Total AIR+Liveness bytes: 558B
-# AIR Instructions:         26 (234B)
-# AIR Extra Data:           39 (156B)
+# Total AIR+Liveness bytes: 644B
+# AIR Instructions:         32 (288B)
+# AIR Extra Data:           47 (188B)
 # Liveness tomb_bits:       16B
 # Liveness Extra Data:      6 (24B)
 # Liveness special table:   3 (24B)
@@ -16,23 +16,29 @@
   %8!= dbg_stmt(4:20)
   %9 = float_from_int(f32, %7!)
   %10!= dbg_var_val(%9, "y")
-  %11!= dbg_stmt(5:19)
-  %12 = int_from_float(u8, %9)
-  %13 = float_from_int(f32, %12)
-  %14 = sub(%9!, %13!)
-  %15 = cmp_lt(%14, <f32, 1>)
-  %16 = cmp_gt(%14!, <f32, -1>)
-  %17 = bool_and(%15!, %16!)
-  %20!= block(void, {
-    %21!= cond_br(%17!, likely {
-      %22!= br(%20, @Air.Inst.Ref.void_value)
+  %11!= dbg_stmt(5:21)
+  %12 = fpext(f64, %9!)
+  %13!= dbg_var_val(%12, "y2")
+  %14!= dbg_stmt(6:21)
+  %15 = fptrunc(f16, %12!)
+  %16!= dbg_var_val(%15, "y3")
+  %17!= dbg_stmt(7:19)
+  %18 = int_from_float(u8, %15)
+  %19 = float_from_int(f16, %18)
+  %20 = sub(%15!, %19!)
+  %21 = cmp_lt(%20, <f16, 1>)
+  %22 = cmp_gt(%20!, <f16, -1>)
+  %23 = bool_and(%21!, %22!)
+  %26!= block(void, {
+    %27!= cond_br(%23!, likely {
+      %28!= br(%26, @Air.Inst.Ref.void_value)
     }, cold {
-      %12!
-      %18!= call(<fn ([]const u8, ?*const builtin.StackTrace, ?usize) noreturn, (function 'defaultPanic')>, [<[]const u8, "integer part of floating point value out of bounds"[0..50]>, <?*const builtin.StackTrace, null>, <?usize, null>])
-      %19!= unreach()
+      %18!
+      %24!= call(<fn ([]const u8, ?*const builtin.StackTrace, ?usize) noreturn, (function 'defaultPanic')>, [<[]const u8, "integer part of floating point value out of bounds"[0..50]>, <?*const builtin.StackTrace, null>, <?usize, null>])
+      %25!= unreach()
     })
-  } %17!)
-  %23!= dbg_var_val(%12, "z")
-  %24!= dbg_stmt(6:5)
-  %25!= ret_safe(%12!)
+  } %23!)
+  %29!= dbg_var_val(%18, "z")
+  %30!= dbg_stmt(8:5)
+  %31!= ret_safe(%18!)
 # End Function AIR: intfloat.main

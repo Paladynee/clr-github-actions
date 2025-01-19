@@ -4,7 +4,9 @@ defmodule Clr.Air.Instruction.Vector do
 
   Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
-  Pegasus.parser_from_string("vector <- reduce / cmp_vector # splat shuffle select\n", vector: [export: true])
+  Pegasus.parser_from_string("vector <- reduce / cmp_vector # splat shuffle select\n",
+    vector: [export: true]
+  )
 
   defmodule Reduce do
     defstruct [:src, :op, :optimized]
@@ -58,10 +60,11 @@ defmodule Clr.Air.Instruction.Vector do
   )
 
   def cmp_vector(rest, [rhs, lhs, op | rest_args], context, _slot, _bytes) do
-    optimized = case rest_args do
-      [] -> false
-      [:optimized] -> true
-    end
+    optimized =
+      case rest_args do
+        [] -> false
+        [:optimized] -> true
+      end
 
     {rest, [%Cmp{op: op, lhs: lhs, rhs: rhs, optimized: optimized}], context}
   end

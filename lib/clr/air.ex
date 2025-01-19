@@ -83,6 +83,7 @@ defmodule Clr.Air do
   defmacro unimplemented(op) do
     parser = "#{op} <- '#{op}' lparen"
     parser_opts = [{op, post_traverse: op}]
+
     quote do
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
 
@@ -104,7 +105,8 @@ defmodule Clr.Air do
       opts,
       :do,
       quote do
-        def analyze(_, _, _), do: raise("#{__MODULE__}: #{inspect __ENV__.function} unimplemented")
+        def analyze(_, _, _),
+          do: raise("#{__MODULE__}: #{inspect(__ENV__.function)} unimplemented")
       end
     )
   end
