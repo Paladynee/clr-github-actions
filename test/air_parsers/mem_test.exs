@@ -43,4 +43,34 @@ defmodule ClrTest.AirParsers.MemTest do
   end
 
   test "get_union_tag"
+
+  alias Clr.Air.Instruction.Mem.Memset
+
+  test "memset" do
+    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
+             Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
+  end
+
+  test "memset_safe" do
+    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: true} =
+             Instruction.parse("memset_safe(%0, @Air.Inst.Ref.zero_u8)")
+  end
+
+  alias Clr.Air.Instruction.Mem.TagName
+
+  test "tag_name" do
+    assert %TagName{src: {39, :clobber}} = Instruction.parse("tag_name(%39!)")
+  end
+
+  alias Clr.Air.Instruction.Mem.ErrorName
+
+  test "error_name" do
+    assert %ErrorName{src: {39, :clobber}} = Instruction.parse("error_name(%39!)")
+  end
+  
+  test "aggregate_init"
+
+  test "union_init"
+
+  test "prefetch"
 end

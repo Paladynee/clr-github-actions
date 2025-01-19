@@ -119,9 +119,16 @@ defmodule ClrTest.AirParsers.TestsTest do
       assert %Is{op: :non_err_ptr, operand: {95, :clobber}} =
                Instruction.parse("is_non_err_ptr(%95!)")
     end
+
+    test "is_named_enum_value" do
+      assert %Is{op: :named_enum_value, operand: {95, :clobber}} =
+               Instruction.parse("is_named_enum_value(%95!)")
+    end
   end
 
   test "cmp_vector"
 
   test "cmp_vector_optimized"
+
+  test "error_set_has_value"
 end

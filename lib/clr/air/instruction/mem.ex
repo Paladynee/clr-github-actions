@@ -4,11 +4,11 @@ defmodule Clr.Air.Instruction.Mem do
   alias Clr.Air
   require Air
 
-  Air.import(~w[slotref cs lparen rparen type literal argument int]a)
+  Air.import(~w[slotref cs lparen rparen type literal argument int lvalue]a)
 
   Pegasus.parser_from_string(
     """
-    mem <- load / store / struct_field_val / set_union_tag
+    mem <- load / store / struct_field_val / set_union_tag / memset / tag_name / error_name
     """,
     mem: [export: true]
   )
@@ -104,4 +104,43 @@ defmodule Clr.Air.Instruction.Mem do
   def set_union_tag(rest, [val, src], context, _slot, _bytes) do
     {rest, [%SetUnionTag{src: src, val: val}], context}
   end
+
+  defmodule Memset do
+    defstruct [:src, :val, :safe]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    memset <- memset_str safe? lparen (lvalue / slotref) cs lvalue rparen
+    memset_str <- 'memset'
+    safe <- '_safe'
+    """,
+    memset: [post_traverse: :memset],
+    memset_str: [ignore: true],
+    safe: [token: :safe]
+  )
+
+  def memset(rest, [val, src | rest_args], context, _slot, _bytes) do
+    safe =
+      case rest_args do
+        [] -> false
+        [:safe] -> true
+      end
+
+    {rest, [%Memset{src: src, val: val, safe: safe}], context}
+  end
+
+  defmodule TagName do
+    defstruct [:src]
+  end
+
+  Air.un_op(:tag_name, TagName)
+
+
+  defmodule ErrorName do
+    defstruct [:src]
+  end
+
+  Air.un_op(:error_name, ErrorName)
+
 end

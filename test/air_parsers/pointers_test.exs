@@ -130,4 +130,12 @@ defmodule ClrTest.AirParsers.PointersTest do
     assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8", []}, src: {13, :clobber}} =
              Instruction.parse("array_to_slice([]u8, %13!)")
   end
+
+  test "field_parent_ptr"
+
+  test "error_return_trace"
+
+  test "set_err_return_trace"
+
+  test "set_err_return_trace_index"
 end

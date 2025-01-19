@@ -147,4 +147,6 @@ defmodule ClrTest.AirParsers.CastsTest do
   test "int_from_float"
 
   test "float_from_int"
+
+  test "addrspace_cast"
 end

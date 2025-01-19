@@ -31,10 +31,11 @@ defmodule Clr.Air.Instruction.Vector do
   )
 
   def reduce(rest, [op, src | rest_args], context, _slot, _bytes) do
-    optimized = case rest_args do
-      [] -> false
-      [:optimized] -> true
-    end
+    optimized =
+      case rest_args do
+        [] -> false
+        [:optimized] -> true
+      end
 
     {rest, [%Reduce{op: op, src: src, optimized: optimized}], context}
   end

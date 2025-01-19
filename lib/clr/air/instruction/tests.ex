@@ -68,7 +68,7 @@ defmodule Clr.Air.Instruction.Tests do
 
     is_prefix <- 'is_'
 
-    is_op <- err_ptr / err / non_err_ptr / non_err / non_null_ptr / non_null / null_ptr / null
+    is_op <- err_ptr / err / non_err_ptr / non_err / non_null_ptr / non_null / null_ptr / null / named_enum_value
 
     null <- 'null'
     non_null <- 'non_null'
@@ -78,6 +78,7 @@ defmodule Clr.Air.Instruction.Tests do
     non_err <- 'non_err'
     err_ptr <- 'err_ptr'
     non_err_ptr <- 'non_err_ptr'
+    named_enum_value <- 'named_enum_value'
     """,
     is_instruction: [post_traverse: :is_instruction],
     is_prefix: [ignore: true],
@@ -88,7 +89,8 @@ defmodule Clr.Air.Instruction.Tests do
     err: [token: :err],
     non_err: [token: :non_err],
     err_ptr: [token: :err_ptr],
-    non_err_ptr: [token: :non_err_ptr]
+    non_err_ptr: [token: :non_err_ptr],
+    named_enum_value: [token: :named_enum_value]
   )
 
   def is_instruction(rest, [operand, op], context, _slot, _bytes) do

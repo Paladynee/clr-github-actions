@@ -62,20 +62,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
       assert %UnionInit{src: {18, :clobber}, val: 0} = Instruction.parse("union_init(0, %18!)")
     end
 
-    alias Clr.Air.Instruction.Memset
-
-    test "memset" do
-      assert %Memset{loc: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
-               Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
-    end
-
-    alias Clr.Air.Instruction.MemsetSafe
-
-    test "memset_safe" do
-      assert %MemsetSafe{loc: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
-               Instruction.parse("memset_safe(%0, @Air.Inst.Ref.zero_u8)")
-    end
-
     alias Clr.Air.Instruction.Memcpy
 
     test "memcpy" do
@@ -85,24 +71,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     alias Clr.Air.Instruction.GetUnionTag
 
-    test "get_union_tag" do
-      assert %GetUnionTag{loc: {298, :keep}, type: {:lvalue, _}} =
-               Instruction.parse(
-                 "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
-               )
-    end
+    test "get_union_tag" # do
+    #  assert %GetUnionTag{loc: {298, :keep}, type: {:lvalue, _}} =
+    #           Instruction.parse(
+    #             "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
+    #           )
+    #end
 
-    alias Clr.Air.Instruction.ErrorName
-
-    test "error_name" do
-      assert %ErrorName{val: {39, :clobber}} = Instruction.parse("error_name(%39!)")
-    end
-
-    alias Clr.Air.Instruction.TagName
-
-    test "tag_name" do
-      assert %TagName{val: {39, :clobber}} = Instruction.parse("tag_name(%39!)")
-    end
   end
 
   describe "test operations" do

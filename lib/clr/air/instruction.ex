@@ -9,11 +9,8 @@ after
              ~w[assembly 
                 arg alloc  
                 aggregate_init
-                memset memcpy 
-                get_union_tag
-                error_name 
-                memset_safe 
-                cmp_vector tag_name union_init
+                memcpy 
+                cmp_vector union_init
                 vector 
                 casts dbg controls pointers maths tests atomics mem],
              fn instruction ->
@@ -40,15 +37,11 @@ after
     # TODO: reorganize this by category.
     instruction <- # memory operations
                    alloc /
-                   memset / memcpy / memset_safe /
+                   memcpy /
                    # memory operations
                    mem /
                    # inits
-                   union_init / aggregate_init / 
-                   # casting operations
-                   get_union_tag /  
-                   # names
-                   tag_name / error_name /
+                   union_init / aggregate_init /
                    # debug operations
                    dbg /
                    # casting operations
