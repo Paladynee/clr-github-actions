@@ -35,7 +35,7 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction.Casts.Fpext
 
   test "fpext" do
-    assert %Fptrunc{type: ~l"f64", src: {9, :clobber}} = Instruction.parse("fpext(f64, %9!)")
+    assert %Fpext{type: ~l"f64", src: {9, :clobber}} = Instruction.parse("fpext(f64, %9!)")
   end
 
   alias Clr.Air.Instruction.Casts.Intcast
