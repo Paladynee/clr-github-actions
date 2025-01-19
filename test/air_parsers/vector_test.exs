@@ -17,6 +17,21 @@ defmodule ClrTest.AirParsers.VectorTests do
              Instruction.parse("reduce_optimized(%0, Or)")
   end
 
+  alias Clr.Air.Instruction.Vector.Cmp
+
+  test "cmp_vector" do
+    assert %Cmp{
+             op: :neq,
+             lhs: {405, :clobber},
+             rhs: {:literal, {:lvalue, [{:vector, {:lvalue, ["u8"]}, 16}]}, _}
+           } =
+             Instruction.parse(
+               "cmp_vector(neq, %405!, <@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>)"
+             )
+  end
+
+  test "cmp_vector_optimized"
+
   test "splat"
 
   test "shuffle"

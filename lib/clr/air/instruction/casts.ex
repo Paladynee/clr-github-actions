@@ -10,7 +10,7 @@ defmodule Clr.Air.Instruction.Casts do
       optional_payload_ptr_set / optional_payload_ptr / optional_payload /
       wrap_optional / unwrap_errunion_payload_ptr / unwrap_errunion_payload / 
       unwrap_errunion_err_ptr / unwrap_errunion_err / errunion_payload_ptr_set /
-      wrap_errunion_err / wrap_errunion_payload
+      wrap_errunion_err / wrap_errunion_payload / int_from_float / float_from_int
     """,
     casts: [export: true]
   )
@@ -87,4 +87,6 @@ defmodule Clr.Air.Instruction.Casts do
 
     {rest, [%IntFromFloat{src: src, type: type, optimized: optimized}], context}
   end
+
+  Air.ty_op(:float_from_int, FloatFromInt)
 end

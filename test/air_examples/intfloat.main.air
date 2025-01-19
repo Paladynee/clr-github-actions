@@ -1,0 +1,38 @@
+# Begin Function AIR: intfloat.main:
+# Total AIR+Liveness bytes: 558B
+# AIR Instructions:         26 (234B)
+# AIR Extra Data:           39 (156B)
+# Liveness tomb_bits:       16B
+# Liveness Extra Data:      6 (24B)
+# Liveness special table:   3 (24B)
+  %0!= dbg_stmt(2:5)
+  %1 = alloc(*u8)
+  %2!= store_safe(%1, <u8, undefined>)
+  %3!= dbg_var_ptr(%1, "x")
+  %4!= dbg_stmt(3:5)
+  %5!= store_safe(%1, <u8, 10>)
+  %6!= dbg_stmt(4:5)
+  %7 = load(u8, %1!)
+  %8!= dbg_stmt(4:20)
+  %9 = float_from_int(f32, %7!)
+  %10!= dbg_var_val(%9, "y")
+  %11!= dbg_stmt(5:19)
+  %12 = int_from_float(u8, %9)
+  %13 = float_from_int(f32, %12)
+  %14 = sub(%9!, %13!)
+  %15 = cmp_lt(%14, <f32, 1>)
+  %16 = cmp_gt(%14!, <f32, -1>)
+  %17 = bool_and(%15!, %16!)
+  %20!= block(void, {
+    %21!= cond_br(%17!, likely {
+      %22!= br(%20, @Air.Inst.Ref.void_value)
+    }, cold {
+      %12!
+      %18!= call(<fn ([]const u8, ?*const builtin.StackTrace, ?usize) noreturn, (function 'defaultPanic')>, [<[]const u8, "integer part of floating point value out of bounds"[0..50]>, <?*const builtin.StackTrace, null>, <?usize, null>])
+      %19!= unreach()
+    })
+  } %17!)
+  %23!= dbg_var_val(%12, "z")
+  %24!= dbg_stmt(6:5)
+  %25!= ret_safe(%12!)
+# End Function AIR: intfloat.main

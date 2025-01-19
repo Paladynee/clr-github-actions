@@ -41,7 +41,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "memory operations" do
-
     alias Clr.Air.Instruction.GetUnionTag
 
     # do
@@ -51,22 +50,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     #             "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
     #           )
     # end
-  end
-
-  describe "test operations" do
-    # TODO: set off into "vector" domain
-    alias Clr.Air.Instruction.CmpVector
-
-    test "cmp_vector" do
-      assert %CmpVector{
-               op: :neq,
-               lhs: {405, :clobber},
-               rhs: {:literal, {:lvalue, [{:vector, {:lvalue, ["u8"]}, 16}]}, _}
-             } =
-               Instruction.parse(
-                 "cmp_vector(neq, %405!, <@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>)"
-               )
-    end
   end
 
   # other instructions
