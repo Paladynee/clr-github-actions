@@ -10,7 +10,8 @@ defmodule Clr.Air.Instruction.Casts do
       optional_payload_ptr_set / optional_payload_ptr / optional_payload /
       wrap_optional / unwrap_errunion_payload_ptr / unwrap_errunion_payload / 
       unwrap_errunion_err_ptr / unwrap_errunion_err / errunion_payload_ptr_set /
-      wrap_errunion_err / wrap_errunion_payload / int_from_float / float_from_int
+      wrap_errunion_err / wrap_errunion_payload / int_from_float / float_from_int /
+      addrspace_cast
     """,
     casts: [export: true]
   )
@@ -78,7 +79,7 @@ defmodule Clr.Air.Instruction.Casts do
     optimized: [token: :optimized]
   )
 
-  def int_from_float(rest, [type, src | rest_args], context, _slot, _bytes) do
+  def int_from_float(rest, [src, type | rest_args], context, _slot, _bytes) do
     optimized =
       case rest_args do
         [] -> false
@@ -89,4 +90,6 @@ defmodule Clr.Air.Instruction.Casts do
   end
 
   Air.ty_op(:float_from_int, FloatFromInt)
+
+  Air.unimplemented(:addrspace_cast)
 end

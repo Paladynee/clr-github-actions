@@ -144,9 +144,21 @@ defmodule ClrTest.AirParsers.CastsTest do
              Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")
   end
 
-  test "int_from_float"
+  alias Clr.Air.Instruction.Casts.IntFromFloat
 
-  test "float_from_int"
+  test "int_from_float" do
+    assert %IntFromFloat{type: ~l"u8", src: {9, :keep}} = Instruction.parse("int_from_float(u8, %9)")
+  end
 
-  test "addrspace_cast"
+  alias Clr.Air.Instruction.Casts.FloatFromInt
+
+  test "float_from_int" do
+    assert %FloatFromInt{type: ~l"f32", src: {12, :keep}} = Instruction.parse("float_from_int(f32, %12)")
+  end
+
+  test "addrspace_cast" do
+    assert_raise RuntimeError, fn ->
+      Instruction.parse("addrspace_cast(%0, %1)")
+    end
+  end
 end

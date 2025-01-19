@@ -80,6 +80,18 @@ defmodule Clr.Air do
     end
   end
 
+  defmacro unimplemented(op) do
+    parser = "#{op} <- '#{op}' lparen"
+    parser_opts = [{op, post_traverse: op}]
+    quote do
+      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
+
+      def unquote(op)(rest, _, _, _, _) do
+        raise "Instruction #{unquote(op)} unimplemented"
+      end
+    end
+  end
+
   defp parser_opts(op, op_str) do
     [
       {op, post_traverse: op},
