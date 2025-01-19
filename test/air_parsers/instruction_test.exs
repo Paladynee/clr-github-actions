@@ -41,12 +41,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
   end
 
   describe "memory operations" do
-    alias Clr.Air.Instruction.Alloc
-
-    test "alloc" do
-      assert %Alloc{type: {:ptr, :one, ~l"usize", []}} = Instruction.parse("alloc(*usize)")
-    end
-
     alias Clr.Air.Instruction.AggregateInit
 
     test "aggregate_init" do
@@ -71,13 +65,13 @@ defmodule ClrTest.AirParsers.InstructionTest do
 
     alias Clr.Air.Instruction.GetUnionTag
 
-    test "get_union_tag" # do
+    # do
+    test "get_union_tag"
     #  assert %GetUnionTag{loc: {298, :keep}, type: {:lvalue, _}} =
     #           Instruction.parse(
     #             "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
     #           )
-    #end
-
+    # end
   end
 
   describe "test operations" do
@@ -131,17 +125,5 @@ defmodule ClrTest.AirParsers.InstructionTest do
              Instruction.parse(
                ~S/assembly(usize, volatile, [_] -> ={rax}, [_] out ={rdi} = (%20!), [_] in {rdi} = (%8), [getContextInternal] in X = (<*const fn () callconv(.naked) usize, os.linux.x86_64.getContextInternal>), ~{cc}, ~{memory}, ~{rcx}, ~{rdx}, ~{rsi}, ~{r8}, ~{r10}, ~{r11}, " callq %[getContextInternal:P]")/
              )
-  end
-
-  alias Clr.Air.Instruction.Arg
-
-  test "arg" do
-    assert %Arg{type: {:ptr, :many, ~l"usize", []}, name: "argc_argv_ptr"} =
-             Instruction.parse(~S/arg([*]usize, "argc_argv_ptr")/)
-  end
-
-  test "arg without value" do
-    assert %Arg{type: {:ptr, :many, ~l"usize", []}, name: nil} =
-             Instruction.parse(~S/arg([*]usize)/)
   end
 end

@@ -8,10 +8,38 @@ defmodule Clr.Air.Instruction.Mem do
 
   Pegasus.parser_from_string(
     """
-    mem <- load / store / struct_field_val / set_union_tag / memset / tag_name / error_name
+    mem <- alloc / load / store / struct_field_val / set_union_tag / memset / tag_name / error_name
+    safe <- '_safe'
     """,
-    mem: [export: true]
+    mem: [export: true],
+    safe: [token: :safe]
   )
+
+  defmodule Alloc do
+    defstruct [:type]
+
+    use Clr.Air.Instruction
+
+    alias Clr.Block
+    alias Clr.Type
+
+    def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis) do
+      Block.put_type(analysis, slot, Type.from_air(type), stack: analysis.function)
+    end
+  end
+
+  Pegasus.parser_from_string(
+    """
+    alloc <- alloc_str lparen type rparen
+    alloc_str <- 'alloc'
+    """,
+    alloc: [post_traverse: :alloc],
+    alloc_str: [ignore: true]
+  )
+
+  def alloc(rest, [type], context, _slot, _bytes) do
+    {rest, [%Alloc{type: type}], context}
+  end
 
   defmodule Load do
     # takes a value from a pointer and puts into a vm slot.
@@ -43,22 +71,26 @@ defmodule Clr.Air.Instruction.Mem do
   Air.ty_op(:load, Load)
 
   defmodule Store do
-    defstruct [:loc, :src]
+    defstruct [:loc, :src, :safe]
   end
 
   Pegasus.parser_from_string(
     """
     store <- store_str safe? lparen (slotref / literal) cs argument rparen
     store_str <- 'store'
-    safe <- '_safe'
     """,
     store: [post_traverse: :store],
-    store_str: [ignore: true],
-    safe: [ignore: true]
+    store_str: [ignore: true]
   )
 
-  def store(rest, [src, loc], context, _slot, _bytes) do
-    {rest, [%Store{src: src, loc: loc}], context}
+  def store(rest, [src, loc | rest_args], context, _slot, _bytes) do
+    safe =
+      case rest_args do
+        [] -> false
+        [:safe] -> true
+      end
+
+    {rest, [%Store{src: src, loc: loc, safe: safe}], context}
   end
 
   defmodule StructFieldVal do
@@ -113,11 +145,9 @@ defmodule Clr.Air.Instruction.Mem do
     """
     memset <- memset_str safe? lparen (lvalue / slotref) cs lvalue rparen
     memset_str <- 'memset'
-    safe <- '_safe'
     """,
     memset: [post_traverse: :memset],
-    memset_str: [ignore: true],
-    safe: [token: :safe]
+    memset_str: [ignore: true]
   )
 
   def memset(rest, [val, src | rest_args], context, _slot, _bytes) do
@@ -136,11 +166,9 @@ defmodule Clr.Air.Instruction.Mem do
 
   Air.un_op(:tag_name, TagName)
 
-
   defmodule ErrorName do
     defstruct [:src]
   end
 
   Air.un_op(:error_name, ErrorName)
-
 end

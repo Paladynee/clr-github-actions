@@ -56,7 +56,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     assert %{slots: %{0 => {:u, 32, ^meta}}} =
              run_analysis(
                %{
-                 {0, :keep} => %Clr.Air.Instruction.Arg{type: ~l"u32", name: "name"}
+                 {0, :keep} => %Clr.Air.Instruction.Function.Arg{type: ~l"u32", name: "name"}
                },
                [meta]
              )
@@ -67,7 +67,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
 
     assert %{slots: %{0 => {:ptr, :one, {:u, 32, ^empty_map}, ^meta}}} =
              run_analysis(%{
-               {0, :keep} => %Clr.Air.Instruction.Alloc{
+               {0, :keep} => %Clr.Air.Instruction.Mem.Alloc{
                  type: {:ptr, :one, {:lvalue, ["u32"]}, []}
                }
              })
@@ -133,7 +133,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
     test "returns an lvalue when it's an lvalue" do
       assert %{return: {{:TypeOf, ~l"foo.bar.value"}, %{}}} =
                run_analysis(%{
-                 {0, :keep} => %Clr.Air.Instruction.ControlFlow.Ret{
+                 {0, :keep} => %Clr.Air.Instruction.Function.Ret{
                    val: ~l"foo.bar.value",
                    mode: :safe
                  }
@@ -151,7 +151,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
                      run_analysis(%{
                        {0, :clobber} => %Clr.Air.Instruction.Dbg.Stmt{loc: {0, 1}},
                        {1, :keep} => %ClrTest.Instruction{},
-                       {2, :clobber} => %Clr.Air.Instruction.ControlFlow.Ret{
+                       {2, :clobber} => %Clr.Air.Instruction.Function.Ret{
                          val: {1, :clobber},
                          mode: :safe
                        }

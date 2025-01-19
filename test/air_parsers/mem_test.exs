@@ -4,6 +4,12 @@ defmodule ClrTest.AirParsers.MemTest do
 
   import Clr.Air.Lvalue
 
+  alias Clr.Air.Instruction.Mem.Alloc
+
+  test "alloc" do
+    assert %Alloc{type: {:ptr, :one, ~l"usize", []}} = Instruction.parse("alloc(*usize)")
+  end
+
   alias Clr.Air.Instruction.Mem.Load
 
   test "load" do
@@ -47,7 +53,7 @@ defmodule ClrTest.AirParsers.MemTest do
   alias Clr.Air.Instruction.Mem.Memset
 
   test "memset" do
-    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8"} =
+    assert %Memset{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_u8", safe: false} =
              Instruction.parse("memset(%0, @Air.Inst.Ref.zero_u8)")
   end
 
@@ -67,7 +73,7 @@ defmodule ClrTest.AirParsers.MemTest do
   test "error_name" do
     assert %ErrorName{src: {39, :clobber}} = Instruction.parse("error_name(%39!)")
   end
-  
+
   test "aggregate_init"
 
   test "union_init"

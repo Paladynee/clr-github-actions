@@ -20,7 +20,7 @@ defmodule Clr.Air.Instruction.AggregateInit do
 
     params <- lbrack argument (cs argument)* rbrack
     """,
-    aggregate_init: [export: true, post_traverse: :aggregate_init],
+    aggregate_init: [post_traverse: :aggregate_init],
     struct_init: [post_traverse: :struct_init],
     initializer: [post_traverse: :initializer],
     params: [post_traverse: :params]

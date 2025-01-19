@@ -25,8 +25,8 @@ defmodule ClrTest.Function.ManagesTest do
              } =
                run_analysis(
                  %{
-                   {0, :keep} => %Clr.Air.Instruction.Arg{type: {:ptr, :one, ~l"u8", []}},
-                   {1, :clobber} => %Clr.Air.Instruction.ControlFlow.Call{
+                   {0, :keep} => %Clr.Air.Instruction.Function.Arg{type: {:ptr, :one, ~l"u8", []}},
+                   {1, :clobber} => %Clr.Air.Instruction.Function.Call{
                      fn: destructor(~l"my_vtable", 0, "destroy"),
                      args: [
                        {:literal, ~l"mem.Allocator", %{"vtable" => ~l"my_vtable"}},
