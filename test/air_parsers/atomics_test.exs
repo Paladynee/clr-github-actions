@@ -59,7 +59,8 @@ defmodule ClrTest.AirParsers.AtomicsTests do
              )
   end
 
-  # test "cmpxchg_strong" do
+  test "cmpxchg_strong"
+  # do
   #  assert %CmpxchgStrong{
   #           loc:
   #             {:literal,

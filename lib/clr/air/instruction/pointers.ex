@@ -1,6 +1,6 @@
 defmodule Clr.Air.Instruction.Pointers do
-  alias Clr.Air 
-  
+  alias Clr.Air
+
   require Air
   require Pegasus
 
@@ -9,7 +9,8 @@ defmodule Clr.Air.Instruction.Pointers do
   Pegasus.parser_from_string(
     """
     pointers <- ptr_op / struct_field_ptr_index / struct_field_ptr / slice_len / slice_ptr /
-      slice
+      slice_elem_val / slice_elem_ptr / slice / array_elem_val / ptr_slice_len_ptr / ptr_slice_ptr_ptr /
+      ptr_elem_val / ptr_elem_ptr / array_to_slice
     prefix <- 'ptr_'
     """,
     pointers: [export: true],
@@ -113,8 +114,99 @@ defmodule Clr.Air.Instruction.Pointers do
   Air.ty_op(:ptr_slice_len_ptr, PtrSliceLenPtr)
 
   defmodule PtrSlicePtrPtr do
-    defstruct [:type, :src] 
+    defstruct [:type, :src]
   end
 
   Air.ty_op(:ptr_slice_ptr_ptr, PtrSlicePtrPtr)
+
+  defmodule ArrayElemVal do
+    defstruct [:src, :index_src]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    array_elem_val <- array_elem_val_str lparen argument cs argument rparen
+    array_elem_val_str <- 'array_elem_val'
+    """,
+    array_elem_val: [post_traverse: :array_elem_val],
+    array_elem_val_str: [ignore: true]
+  )
+
+  def array_elem_val(rest, [slot, type], context, _slot, _bytes) do
+    {rest, [%ArrayElemVal{src: type, index_src: slot}], context}
+  end
+
+  defmodule SliceElemVal do
+    defstruct [:src, :index_src]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    slice_elem_val <- slice_elem_val_str lparen slotref cs argument rparen
+    slice_elem_val_str <- 'slice_elem_val'
+    """,
+    slice_elem_val: [post_traverse: :slice_elem_val],
+    slice_elem_val_str: [ignore: true]
+  )
+
+  defp slice_elem_val(rest, [index, src], context, _slot, _bytes) do
+    {rest, [%SliceElemVal{index_src: index, src: src}], context}
+  end
+
+  defmodule SliceElemPtr do
+    defstruct [:type, :src, :index]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    slice_elem_ptr <- slice_elem_ptr_str lparen type cs slotref cs argument rparen
+    slice_elem_ptr_str <- 'slice_elem_ptr'
+    """,
+    slice_elem_ptr: [post_traverse: :slice_elem_ptr],
+    slice_elem_ptr_str: [ignore: true]
+  )
+
+  defp slice_elem_ptr(rest, [index, src, type], context, _slot, _bytes) do
+    {rest, [%SliceElemPtr{index: index, src: src, type: type}], context}
+  end
+
+  defmodule PtrElemVal do
+    defstruct [:src, :index_src]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    ptr_elem_val <- ptr_elem_val_str lparen slotref cs argument rparen
+    ptr_elem_val_str <- 'ptr_elem_val'
+    """,
+    ptr_elem_val: [post_traverse: :ptr_elem_val],
+    ptr_elem_val_str: [ignore: true]
+  )
+
+  defp ptr_elem_val(rest, [index, src], context, _slot, _bytes) do
+    {rest, [%PtrElemVal{index_src: index, src: src}], context}
+  end
+
+  defmodule PtrElemPtr do
+    defstruct [:loc, :val, :type]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    ptr_elem_ptr <- ptr_elem_ptr_str lparen type cs (slotref / literal) cs argument rparen
+    ptr_elem_ptr_str <- 'ptr_elem_ptr'
+    """,
+    ptr_elem_ptr: [post_traverse: :ptr_elem_ptr],
+    ptr_elem_ptr_str: [ignore: true]
+  )
+
+  defp ptr_elem_ptr(rest, [val, loc, type], context, _slot, _byte) do
+    {rest, [%PtrElemPtr{loc: loc, val: val, type: type}], context}
+  end
+
+  defmodule ArrayToSlice do
+    defstruct [:type, :src]
+  end
+
+  Air.ty_op(:array_to_slice, ArrayToSlice)
 end

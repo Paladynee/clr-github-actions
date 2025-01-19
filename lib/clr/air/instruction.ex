@@ -7,16 +7,14 @@ defprotocol Clr.Air.Instruction do
 after
   @modules Map.new(
              ~w[assembly 
-                arg ptr_elem_val alloc  
-                slice_elem_val aggregate_init
-                slice_elem_ptr
+                arg alloc  
+                aggregate_init
                 memset memcpy 
-                array_to_slice ret_load
                 get_union_tag
-                array_elem_val ptr_elem_ptr
                 error_name 
-                memset_safe ptr_slice_ptr_ptr
-                cmp_vector reduce ptr_slice_len_ptr tag_name union_init
+                memset_safe 
+                cmp_vector tag_name union_init
+                vector 
                 casts dbg controls pointers maths tests atomics mem],
              fn instruction ->
                {String.to_atom(instruction),
@@ -40,12 +38,7 @@ after
   Pegasus.parser_from_string(
     """
     # TODO: reorganize this by category.
-    instruction <- # pointer operations
-                   ptr_elem_val / slice_elem_val /
-                   slice_elem_ptr /
-                   ptr_elem_ptr /
-                   array_elem_val /
-                   # memory operations
+    instruction <- # memory operations
                    alloc /
                    memset / memcpy / memset_safe /
                    # memory operations
@@ -53,7 +46,6 @@ after
                    # inits
                    union_init / aggregate_init / 
                    # casting operations
-                    array_to_slice / 
                    get_union_tag /  
                    # names
                    tag_name / error_name /
@@ -66,7 +58,8 @@ after
                    # atomic operations
                    atomics /
                    # vector operations
-                   reduce / cmp_vector /
+                   vector /
+                   cmp_vector /
                    # pointer operations
                    pointers /
                    # test

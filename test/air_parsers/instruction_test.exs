@@ -40,33 +40,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     end
   end
 
-  describe "pointer operations" do
-    alias Clr.Air.Instruction.PtrElemVal
-
-    test "ptr_elem_val" do
-      assert %PtrElemVal{src: {0, :keep}, val: ~l"@Air.Inst.Ref.zero_usize"} =
-               Instruction.parse("ptr_elem_val(%0, @Air.Inst.Ref.zero_usize)")
-    end
-
-    alias Clr.Air.Instruction.PtrElemPtr
-
-    test "ptr_elem_ptr" do
-      assert %PtrElemPtr{
-               loc: {79, :keep},
-               val: {:literal, ~l"usize", 13},
-               type: {:ptr, :one, {:optional, ~l"debug.Dwarf.Section"}, []}
-             } =
-               Instruction.parse("ptr_elem_ptr(*?debug.Dwarf.Section, %79, <usize, 13>)")
-    end
-
-    alias Clr.Air.Instruction.SliceElemVal
-
-    test "slice_elem_val" do
-      assert %SliceElemVal{src: {0, :keep}, index: {2, :clobber}} =
-               Instruction.parse("slice_elem_val(%0, %2!)")
-    end
-  end
-
   describe "memory operations" do
     alias Clr.Air.Instruction.Alloc
 
@@ -110,22 +83,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse("memcpy(%104!, %112!)")
     end
 
-    alias Clr.Air.Instruction.ArrayToSlice
-
-    test "array_to_slice" do
-      assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8", []}, src: {13, :clobber}} =
-               Instruction.parse("array_to_slice([]u8, %13!)")
-    end
-
-    alias Clr.Air.Instruction.ArrayElemVal
-
-    test "array_elem_val" do
-      assert %ArrayElemVal{type: {:literal, {:array, 2, _, []}, _}, src: {519, :keep}} =
-               Instruction.parse(
-                 "array_elem_val(<[2]debug.Dwarf.Section.Id, .{ .eh_frame, .debug_frame }>, %519)"
-               )
-    end
-
     alias Clr.Air.Instruction.GetUnionTag
 
     test "get_union_tag" do
@@ -161,13 +118,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
                Instruction.parse(
                  "cmp_vector(neq, %405!, <@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>)"
                )
-    end
-
-    alias Clr.Air.Instruction.Reduce
-
-    test "reduce" do
-      assert %Reduce{loc: {0, :keep}, op: :or} =
-               Instruction.parse("reduce(%0, Or)")
     end
   end
 

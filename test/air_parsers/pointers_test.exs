@@ -89,4 +89,45 @@ defmodule ClrTest.AirParsers.PointersTest do
     assert %PtrSliceLenPtr{type: {:ptr, :one, {:lvalue, ["usize"]}, []}, src: {20, :clobber}} =
              Instruction.parse("ptr_slice_len_ptr(*usize, %20!)")
   end
+
+  alias Clr.Air.Instruction.Pointers.ArrayElemVal
+
+  test "array_elem_val" do
+    assert %ArrayElemVal{src: {:literal, {:array, 2, _, []}, _}, index_src: {519, :keep}} =
+             Instruction.parse(
+               "array_elem_val(<[2]debug.Dwarf.Section.Id, .{ .eh_frame, .debug_frame }>, %519)"
+             )
+  end
+
+  alias Clr.Air.Instruction.Pointers.SliceElemVal
+
+  test "slice_elem_val" do
+    assert %SliceElemVal{src: {0, :keep}, index_src: {2, :clobber}} =
+             Instruction.parse("slice_elem_val(%0, %2!)")
+  end
+
+  alias Clr.Air.Instruction.Pointers.PtrElemVal
+
+  test "ptr_elem_val" do
+    assert %PtrElemVal{src: {0, :keep}, index_src: ~l"@Air.Inst.Ref.zero_usize"} =
+             Instruction.parse("ptr_elem_val(%0, @Air.Inst.Ref.zero_usize)")
+  end
+
+  alias Clr.Air.Instruction.Pointers.PtrElemPtr
+
+  test "ptr_elem_ptr" do
+    assert %PtrElemPtr{
+             loc: {79, :keep},
+             val: {:literal, ~l"usize", 13},
+             type: {:ptr, :one, {:optional, ~l"debug.Dwarf.Section"}, []}
+           } =
+             Instruction.parse("ptr_elem_ptr(*?debug.Dwarf.Section, %79, <usize, 13>)")
+  end
+
+  alias Clr.Air.Instruction.Pointers.ArrayToSlice
+
+  test "array_to_slice" do
+    assert %ArrayToSlice{type: {:ptr, :slice, ~l"u8", []}, src: {13, :clobber}} =
+             Instruction.parse("array_to_slice([]u8, %13!)")
+  end
 end

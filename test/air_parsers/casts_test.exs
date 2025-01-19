@@ -143,4 +143,8 @@ defmodule ClrTest.AirParsers.CastsTest do
            } =
              Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")
   end
+
+  test "int_from_float"
+
+  test "float_from_int"
 end

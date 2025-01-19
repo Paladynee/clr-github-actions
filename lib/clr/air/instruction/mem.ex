@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.Mem do
 
   Pegasus.parser_from_string(
     """
-    mem <- load / store / struct_field_val
+    mem <- load / store / struct_field_val / set_union_tag
     """,
     mem: [export: true]
   )

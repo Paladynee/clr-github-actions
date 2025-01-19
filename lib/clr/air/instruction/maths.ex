@@ -138,7 +138,7 @@ defmodule Clr.Air.Instruction.Maths do
   # unary operations
 
   defmodule Unary do
-    defstruct ~w[op operand optimized]a
+    defstruct ~w[op operand]a ++ [optimized: false]
   end
 
   Pegasus.parser_from_string(
