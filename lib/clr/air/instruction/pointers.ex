@@ -95,27 +95,11 @@ defmodule Clr.Air.Instruction.Pointers do
     {rest, [%Slice{type: type, src: src, len: len}], context}
   end
 
-  defmodule SliceLen do
-    defstruct [:type, :src]
-  end
-
   Air.ty_op(:slice_len, SliceLen)
-
-  defmodule SlicePtr do
-    defstruct [:type, :src]
-  end
 
   Air.ty_op(:slice_ptr, SlicePtr)
 
-  defmodule PtrSliceLenPtr do
-    defstruct [:type, :src]
-  end
-
   Air.ty_op(:ptr_slice_len_ptr, PtrSliceLenPtr)
-
-  defmodule PtrSlicePtrPtr do
-    defstruct [:type, :src]
-  end
 
   Air.ty_op(:ptr_slice_ptr_ptr, PtrSlicePtrPtr)
 
@@ -202,10 +186,6 @@ defmodule Clr.Air.Instruction.Pointers do
 
   defp ptr_elem_ptr(rest, [val, loc, type], context, _slot, _byte) do
     {rest, [%PtrElemPtr{loc: loc, val: val, type: type}], context}
-  end
-
-  defmodule ArrayToSlice do
-    defstruct [:type, :src]
   end
 
   Air.ty_op(:array_to_slice, ArrayToSlice)

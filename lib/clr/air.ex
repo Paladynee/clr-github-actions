@@ -34,21 +34,36 @@ defmodule Clr.Air do
     end
   end
 
-  defmacro un_op(op, module) do
+  defmacro un_op(op, module, opts \\ []) do
     op_str = :"#{op}_str"
+
+    code =
+      Keyword.get(
+        opts,
+        :do,
+        quote do
+          def analysis(_, _), do: raise("unimplemented")
+        end
+      )
 
     parser = """
     #{op} <- #{op_str} lparen argument rparen
     #{op_str} <- '#{op}'
     """
 
-    opts = [
+    parser_opts = [
       {op, post_traverse: op},
       {op_str, ignore: true}
     ]
 
     quote do
-      Pegasus.parser_from_string(unquote(parser), unquote(opts))
+      defmodule unquote(module) do
+        defstruct [:type, :src]
+        use Clr.Air.Instruction
+        unquote(code)
+      end
+
+      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
 
       def unquote(op)(rest, [value], context, _slot, _bytes) do
         {rest, [%unquote(module){src: value}], context}
@@ -56,10 +71,19 @@ defmodule Clr.Air do
     end
   end
 
-  defmacro ty_op(op, module) do
+  defmacro ty_op(op, module, opts \\ []) do
     op_str = :"#{op}_str"
 
-    opts = [
+    code =
+      Keyword.get(
+        opts,
+        :do,
+        quote do
+          def analysis(_, _), do: raise("unimplemented")
+        end
+      )
+
+    parser_opts = [
       {op, post_traverse: op},
       {op_str, ignore: true}
     ]
@@ -70,7 +94,13 @@ defmodule Clr.Air do
     """
 
     quote do
-      Pegasus.parser_from_string(unquote(parser), unquote(opts))
+      defmodule unquote(module) do
+        defstruct [:type, :src]
+        use Clr.Air.Instruction
+        unquote(code)
+      end
+
+      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
 
       def unquote(op)(rest, [slot, type], context, _slot, _bytes) do
         {rest, [%unquote(module){type: type, src: slot}], context}

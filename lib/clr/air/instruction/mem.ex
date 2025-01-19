@@ -41,12 +41,7 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%Alloc{type: type}], context}
   end
 
-  defmodule Load do
-    # takes a value from a pointer and puts into a vm slot.
-    defstruct [:type, :src]
-
-    use Clr.Air.Instruction
-
+  Air.ty_op(:load, Load) do
     alias Clr.Block
     alias Clr.Type
 
@@ -67,8 +62,6 @@ defmodule Clr.Air.Instruction.Mem do
       end
     end
   end
-
-  Air.ty_op(:load, Load)
 
   defmodule Store do
     defstruct [:loc, :src, :safe]
@@ -160,15 +153,7 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%Memset{src: src, val: val, safe: safe}], context}
   end
 
-  defmodule TagName do
-    defstruct [:src]
-  end
-
   Air.un_op(:tag_name, TagName)
-
-  defmodule ErrorName do
-    defstruct [:src]
-  end
 
   Air.un_op(:error_name, ErrorName)
 end
