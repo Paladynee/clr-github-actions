@@ -37,33 +37,19 @@ defmodule Clr.Air do
   defmacro un_op(op, module, opts \\ []) do
     op_str = :"#{op}_str"
 
-    code =
-      Keyword.get(
-        opts,
-        :do,
-        quote do
-          def analysis(_, _), do: raise("unimplemented")
-        end
-      )
-
     parser = """
     #{op} <- #{op_str} lparen argument rparen
     #{op_str} <- '#{op}'
     """
 
-    parser_opts = [
-      {op, post_traverse: op},
-      {op_str, ignore: true}
-    ]
-
     quote do
       defmodule unquote(module) do
         defstruct [:type, :src]
         use Clr.Air.Instruction
-        unquote(code)
+        unquote(default_code(opts))
       end
 
-      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
+      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))
 
       def unquote(op)(rest, [value], context, _slot, _bytes) do
         {rest, [%unquote(module){src: value}], context}
@@ -74,20 +60,6 @@ defmodule Clr.Air do
   defmacro ty_op(op, module, opts \\ []) do
     op_str = :"#{op}_str"
 
-    code =
-      Keyword.get(
-        opts,
-        :do,
-        quote do
-          def analysis(_, _), do: raise("unimplemented")
-        end
-      )
-
-    parser_opts = [
-      {op, post_traverse: op},
-      {op_str, ignore: true}
-    ]
-
     parser = """
     #{op} <- #{op_str} lparen type cs argument rparen
     #{op_str} <- '#{op}'
@@ -97,15 +69,32 @@ defmodule Clr.Air do
       defmodule unquote(module) do
         defstruct [:type, :src]
         use Clr.Air.Instruction
-        unquote(code)
+        unquote(default_code(opts))
       end
 
-      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))
+      Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))
 
       def unquote(op)(rest, [slot, type], context, _slot, _bytes) do
         {rest, [%unquote(module){type: type, src: slot}], context}
       end
     end
+  end
+
+  defp parser_opts(op, op_str) do
+    [
+      {op, post_traverse: op},
+      {op_str, ignore: true}
+    ]
+  end
+
+  defp default_code(opts) do
+    Keyword.get(
+      opts,
+      :do,
+      quote do
+        def analysis(_, _, _), do: raise("unimplemented")
+      end
+    )
   end
 
   alias Clr.Air.Instruction
