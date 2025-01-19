@@ -51,11 +51,22 @@ defmodule Clr.Air.Instruction.Vector do
     cmp_vector <- cmp_vector_str optimized? lparen op cs argument cs argument rparen
     cmp_vector_str <- 'cmp_vector'
 
-    op <- neq
+    op <- lte / lt / gte / gt / neq / eq
+    lte <- 'lte'
+    lt <- 'lt'
+    gte <- 'gte'
+    gt <- 'gt'
+    eq <- 'eq'
     neq <- 'neq'
     """,
     cmp_vector: [export: true, post_traverse: :cmp_vector],
     cmp_vector_str: [ignore: true],
+    optimized: [token: :optimized],
+    lte: [token: :lte],
+    lt: [token: :lt],
+    gte: [token: :gte],
+    gt: [token: :gt],
+    eq: [token: :eq],
     neq: [token: :neq]
   )
 
