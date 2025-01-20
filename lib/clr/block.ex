@@ -52,7 +52,10 @@ defmodule Clr.Block do
     |> Enum.map(fn {req, slot} ->
       case fetch_up!(block, slot) do
         {type, _} ->
-          Map.merge(req, Type.get_meta(type))
+          case Type.get_meta(type) do
+            %{deleted: info} ->
+              Map.put(req, :transferred, info)
+          end
       end
     end)
   end
@@ -65,7 +68,7 @@ defmodule Clr.Block do
     Clr.Air.Instruction.Function.Ret,
     Clr.Air.Instruction.Mem.Store,
     Clr.Air.Instruction.Dbg.Stmt,
-    Clr.Air.Instruction.ControlFlow.Call
+    Clr.Air.Instruction.Function.Call
   ]
 
   # if we have a "keep" instruction or a required instruction, subject the

@@ -21,7 +21,7 @@ defmodule ClrTest.Function.ManagesTest do
     test "when you pass a pointer to the function" do
       assert %{
                args_meta: [%{heap: ~l"my_vtable"}],
-               reqs: [%{deleted: ~l"foo.bar"}]
+               reqs: [%{transferred: ~l"foo.bar"}]
              } =
                run_analysis(
                  %{
