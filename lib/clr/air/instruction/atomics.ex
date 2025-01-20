@@ -61,7 +61,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[from mode]a
   end
 
-  defp atomic_load_instruction(rest, [mode, from], context, _slot, _bytes) do
+  defp atomic_load_instruction(rest, [mode, from], context, _loc, _bytes) do
     {rest, [%Load{from: from, mode: mode}], context}
   end
 
@@ -69,7 +69,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[from to mode]a
   end
 
-  defp atomic_store_instruction(rest, [mode, from, to, mode], context, _slot, _bytes) do
+  defp atomic_store_instruction(rest, [mode, from, to, mode], context, _loc, _bytes) do
     {rest, [%Store{from: from, to: to, mode: mode}], context}
   end
 
@@ -77,7 +77,7 @@ defmodule Clr.Air.Instruction.Atomics do
     defstruct ~w[val loc op mode]a
   end
 
-  defp atomic_rmw_instruction(rest, [mode, op, val, loc], context, _slot, _bytes) do
+  defp atomic_rmw_instruction(rest, [mode, op, val, loc], context, _loc, _bytes) do
     {rest, [%Rmw{val: val, loc: loc, op: op, mode: mode}], context}
   end
 

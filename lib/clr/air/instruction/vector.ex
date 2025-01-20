@@ -6,7 +6,8 @@ defmodule Clr.Air.Instruction.Vector do
 
   Air.import(~w[argument type slotref literal lvalue cs lparen rparen int space]a)
 
-  Pegasus.parser_from_string("vector <- reduce / cmp_vector / select / shuffle / splat\n",
+  Pegasus.parser_from_string(
+    "vector <- reduce / cmp_vector / select / shuffle / splat / vector_store_elem \n",
     vector: [export: true]
   )
 
@@ -34,7 +35,7 @@ defmodule Clr.Air.Instruction.Vector do
     or: [token: :or]
   )
 
-  def reduce(rest, [op, src | rest_args], context, _slot, _bytes) do
+  def reduce(rest, [op, src | rest_args], context, _loc, _bytes) do
     optimized =
       case rest_args do
         [] -> false
@@ -72,7 +73,7 @@ defmodule Clr.Air.Instruction.Vector do
     neq: [token: :neq]
   )
 
-  def cmp_vector(rest, [rhs, lhs, op | rest_args], context, _slot, _bytes) do
+  def cmp_vector(rest, [rhs, lhs, op | rest_args], context, _loc, _bytes) do
     optimized =
       case rest_args do
         [] -> false
@@ -98,10 +99,10 @@ defmodule Clr.Air.Instruction.Vector do
     shuffle: [post_traverse: :shuffle],
     shuffle_str: [ignore: true],
     mask: [ignore: true],
-    len: [ignore: true],
+    len: [ignore: true]
   )
 
-  def shuffle(rest, [len, mask, b, a], context, _slot, _bytes) do
+  def shuffle(rest, [len, mask, b, a], context, _loc, _bytes) do
     {rest, [%Shuffle{a: a, b: b, len: len, mask: mask}], context}
   end
 
@@ -118,8 +119,9 @@ defmodule Clr.Air.Instruction.Vector do
     select_str: [ignore: true]
   )
 
-  def select(rest, [b, a, pred, type], context, _slot, _bytes) do
+  def select(rest, [b, a, pred, type], context, _loc, _bytes) do
     {rest, [%Select{type: type, pred: pred, a: a, b: b}], context}
   end
 
+  Air.unimplemented(:vector_store_elem)
 end

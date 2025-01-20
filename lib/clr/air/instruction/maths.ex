@@ -94,12 +94,12 @@ defmodule Clr.Air.Instruction.Maths do
   )
 
   @modes ~w[safe optimized wrap sat exact]a
-  def binary_instruction(rest, [rhs, lhs, mode, op], context, _slot, _bytes)
+  def binary_instruction(rest, [rhs, lhs, mode, op], context, _loc, _bytes)
       when mode in @modes do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op, mode: mode}], context}
   end
 
-  def binary_instruction(rest, [rhs, lhs, op], context, _slot, _bytes) do
+  def binary_instruction(rest, [rhs, lhs, op], context, _loc, _bytes) do
     {rest, [%Binary{lhs: lhs, rhs: rhs, op: op}], context}
   end
 
@@ -131,7 +131,7 @@ defmodule Clr.Air.Instruction.Maths do
     bit_reverse: [token: :bit_reverse]
   )
 
-  def unary_type_instruction(rest, [operand, type, op], context, _slot, _bytes) do
+  def unary_type_instruction(rest, [operand, type, op], context, _loc, _bytes) do
     {rest, [%UnaryTyped{operand: operand, type: type, op: op}], context}
   end
 
@@ -182,7 +182,7 @@ defmodule Clr.Air.Instruction.Maths do
     optimized: [token: :optimized]
   )
 
-  def unary_instruction(rest, args, context, _slot, _bytes) do
+  def unary_instruction(rest, args, context, _loc, _bytes) do
     op =
       case args do
         [operand, :optimized, :neg] -> %Unary{operand: operand, op: :neg, optimized: true}
@@ -215,7 +215,7 @@ defmodule Clr.Air.Instruction.Maths do
     overflow_instruction: [post_traverse: :overflow_instruction]
   )
 
-  def overflow_instruction(rest, [rhs, lhs, type, op], context, _slot, _bytes) do
+  def overflow_instruction(rest, [rhs, lhs, type, op], context, _loc, _bytes) do
     {rest, [%Overflow{lhs: lhs, rhs: rhs, type: type, op: op}], context}
   end
 end

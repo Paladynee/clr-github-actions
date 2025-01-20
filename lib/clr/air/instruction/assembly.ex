@@ -33,23 +33,23 @@ defmodule Clr.Air.Instruction.Assembly do
     volatile: [token: :volatile]
   )
 
-  defp asm_io(rest, [literal, "=", var, "in" | args], context, _slot, _bytes) do
+  defp asm_io(rest, [literal, "=", var, "in" | args], context, _loc, _bytes) do
     {rest, [{:in, {var, Enum.reverse(args), literal}}], context}
   end
 
-  defp asm_io(rest, [literal, "=", var, "=", "out" | args], context, _slot, _bytes) do
+  defp asm_io(rest, [literal, "=", var, "=", "out" | args], context, _loc, _bytes) do
     {rest, [{:out, {var, Enum.reverse(args), literal}}], context}
   end
 
-  defp asm_assign(rest, [reg, "=", "->", var], context, _slot, _bytes) do
+  defp asm_assign(rest, [reg, "=", "->", var], context, _loc, _bytes) do
     {rest, [{:->, {var, reg}}], context}
   end
 
-  defp asm_clobber(rest, [name, "~"], context, _slot, _bytes) do
+  defp asm_clobber(rest, [name, "~"], context, _loc, _bytes) do
     {rest, [{:clobber, name}], context}
   end
 
-  defp assembly(rest, args, context, _slot, _bytes) do
+  defp assembly(rest, args, context, _loc, _bytes) do
     result =
       case Enum.reverse(args) do
         ["assembly", type, :volatile | rest] ->

@@ -81,31 +81,40 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
                """)
     end
 
-    test "other switch_br features"
+    test "loop_switch_br" do
+      assert %SwitchBr{test: {104, :clobber}, loop: true} =
+        Instruction.parse("""
+        loop_switch_br(%104!, [<u64, 5>] => {
+            %120!= br(%109, @Air.Inst.Ref.void_value)
+          }
+        )
+        """)
+    end
 
     test "else with .cold" do
-      assert %Clr.Air.Instruction.ControlFlow.SwitchBr{
-        test: {300, :clobber},
-        cases: %{:else => %{{333, :clobber} => _}}} = Instruction.parse("""
-      switch_br(%300!, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .signed>] => {
-          %328!= br(%301, %327!)
-        }, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .unsigned>] => {
-          %332!= br(%301, %331!)
-        }, else .cold => {
-          %333!= dbg_stmt(35:44)
-          %335!= unreach()
-        }
-      )
-      """)
+      assert %SwitchBr{
+               test: {300, :clobber},
+               cases: %{:else => %{{333, :clobber} => _}}
+             } =
+               Instruction.parse("""
+               switch_br(%300!, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .signed>] => {
+                   %328!= br(%301, %327!)
+                 }, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .unsigned>] => {
+                   %332!= br(%301, %331!)
+                 }, else .cold => {
+                   %333!= dbg_stmt(35:44)
+                   %335!= unreach()
+                 }
+               )
+               """)
     end
   end
 
-  describe "loop_switch_br" do
-    test "loop_switch_br"
-  end
-
   describe "switch_dispatch" do
-    test "switch_dispatch"
+    alias Clr.Air.Instruction.ControlFlow.SwitchDispatch
+    test "switch_dispatch" do
+      %SwitchDispatch{val: val, slot: slot} = Instruction.parse("switch_dispatch(%49, %44!)")
+    end
   end
 
   describe "try" do

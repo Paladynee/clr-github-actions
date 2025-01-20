@@ -32,11 +32,11 @@ defmodule Clr.Air.Instruction.Function do
     arg_str: [ignore: true]
   )
 
-  def arg(rest, [type], context, _slot, _byte) do
+  def arg(rest, [type], context, _loc, _byte) do
     {rest, [%Arg{type: type}], context}
   end
 
-  def arg(rest, [name, type], context, _slot, _byte) do
+  def arg(rest, [name, type], context, _loc, _byte) do
     {rest, [%Arg{type: type, name: name}], context}
   end
 
@@ -220,7 +220,7 @@ defmodule Clr.Air.Instruction.Function do
     load: [token: :load]
   )
 
-  def ret(rest, [value | rest_args], context, _slot, _bytes) do
+  def ret(rest, [value | rest_args], context, _loc, _bytes) do
     mode =
       case rest_args do
         [:safe] -> :safe
@@ -245,7 +245,7 @@ defmodule Clr.Air.Instruction.Function do
     defstruct [:type]
   end
 
-  def ret_ptr(rest, [value], context, _slot, _bytes) do
+  def ret_ptr(rest, [value], context, _loc, _bytes) do
     {rest, [%RetPtr{type: value}], context}
   end
 

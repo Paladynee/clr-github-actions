@@ -79,7 +79,7 @@ defmodule Clr.Air.Instruction.Casts do
     optimized: [token: :optimized]
   )
 
-  def int_from_float(rest, [src, type | rest_args], context, _slot, _bytes) do
+  def int_from_float(rest, [src, type | rest_args], context, _loc, _bytes) do
     optimized =
       case rest_args do
         [] -> false

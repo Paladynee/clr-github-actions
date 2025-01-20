@@ -11,7 +11,7 @@ defmodule Clr.Air.Instruction.Mem do
   Pegasus.parser_from_string(
     """
     mem <- alloc / load / store / struct_field_val / set_union_tag / get_union_tag / memset / memcpy / 
-      tag_name / error_name / aggregate_init / union_init
+      tag_name / error_name / aggregate_init / union_init / prefetch
     safe <- '_safe'
     """,
     mem: [export: true],
@@ -40,7 +40,7 @@ defmodule Clr.Air.Instruction.Mem do
     alloc_str: [ignore: true]
   )
 
-  def alloc(rest, [type], context, _slot, _bytes) do
+  def alloc(rest, [type], context, _loc, _bytes) do
     {rest, [%Alloc{type: type}], context}
   end
 
@@ -79,7 +79,7 @@ defmodule Clr.Air.Instruction.Mem do
     store_str: [ignore: true]
   )
 
-  def store(rest, [src, loc | rest_args], context, _slot, _bytes) do
+  def store(rest, [src, loc | rest_args], context, _loc, _bytes) do
     safe =
       case rest_args do
         [] -> false
@@ -112,7 +112,7 @@ defmodule Clr.Air.Instruction.Mem do
     struct_field_val_str: [ignore: true]
   )
 
-  def struct_field_val(rest, [index, src], context, _slot, _bytes) do
+  def struct_field_val(rest, [index, src], context, _loc, _bytes) do
     {rest, [%StructFieldVal{src: src, index: index}], context}
   end
 
@@ -129,7 +129,7 @@ defmodule Clr.Air.Instruction.Mem do
     set_union_tag_str: [ignore: true]
   )
 
-  def set_union_tag(rest, [val, src], context, _slot, _bytes) do
+  def set_union_tag(rest, [val, src], context, _loc, _bytes) do
     {rest, [%SetUnionTag{src: src, val: val}], context}
   end
 
@@ -148,7 +148,7 @@ defmodule Clr.Air.Instruction.Mem do
     memset_str: [ignore: true]
   )
 
-  def memset(rest, [val, src | rest_args], context, _slot, _bytes) do
+  def memset(rest, [val, src | rest_args], context, _loc, _bytes) do
     safe =
       case rest_args do
         [] -> false
@@ -171,7 +171,7 @@ defmodule Clr.Air.Instruction.Mem do
     memcpy_str: [ignore: true]
   )
 
-  def memcpy(rest, [val, loc], context, _slot, _bytes) do
+  def memcpy(rest, [val, loc], context, _loc, _bytes) do
     {rest, [%Cpy{loc: loc, val: val}], context}
   end
 
@@ -206,23 +206,23 @@ defmodule Clr.Air.Instruction.Mem do
     params: [post_traverse: :params]
   )
 
-  defp aggregate_init(rest, [params, init], context, _slot, _bytes) do
+  defp aggregate_init(rest, [params, init], context, _loc, _bytes) do
     {rest, [%AggregateInit{params: params, init: init}], context}
   end
 
-  defp struct_init(rest, params, context, _slot, _bytes) do
+  defp struct_init(rest, params, context, _loc, _bytes) do
     {rest, [Enum.reverse(params)], context}
   end
 
-  defp initializer(rest, [val, "=", type], context, _slot, _bytes) do
+  defp initializer(rest, [val, "=", type], context, _loc, _bytes) do
     {rest, [{type, val}], context}
   end
 
-  defp initializer(rest, [type], context, _slot, _bytes) do
+  defp initializer(rest, [type], context, _loc, _bytes) do
     {rest, [type], context}
   end
 
-  defp params(rest, params, context, _slot, _bytes) do
+  defp params(rest, params, context, _loc, _bytes) do
     {rest, [Enum.reverse(params)], context}
   end
 
@@ -239,7 +239,34 @@ defmodule Clr.Air.Instruction.Mem do
     union_init_str: [ignore: true]
   )
 
-  def union_init(rest, [src, index], context, _slot, _bytes) do
+  def union_init(rest, [src, index], context, _loc, _bytes) do
     {rest, [%UnionInit{src: src, index: index}], context}
+  end
+
+  defmodule Prefetch do
+    defstruct [:src, :rw, :locality, :cache]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    prefetch <- prefetch_str lparen argument cs rw cs int cs cache rparen
+    prefetch_str <- 'prefetch'
+    rw <- read / write
+    cache <- instruction / data
+    read <- 'read'
+    write <- 'write'
+    instruction <- 'instruction'
+    data <- 'data'
+    """,
+    prefetch: [post_traverse: :prefetch],
+    prefetch_str: [ignore: true],
+    read: [token: :read],
+    write: [token: :write],
+    instruction: [token: :instruction],
+    data: [token: :data]
+  )
+
+  def prefetch(rest, [cache, locality, rw, src], context, _loc, _bytes) do
+    {rest, [%Prefetch{src: src, rw: rw, locality: locality, cache: cache}], context}
   end
 end

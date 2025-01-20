@@ -61,56 +61,56 @@ defmodule Clr.Air.Literal do
     elision: [token: :...]
   )
 
-  defp literal(rest, [value, type], context, _slot, _bytes) do
+  defp literal(rest, [value, type], context, _loc, _bytes) do
     {rest, [{:literal, type, value}], context}
   end
 
-  defp struct_ptr(rest, args, context, _slot, _bytes) do
+  defp struct_ptr(rest, args, context, _loc, _bytes) do
     case args do
       [range, value, "&"] -> {rest, [{:structptr, value, range}], context}
       [value, "&"] -> {rest, [{:structptr, value}], context}
     end
   end
 
-  defp string_value(rest, [to, "..", from, string], context, _slot, _bytes) do
+  defp string_value(rest, [to, "..", from, string], context, _loc, _bytes) do
     {rest, [{:substring, string, from..to}], context}
   end
 
-  defp string_value(rest, [string], context, _slot, _bytes) do
+  defp string_value(rest, [string], context, _loc, _bytes) do
     {rest, [{:string, string}], context}
   end
 
-  defp sizeof(rest, [type, "@sizeOf"], context, _slot, _bytes) do
+  defp sizeof(rest, [type, "@sizeOf"], context, _loc, _bytes) do
     {rest, [{:sizeof, type}], context}
   end
 
-  defp alignof(rest, [type, "@alignOf"], context, _slot, _bytes) do
+  defp alignof(rest, [type, "@alignOf"], context, _loc, _bytes) do
     {rest, [{:alignof, type}], context}
   end
 
-  defp as(rest, [value, type, "@as"], context, _slot, _bytes) do
+  defp as(rest, [value, type, "@as"], context, _loc, _bytes) do
     {rest, [{:as, type, value}], context}
   end
 
-  defp as(rest, ["*", value, type, "@as"], context, _slot, _bytes) do
+  defp as(rest, ["*", value, type, "@as"], context, _loc, _bytes) do
     {rest, [{:ptr_deref, {:as, type, value}}], context}
   end
 
-  defp ptrcast(rest, [name, "@ptrCast"], context, _slot, _bytes) do
+  defp ptrcast(rest, [name, "@ptrCast"], context, _loc, _bytes) do
     {rest, [{:ptrcast, name}], context}
   end
 
-  defp enum_value(rest, [value], context, _slot, _bytes) do
+  defp enum_value(rest, [value], context, _loc, _bytes) do
     {rest, [{:enum, value}], context}
   end
 
-  defp range(rest, [to, "..", from], context, _slot, _bytes) do
+  defp range(rest, [to, "..", from], context, _loc, _bytes) do
     {rest, [from..to], context}
   end
 
   def parse(str) do
     case literal(str) do
-      {:ok, [result], "", _context, _slot, _bytes} -> result
+      {:ok, [result], "", _context, _loc, _bytes} -> result
     end
   end
 end

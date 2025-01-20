@@ -89,20 +89,20 @@ defmodule Clr.Air.Base do
     elision: [export: true, token: :...]
   )
 
-  defp int(rest, [value], context, _slot, _bytes), do: {rest, [String.to_integer(value)], context}
+  defp int(rest, [value], context, _loc, _bytes), do: {rest, [String.to_integer(value)], context}
 
-  defp keep(rest, [slot], context, _slot, _bytes), do: {rest, [{slot, :keep}], context}
+  defp keep(rest, [slot], context, _loc, _bytes), do: {rest, [{slot, :keep}], context}
 
-  defp identifier(rest, args, context, _slot, _bytes) do
+  defp identifier(rest, args, context, _loc, _bytes) do
     case args do
       [identifier] -> {rest, [identifier], context}
       [identifier, "@"] -> {rest, [identifier], context}
     end
   end
 
-  defp clobber(rest, [slot], context, _slot, _bytes), do: {rest, [{slot, :clobber}], context}
+  defp clobber(rest, [slot], context, _loc, _bytes), do: {rest, [{slot, :clobber}], context}
 
-  defp clobbers(rest, clobbers, context, _slot, _bytes) do
+  defp clobbers(rest, clobbers, context, _loc, _bytes) do
     clobbers =
       clobbers
       |> Enum.map(fn {slot, :clobber} -> slot end)

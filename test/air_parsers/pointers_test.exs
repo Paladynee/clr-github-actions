@@ -29,7 +29,15 @@ defmodule ClrTest.AirParsers.PointersTest do
     end
   end
 
-  test "struct_field_ptr"
+  alias Clr.Air.Instruction.Pointers.StructFieldPtr
+
+  test "struct_field_ptr" do
+    assert %StructFieldPtr{
+             src: {0, :keep},
+             index: 2
+           } =
+             Instruction.parse("struct_field_ptr(%0, 2)")
+  end
 
   alias Clr.Air.Instruction.Pointers.StructFieldPtrIndex
 

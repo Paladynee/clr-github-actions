@@ -52,7 +52,7 @@ defmodule Clr.Air.Instruction.Pointers do
     struct_field_ptr_str: [ignore: true]
   )
 
-  def struct_field_ptr(rest, [index, src], context, _slot, _bytes) do
+  def struct_field_ptr(rest, [index, src], context, _loc, _bytes) do
     {rest, [%StructFieldPtr{src: src, index: index}], context}
   end
 
@@ -92,7 +92,7 @@ defmodule Clr.Air.Instruction.Pointers do
     slice_str: [ignore: true]
   )
 
-  defp slice(rest, [len, src, type], context, _slot, _bytes) do
+  defp slice(rest, [len, src, type], context, _loc, _bytes) do
     {rest, [%Slice{type: type, src: src, len: len}], context}
   end
 
@@ -117,7 +117,7 @@ defmodule Clr.Air.Instruction.Pointers do
     array_elem_val_str: [ignore: true]
   )
 
-  def array_elem_val(rest, [slot, type], context, _slot, _bytes) do
+  def array_elem_val(rest, [slot, type], context, _loc, _bytes) do
     {rest, [%ArrayElemVal{src: type, index_src: slot}], context}
   end
 
@@ -134,7 +134,7 @@ defmodule Clr.Air.Instruction.Pointers do
     slice_elem_val_str: [ignore: true]
   )
 
-  defp slice_elem_val(rest, [index, src], context, _slot, _bytes) do
+  defp slice_elem_val(rest, [index, src], context, _loc, _bytes) do
     {rest, [%SliceElemVal{index_src: index, src: src}], context}
   end
 
@@ -151,7 +151,7 @@ defmodule Clr.Air.Instruction.Pointers do
     slice_elem_ptr_str: [ignore: true]
   )
 
-  defp slice_elem_ptr(rest, [index, src, type], context, _slot, _bytes) do
+  defp slice_elem_ptr(rest, [index, src, type], context, _loc, _bytes) do
     {rest, [%SliceElemPtr{index: index, src: src, type: type}], context}
   end
 
@@ -168,7 +168,7 @@ defmodule Clr.Air.Instruction.Pointers do
     ptr_elem_val_str: [ignore: true]
   )
 
-  defp ptr_elem_val(rest, [index, src], context, _slot, _bytes) do
+  defp ptr_elem_val(rest, [index, src], context, _loc, _bytes) do
     {rest, [%PtrElemVal{index_src: index, src: src}], context}
   end
 
@@ -185,7 +185,7 @@ defmodule Clr.Air.Instruction.Pointers do
     ptr_elem_ptr_str: [ignore: true]
   )
 
-  defp ptr_elem_ptr(rest, [val, loc, type], context, _slot, _byte) do
+  defp ptr_elem_ptr(rest, [val, loc, type], context, _loc, _byte) do
     {rest, [%PtrElemPtr{loc: loc, val: val, type: type}], context}
   end
 
@@ -210,7 +210,7 @@ defmodule Clr.Air.Instruction.Pointers do
     field_parent_ptr_str: [ignore: true]
   )
 
-  def field_parent_ptr(rest, [index, src], context, _slot, _bytes) do
+  def field_parent_ptr(rest, [index, src], context, _loc, _bytes) do
     {rest, [%FieldParentPtr{src: src, index: index}], context}
   end
 end

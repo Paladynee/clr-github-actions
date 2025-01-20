@@ -62,9 +62,9 @@ defmodule Clr.Block do
   # analyzed.
 
   @always [
-    Clr.Air.Instruction.RetSafe,
-    Clr.Air.Instruction.StoreSafe,
-    Clr.Air.Instruction.DbgStmt,
+    Clr.Air.Instruction.Function.Ret,
+    Clr.Air.Instruction.Mem.Store,
+    Clr.Air.Instruction.Dbg.Stmt,
     Clr.Air.Instruction.ControlFlow.Call
   ]
 

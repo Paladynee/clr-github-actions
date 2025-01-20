@@ -50,15 +50,15 @@ defmodule Clr.Air.Function do
     codeline: [export: true, post_traverse: :codeline]
   )
 
-  defp init(rest, _, _context, _slot, _bytes) do
+  defp init(rest, _, _context, _loc, _bytes) do
     {rest, [], %__MODULE__{name: nil}}
   end
 
-  defp function_head(rest, [_, name, _], context, _slot, _bytes) do
+  defp function_head(rest, [_, name, _], context, _loc, _bytes) do
     {rest, [], %{context | name: name}}
   end
 
-  defp function_foot(rest, [name, _], %{name: expected_name} = context, _slot, _bytes) do
+  defp function_foot(rest, [name, _], %{name: expected_name} = context, _loc, _bytes) do
     if expected_name != name do
       raise "function foot name #{name} mismatches expected name #{expected_name}"
     end
@@ -66,15 +66,15 @@ defmodule Clr.Air.Function do
     {rest, [], context}
   end
 
-  defp function(rest, args, context, _slot, _bytes) do
+  defp function(rest, args, context, _loc, _bytes) do
     {rest, [], %{context | code: Map.new(args)}}
   end
 
-  defp codeline(rest, [instruction, "=", slotref], context, _slot, _bytes) do
+  defp codeline(rest, [instruction, "=", slotref], context, _loc, _bytes) do
     {rest, [{slotref, instruction}], context}
   end
 
-  defp codeblock(rest, args, context, _slot, _bytes), do: {rest, [Map.new(args)], context}
+  defp codeblock(rest, args, context, _loc, _bytes), do: {rest, [Map.new(args)], context}
 
   def parse(string) do
     case air(string) do

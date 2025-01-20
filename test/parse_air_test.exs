@@ -30,4 +30,6 @@ defmodule ParseAirTest do
   test_air("fieldparentptr.main")
 
   test_air("vector.main")
+
+  test_air("pointers.main")
 end

@@ -126,9 +126,5 @@ defmodule ClrTest.AirParsers.TestsTest do
     end
   end
 
-  test "cmp_vector"
-
-  test "cmp_vector_optimized"
-
   test "error_set_has_value"
 end

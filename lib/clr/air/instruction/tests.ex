@@ -50,11 +50,11 @@ defmodule Clr.Air.Instruction.Tests do
     optimized: [token: :optimized]
   )
 
-  def compare_instruction(rest, [rhs, lhs, op], context, _slot, _bytes) do
+  def compare_instruction(rest, [rhs, lhs, op], context, _loc, _bytes) do
     {rest, [%Compare{lhs: lhs, rhs: rhs, op: op}], context}
   end
 
-  def compare_instruction(rest, [rhs, lhs, :optimized, op], context, _slot, _bytes) do
+  def compare_instruction(rest, [rhs, lhs, :optimized, op], context, _loc, _bytes) do
     {rest, [%Compare{lhs: lhs, rhs: rhs, op: op, optimized: true}], context}
   end
 
@@ -93,7 +93,7 @@ defmodule Clr.Air.Instruction.Tests do
     named_enum_value: [token: :named_enum_value]
   )
 
-  def is_instruction(rest, [operand, op], context, _slot, _bytes) do
+  def is_instruction(rest, [operand, op], context, _loc, _bytes) do
     {rest, [%Is{operand: operand, op: op}], context}
   end
 
@@ -114,7 +114,7 @@ defmodule Clr.Air.Instruction.Tests do
     cmp_lt_errors_len: [token: :cmp_lt_errors_len]
   )
 
-  def unary_instruction(rest, [operand, op], context, _slot, _bytes) do
+  def unary_instruction(rest, [operand, op], context, _loc, _bytes) do
     {rest, [%Unary{operand: operand, op: op}], context}
   end
 end

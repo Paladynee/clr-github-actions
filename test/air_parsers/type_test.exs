@@ -201,7 +201,7 @@ defmodule ClrTest.Air.TypeTest do
 
   test "sub_pointer type with four alignment" do
     assert {:ptr, :one, {:lvalue, ["u8"]}, [alignment: {4, 0, 4, 0}]} =
-      Type.parse("*align(4:0:4:0) u8")
+             Type.parse("*align(4:0:4:0) u8")
   end
 
   test "vector type" do

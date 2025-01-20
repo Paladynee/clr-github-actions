@@ -103,5 +103,16 @@ defmodule ClrTest.AirParsers.MemTest do
     assert %UnionInit{index: 0, src: {18, :clobber}} = Instruction.parse("union_init(0, %18!)")
   end
 
-  test "prefetch"
+  alias Clr.Air.Instruction.Mem.Prefetch
+
+  test "prefetch" do
+    assert %Prefetch{
+             cache: :data,
+             rw: :read,
+             locality: 3
+           } =
+             Instruction.parse(
+               "prefetch(<*const comptime_int, @as(comptime_int, 1)>, read, 3, data)"
+             )
+  end
 end

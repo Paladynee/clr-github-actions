@@ -1,16 +1,19 @@
 defmodule Clr.Air.Instruction.Dbg do
   require Pegasus
-  require Clr.Air
+
+  alias Clr.Air
+
+  require Air
 
   import Clr.Air.Lvalue
 
-  Clr.Air.import(
+  Air.import(
     ~w[rparen lparen int colon type cs codeblock clobbers space fn_literal literal slotref dquoted argument]a
   )
 
   Pegasus.parser_from_string(
     """
-    dbg <- trap / dbg_stmt / dbg_empty_stmt / dbg_inline_block / dbg_var_ptr / dbg_var_val / dbg_arg_inline
+    dbg <- trap / dbg_stmt / dbg_empty_stmt / dbg_inline_block / dbg_var_ptr / dbg_var_val / dbg_arg_inline / breakpoint
     """,
     dbg: [export: true]
   )
@@ -55,7 +58,7 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_stmt_str: [ignore: true]
   )
 
-  defp dbg_stmt(rest, [col, row], context, _slot, _bytes) do
+  defp dbg_stmt(rest, [col, row], context, _loc, _bytes) do
     {rest, [%Stmt{loc: {row, col}}], context}
   end
 
@@ -89,7 +92,7 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_inline_block_str: [ignore: true]
   )
 
-  defp dbg_inline_block(rest, [codeblock, fun, name], context, _slot, _bytes) do
+  defp dbg_inline_block(rest, [codeblock, fun, name], context, _loc, _bytes) do
     {rest, [%InlineBlock{code: codeblock, what: fun, type: name}], context}
   end
 
@@ -116,7 +119,7 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_var_ptr_str: [ignore: true]
   )
 
-  def dbg_var_ptr(rest, [value, src], context, _slot, _bytes) do
+  def dbg_var_ptr(rest, [value, src], context, _loc, _bytes) do
     {rest, [%VarPtr{val: value, src: src}], context}
   end
 
@@ -133,7 +136,7 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_var_val_str: [ignore: true]
   )
 
-  def dbg_var_val(rest, [value, src], context, _slot, _bytes) do
+  def dbg_var_val(rest, [value, src], context, _loc, _bytes) do
     {rest, [%VarVal{val: value, src: src}], context}
   end
 
@@ -150,7 +153,9 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_arg_inline_str: [ignore: true]
   )
 
-  def dbg_arg_inline(rest, [key, value], context, _slot, _bytes) do
+  def dbg_arg_inline(rest, [key, value], context, _loc, _bytes) do
     {rest, [%ArgInline{val: value, key: key}], context}
   end
+
+  Air.unimplemented(:breakpoint)
 end

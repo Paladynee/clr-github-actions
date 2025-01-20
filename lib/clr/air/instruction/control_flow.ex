@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
   )
 
   Pegasus.parser_from_string(
-    "control_flow <- block / loop / repeat / br / cond_br / switch_br / try_ptr / try / unreach",
+    "control_flow <- block / loop / repeat / br / cond_br / switch_br / switch_dispatch / try_ptr / try / unreach",
     control_flow: [export: true]
   )
 
@@ -25,11 +25,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
     block_str: [ignore: true]
   )
 
-  def block(rest, [codeblock, type], context, _slot, _bytes) do
+  def block(rest, [codeblock, type], context, _loc, _bytes) do
     {rest, [%Block{type: type, code: codeblock}], context}
   end
 
-  def block(rest, [{:clobbers, clobbers}, codeblock, type], context, _slot, _bytes) do
+  def block(rest, [{:clobbers, clobbers}, codeblock, type], context, _loc, _bytes) do
     {rest, [%Block{type: type, code: codeblock, clobbers: clobbers}], context}
   end
 
@@ -46,7 +46,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
     loop_str: [ignore: true]
   )
 
-  def loop(rest, [codeblock, type], context, _slot, _bytes) do
+  def loop(rest, [codeblock, type], context, _loc, _bytes) do
     {rest, [%Loop{type: type, code: codeblock}], context}
   end
 
@@ -63,7 +63,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
     repeat_str: [ignore: true]
   )
 
-  def repeat(rest, [goto], context, _slot, _bytes) do
+  def repeat(rest, [goto], context, _loc, _bytes) do
     {rest, [%Repeat{goto: goto}], context}
   end
 
@@ -125,12 +125,12 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule SwitchBr do
-    defstruct [:test, :cases]
+    defstruct [:test, :cases, :loop]
   end
 
   Pegasus.parser_from_string(
     """
-    switch_br <- switch_br_str lparen slotref (cs switch_case)* (cs else_case)? (newline space*)? rparen
+    switch_br <- loop_prefix? switch_br_str lparen slotref (cs switch_case)* (cs else_case)? (newline space*)? rparen
 
     switch_case <- lbrack case_value (cs case_value)* rbrack (space modifier)? space fatarrow space codeblock_clobbers 
     case_value <- range / literal / lvalue
@@ -140,12 +140,15 @@ defmodule Clr.Air.Instruction.ControlFlow do
 
     modifier <- switch_cold / switch_unlikely
 
+    loop_prefix <- 'loop_'
+
     switch_br_str <- 'switch_br'
     else <- 'else'
 
     switch_unlikely <- '.unlikely'
     switch_cold <- '.cold'
     """,
+    loop_prefix: [token: :loop],
     switch_br: [post_traverse: :switch_br],
     switch_br_str: [ignore: true],
     else: [token: :else],
@@ -155,35 +158,54 @@ defmodule Clr.Air.Instruction.ControlFlow do
     switch_unlikely: [token: :unlikely]
   )
 
-  defp switch_br(rest, args, context, _slot, _bytes) do
+  defp switch_br(rest, args, context, _loc, _bytes) do
     case Enum.reverse(args) do
+      [:loop, test | cases] ->
+        {rest, [%SwitchBr{test: test, cases: Map.new(cases), loop: true}], context}
       [test | cases] ->
-        {rest, [%SwitchBr{test: test, cases: Map.new(cases)}], context}
+        {rest, [%SwitchBr{test: test, cases: Map.new(cases), loop: false}], context}
     end
   end
 
   @modifiers ~w[cold unlikely]a
 
-  defp switch_case(rest, [codeblock, modifier | compares], context, _slot, _bytes)
+  defp switch_case(rest, [codeblock, modifier | compares], context, _loc, _bytes)
        when modifier in @modifiers do
     {rest, [{compares, codeblock}], context}
   end
 
-  defp switch_case(rest, [codeblock, rhs, :..., lhs], context, _slot, _bytes) do
+  defp switch_case(rest, [codeblock, rhs, :..., lhs], context, _loc, _bytes) do
     {rest, [{{:range, lhs, rhs}, codeblock}], context}
   end
 
-  defp switch_case(rest, [codeblock | compares], context, _slot, _bytes) do
+  defp switch_case(rest, [codeblock | compares], context, _loc, _bytes) do
     {rest, [{compares, codeblock}], context}
   end
 
-  defp else_case(rest, [codeblock, modifier, :else], context, _slot, _bytes)
+  defp else_case(rest, [codeblock, modifier, :else], context, _loc, _bytes)
        when modifier in @modifiers do
     {rest, [{:else, codeblock}], context}
   end
 
-  defp else_case(rest, [codeblock, :else], context, _slot, _bytes) do
+  defp else_case(rest, [codeblock, :else], context, _loc, _bytes) do
     {rest, [{:else, codeblock}], context}
+  end
+
+  defmodule SwitchDispatch do
+    defstruct [:fwd, :goto]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    switch_dispatch <- switch_dispatch_str lparen slotref cs argument rparen
+    switch_dispatch_str <- 'switch_dispatch' 
+    """,
+    switch_dispatch: [post_traverse: :switch_dispatch],
+    switch_dispatch_str: [ignore: true]
+  )
+
+  def switch_dispatch(rest, [fwd, goto], context, _loc, _bytes) do
+    {rest, [%SwitchDispatch{goto: goto, fwd: fwd}], context}
   end
 
   defmodule Try do
@@ -211,7 +233,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
     cold_mod: [token: :cold]
   )
 
-  defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
+  defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _loc, _bytes) do
     {rest, [%Try{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}],
      context}
   end
@@ -244,10 +266,23 @@ defmodule Clr.Air.Instruction.ControlFlow do
     try_ptr_str: [ignore: true]
   )
 
-  defp try_ptr(rest, [{:clobbers, clobbers}, error_code, type, src | maybe_cold] = abc, context, _slot, _bytes) do
+  defp try_ptr(
+         rest,
+         [{:clobbers, clobbers}, error_code, type, src | maybe_cold] = abc,
+         context,
+         _slot,
+         _bytes
+       ) do
     {rest,
-     [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, type: type, cold: cold?(maybe_cold)}],
-     context}
+     [
+       %TryPtr{
+         src: src,
+         error_code: error_code,
+         clobbers: clobbers,
+         type: type,
+         cold: cold?(maybe_cold)
+       }
+     ], context}
   end
 
   defmodule Unreach do

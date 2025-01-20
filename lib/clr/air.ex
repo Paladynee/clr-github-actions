@@ -51,7 +51,7 @@ defmodule Clr.Air do
 
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))
 
-      def unquote(op)(rest, [value], context, _slot, _bytes) do
+      def unquote(op)(rest, [value], context, _loc, _bytes) do
         {rest, [%unquote(module){src: value}], context}
       end
     end
@@ -74,7 +74,7 @@ defmodule Clr.Air do
 
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))
 
-      def unquote(op)(rest, [slot, type], context, _slot, _bytes) do
+      def unquote(op)(rest, [slot, type], context, _loc, _bytes) do
         {rest, [%unquote(module){type: type, src: slot}], context}
       end
     end

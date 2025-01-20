@@ -153,6 +153,9 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "vector literal" do
-    assert {:literal, {:lvalue, [{:vector, ~l"u8", 16}]}, _} = Literal.parse("<@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>")
+    assert {:literal, {:lvalue, [{:vector, ~l"u8", 16}]}, _} =
+             Literal.parse(
+               "<@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>"
+             )
   end
 end

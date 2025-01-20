@@ -4,6 +4,7 @@ defmodule ClrTest.AirParsers.DbgTest do
 
   alias Clr.Air.Instruction.Dbg
   alias Clr.Air.Instruction.Dbg.Trap
+  alias ClrTest.TestAir
 
   import Clr.Air.Lvalue
 
@@ -11,7 +12,9 @@ defmodule ClrTest.AirParsers.DbgTest do
     assert %Trap{} = Instruction.parse("trap()")
   end
 
-  test "breakpoint"
+  test "breakpoint" do
+    TestAir.assert_unimplemented("breakpoint")
+  end
 
   test "dbg_stmt" do
     assert %Dbg.Stmt{loc: {9, 10}} = Instruction.parse("dbg_stmt(9:10)")

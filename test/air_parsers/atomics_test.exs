@@ -52,27 +52,28 @@ defmodule ClrTest.AirParsers.AtomicsTests do
              expected: ~l"@Air.Inst.Ref.bool_false",
              desired: ~l"@Air.Inst.Ref.bool_true",
              success_mode: :seq_cst,
-             failure_mode: :seq_cst
+             failure_mode: :seq_cst,
+             strength: :weak
            } =
              Instruction.parse(
                "cmpxchg_weak(<*bool, posix.abort.global.abort_entered>, @Air.Inst.Ref.bool_false, @Air.Inst.Ref.bool_true, seq_cst, seq_cst)"
              )
   end
 
-  test "cmpxchg_strong"
-  # do
-  #  assert %CmpxchgStrong{
-  #           loc:
-  #             {:literal,
-  #              {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []},
-  #              ~l"heap.next_mmap_addr_hint"},
-  #           expected: {28, :clobber},
-  #           desired: {70, :clobber},
-  #           success_mode: :monotonic,
-  #           failure_mode: :monotonic
-  #         } =
-  #           Instruction.parse(
-  #             "cmpxchg_strong(<*?[*]align(4096) u8, heap.next_mmap_addr_hint>, %28!, %70!, monotonic, monotonic)"
-  #           )
-  # end
+  test "cmpxchg_strong" do
+    assert %Cmpxchg{
+             loc:
+               {:literal,
+                {:ptr, :one, {:ptr, :many, ~l"u8", [optional: true, alignment: 4096]}, []},
+                ~l"heap.next_mmap_addr_hint"},
+             expected: {28, :clobber},
+             desired: {70, :clobber},
+             success_mode: :monotonic,
+             failure_mode: :monotonic,
+             strength: :strong
+           } =
+             Instruction.parse(
+               "cmpxchg_strong(<*?[*]align(4096) u8, heap.next_mmap_addr_hint>, %28!, %70!, monotonic, monotonic)"
+             )
+  end
 end

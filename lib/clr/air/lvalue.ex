@@ -70,11 +70,11 @@ defmodule Clr.Air.Lvalue do
 
   @function_types [:function, :extern]
 
-  defp function_lvalue(rest, [name, type], context, _slot, _bytes) when type in @function_types do
+  defp function_lvalue(rest, [name, type], context, _loc, _bytes) when type in @function_types do
     {rest, [{type, name}], context}
   end
 
-  defp basic_lvalue(rest, args, context, _slot, _bytes) do
+  defp basic_lvalue(rest, args, context, _loc, _bytes) do
     {rest, [coalesce_lvalue(args, [])], context}
   end
 
@@ -88,7 +88,7 @@ defmodule Clr.Air.Lvalue do
 
   defp coalesce_lvalue([], so_far), do: {:lvalue, so_far}
 
-  defp lvalue_segment(rest, args, context, _slot, _bytes) do
+  defp lvalue_segment(rest, args, context, _loc, _bytes) do
     {rest, coalesce_lvalue_segment(args), context}
   end
 
@@ -102,15 +102,15 @@ defmodule Clr.Air.Lvalue do
 
   defp coalesce_lvalue_segment([parent]), do: [parent]
 
-  defp comptime_call_params(rest, args, context, _slot, _bytes) do
+  defp comptime_call_params(rest, args, context, _loc, _bytes) do
     {rest, [{:call, Enum.reverse(args)}], context}
   end
 
-  defp comptime_struct_fields(rest, fields, context, _slot, _bytes) do
+  defp comptime_struct_fields(rest, fields, context, _loc, _bytes) do
     {rest, [to_map(fields, %{})], context}
   end
 
-  defp comptime_tuple_fields(rest, fields, context, _slot, _bytes) do
+  defp comptime_tuple_fields(rest, fields, context, _loc, _bytes) do
     tuple =
       fields
       |> Enum.reverse()
@@ -119,11 +119,11 @@ defmodule Clr.Air.Lvalue do
     {rest, [tuple], context}
   end
 
-  defp array_deref(rest, [index], context, _slot, _bytes) do
+  defp array_deref(rest, [index], context, _loc, _bytes) do
     {rest, [{:array, index}], context}
   end
 
-  defp vector(rest, [type, count, "@Vector"], context, _slot, _bytes) do
+  defp vector(rest, [type, count, "@Vector"], context, _loc, _bytes) do
     {rest, [{:vector, type, count}], context}
   end
 
