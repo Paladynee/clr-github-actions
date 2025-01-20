@@ -2,9 +2,9 @@ defmodule Clr.Air.Instruction.Vector do
   require Pegasus
   require Clr.Air
 
-  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
+  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen int space]a)
 
-  Pegasus.parser_from_string("vector <- reduce / cmp_vector # splat shuffle select\n",
+  Pegasus.parser_from_string("vector <- reduce / cmp_vector / select / shuffle # splat\n",
     vector: [export: true]
   )
 
@@ -48,10 +48,10 @@ defmodule Clr.Air.Instruction.Vector do
 
   Pegasus.parser_from_string(
     """
-    cmp_vector <- cmp_vector_str optimized? lparen op cs argument cs argument rparen
+    cmp_vector <- cmp_vector_str optimized? lparen cmp_op cs argument cs argument rparen
     cmp_vector_str <- 'cmp_vector'
 
-    op <- lte / lt / gte / gt / neq / eq
+    cmp_op <- lte / lt / gte / gt / neq / eq
     lte <- 'lte'
     lt <- 'lt'
     gte <- 'gte'
@@ -59,7 +59,7 @@ defmodule Clr.Air.Instruction.Vector do
     eq <- 'eq'
     neq <- 'neq'
     """,
-    cmp_vector: [export: true, post_traverse: :cmp_vector],
+    cmp_vector: [post_traverse: :cmp_vector],
     cmp_vector_str: [ignore: true],
     optimized: [token: :optimized],
     lte: [token: :lte],
@@ -84,8 +84,41 @@ defmodule Clr.Air.Instruction.Vector do
   end
 
   defmodule Shuffle do
+    defstruct [:a, :b, :len, :mask]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    shuffle <- shuffle_str lparen argument cs argument cs mask space lvalue cs len space int rparen
+    shuffle_str <- 'shuffle'
+    mask <- 'mask'
+    len <- 'len'
+    """,
+    shuffle: [post_traverse: :shuffle],
+    shuffle_str: [ignore: true],
+    mask: [ignore: true],
+    len: [ignore: true],
+  )
+
+  def shuffle(rest, [len, mask, b, a], context, _slot, _bytes) do
+    {rest, [%Shuffle{a: a, b: b, len: len, mask: mask}], context}
   end
 
   defmodule Select do
+    defstruct [:type, :pred, :a, :b]
   end
+
+  Pegasus.parser_from_string(
+    """
+    select <- select_str lparen type cs argument cs argument cs argument rparen
+    select_str <- 'select'
+    """,
+    select: [post_traverse: :select],
+    select_str: [ignore: true]
+  )
+
+  def select(rest, [b, a, pred, type], context, _slot, _bytes) do
+    {rest, [%Select{type: type, pred: pred, a: a, b: b}], context}
+  end
+
 end

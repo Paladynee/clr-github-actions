@@ -199,6 +199,11 @@ defmodule ClrTest.Air.TypeTest do
              Type.parse("*align(4:0:4) u8")
   end
 
+  test "sub_pointer type with four alignment" do
+    assert {:ptr, :one, {:lvalue, ["u8"]}, [alignment: {4, 0, 4, 0}]} =
+      Type.parse("*align(4:0:4:0) u8")
+  end
+
   test "vector type" do
     # note.  the vector type is special in that the definition has a comma in the comptime call.
     assert {:ptr, :one, {:lvalue, [{:vector, ~l"u8", 16}]}, []} = Type.parse("*@Vector(16, u8)")

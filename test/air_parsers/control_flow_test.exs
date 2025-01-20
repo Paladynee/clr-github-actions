@@ -71,7 +71,7 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
   describe "switch_br" do
     alias Clr.Air.Instruction.ControlFlow.SwitchBr
 
-    test "switch_br" do
+    test "basic" do
       assert %SwitchBr{test: {104, :clobber}} =
                Instruction.parse("""
                switch_br(%104!, [<u64, 5>] => {
@@ -82,6 +82,22 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
     end
 
     test "other switch_br features"
+
+    test "else with .cold" do
+      assert %Clr.Air.Instruction.ControlFlow.SwitchBr{
+        test: {300, :clobber},
+        cases: %{:else => %{{333, :clobber} => _}}} = Instruction.parse("""
+      switch_br(%300!, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .signed>] => {
+          %328!= br(%301, %327!)
+        }, [<@typeInfo(debug.Dwarf.readEhPointer__union_4492).@"union".tag_type.?, .unsigned>] => {
+          %332!= br(%301, %331!)
+        }, else .cold => {
+          %333!= dbg_stmt(35:44)
+          %335!= unreach()
+        }
+      )
+      """)
+    end
   end
 
   describe "loop_switch_br" do

@@ -1,6 +1,7 @@
 defmodule ClrTest.AirParsers.PointersTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
+  alias ClrTest.TestAir
 
   import Clr.Air.Lvalue
 
@@ -131,11 +132,22 @@ defmodule ClrTest.AirParsers.PointersTest do
              Instruction.parse("array_to_slice([]u8, %13!)")
   end
 
-  test "field_parent_ptr"
+  alias Clr.Air.Instruction.Pointers.FieldParentPtr
 
-  test "error_return_trace"
+  test "field_parent_ptr" do
+    assert %FieldParentPtr{index: 0, src: {6, :clobber}} =
+             Instruction.parse("field_parent_ptr(%6!, 0)")
+  end
 
-  test "set_err_return_trace"
+  test "error_return_trace" do
+    TestAir.assert_unimplemented(:error_return_trace)
+  end
 
-  test "set_err_return_trace_index"
+  test "set_error_return_trace" do
+    TestAir.assert_unimplemented(:set_error_return_trace)
+  end
+
+  test "set_err_return_trace_index" do
+    TestAir.assert_unimplemented(:set_error_return_trace_index)
+  end
 end

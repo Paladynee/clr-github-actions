@@ -6,6 +6,8 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction
   alias Clr.Air.Instruction.Casts.Bitcast
 
+  alias ClrTest.TestAir
+
   test "bitcast" do
     assert %Bitcast{type: {:ptr, :many, ~l"elf.Elf64_auxv_t", []}, src: {65, :clobber}} =
              Instruction.parse("bitcast([*]elf.Elf64_auxv_t, %65!)")
@@ -167,8 +169,6 @@ defmodule ClrTest.AirParsers.CastsTest do
   end
 
   test "addrspace_cast" do
-    assert_raise RuntimeError, fn ->
-      Instruction.parse("addrspace_cast(%0, %1)")
-    end
+    TestAir.assert_unimplemented(:addrspace_cast)
   end
 end

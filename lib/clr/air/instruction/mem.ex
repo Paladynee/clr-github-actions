@@ -10,7 +10,8 @@ defmodule Clr.Air.Instruction.Mem do
 
   Pegasus.parser_from_string(
     """
-    mem <- alloc / load / store / struct_field_val / set_union_tag / memset / memcpy / tag_name / error_name / aggregate_init
+    mem <- alloc / load / store / struct_field_val / set_union_tag / get_union_tag / memset / memcpy / 
+      tag_name / error_name / aggregate_init / union_init
     safe <- '_safe'
     """,
     mem: [export: true],
@@ -132,6 +133,8 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%SetUnionTag{src: src, val: val}], context}
   end
 
+  Air.ty_op(:get_union_tag, GetUnionTag)
+
   defmodule Set do
     defstruct [:src, :val, :safe]
   end
@@ -221,5 +224,22 @@ defmodule Clr.Air.Instruction.Mem do
 
   defp params(rest, params, context, _slot, _bytes) do
     {rest, [Enum.reverse(params)], context}
+  end
+
+  defmodule UnionInit do
+    defstruct [:index, :src]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    union_init <- union_init_str lparen int cs argument rparen
+    union_init_str <- 'union_init'
+    """,
+    union_init: [post_traverse: :union_init],
+    union_init_str: [ignore: true]
+  )
+
+  def union_init(rest, [src, index], context, _slot, _bytes) do
+    {rest, [%UnionInit{src: src, index: index}], context}
   end
 end

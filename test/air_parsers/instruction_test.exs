@@ -40,18 +40,6 @@ defmodule ClrTest.AirParsers.InstructionTest do
     end
   end
 
-  describe "memory operations" do
-    alias Clr.Air.Instruction.GetUnionTag
-
-    # do
-    test "get_union_tag"
-    #  assert %GetUnionTag{loc: {298, :keep}, type: {:lvalue, _}} =
-    #           Instruction.parse(
-    #             "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
-    #           )
-    # end
-  end
-
   # other instructions
 
   alias Clr.Air.Instruction.Assembly

@@ -8,7 +8,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
   )
 
   Pegasus.parser_from_string(
-    "control_flow <- block / loop / repeat / br / cond_br / switch_br / try / try_ptr / unreach",
+    "control_flow <- block / loop / repeat / br / cond_br / switch_br / try_ptr / try / unreach",
     control_flow: [export: true]
   )
 
@@ -138,21 +138,21 @@ defmodule Clr.Air.Instruction.ControlFlow do
 
     range <- (literal / lvalue) elision (literal / lvalue)
 
-    modifier <- cold / unlikely
+    modifier <- switch_cold / switch_unlikely
 
     switch_br_str <- 'switch_br'
     else <- 'else'
 
-    unlikely <- '.unlikely'
-    cold <- '.cold'
+    switch_unlikely <- '.unlikely'
+    switch_cold <- '.cold'
     """,
     switch_br: [post_traverse: :switch_br],
     switch_br_str: [ignore: true],
     else: [token: :else],
     switch_case: [post_traverse: :switch_case],
     else_case: [post_traverse: :else_case],
-    cold: [token: :cold],
-    unlikely: [token: :unlikely]
+    switch_cold: [token: :cold],
+    switch_unlikely: [token: :unlikely]
   )
 
   defp switch_br(rest, args, context, _slot, _bytes) do
@@ -236,17 +236,17 @@ defmodule Clr.Air.Instruction.ControlFlow do
     """
     # NB: cold_mod is in the previous parser
 
-    try_ptr <- try_ptr_str cold_mod? lparen slotref cs codeblock_clobbers (space clobbers)? rparen
+    try_ptr <- try_ptr_str cold_mod? lparen slotref cs type cs codeblock_clobbers (space clobbers)? rparen
 
     try_ptr_str <- 'try_ptr'
     """,
-    try: [post_traverse: :try],
+    try_ptr: [post_traverse: :try_ptr],
     try_ptr_str: [ignore: true]
   )
 
-  defp try(rest, [{:clobbers, clobbers}, error_code, src | maybe_cold], context, _slot, _bytes) do
+  defp try_ptr(rest, [{:clobbers, clobbers}, error_code, type, src | maybe_cold] = abc, context, _slot, _bytes) do
     {rest,
-     [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, cold: cold?(maybe_cold)}],
+     [%TryPtr{src: src, error_code: error_code, clobbers: clobbers, type: type, cold: cold?(maybe_cold)}],
      context}
   end
 

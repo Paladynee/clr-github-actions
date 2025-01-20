@@ -10,7 +10,8 @@ defmodule Clr.Air.Instruction.Pointers do
     """
     pointers <- ptr_op / struct_field_ptr_index / struct_field_ptr / slice_len / slice_ptr /
       slice_elem_val / slice_elem_ptr / slice / array_elem_val / ptr_slice_len_ptr / ptr_slice_ptr_ptr /
-      ptr_elem_val / ptr_elem_ptr / array_to_slice
+      ptr_elem_val / ptr_elem_ptr / array_to_slice / error_return_trace / set_error_return_trace_index /
+      set_error_return_trace / field_parent_ptr
     prefix <- 'ptr_'
     """,
     pointers: [export: true],
@@ -189,4 +190,27 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   Air.ty_op(:array_to_slice, ArrayToSlice)
+
+  Air.unimplemented(:error_return_trace)
+
+  Air.unimplemented(:set_error_return_trace)
+
+  Air.unimplemented(:set_error_return_trace_index)
+
+  defmodule FieldParentPtr do
+    defstruct [:src, :index]
+  end
+
+  Pegasus.parser_from_string(
+    """
+    field_parent_ptr <- field_parent_ptr_str lparen slotref cs int rparen
+    field_parent_ptr_str <- 'field_parent_ptr'
+    """,
+    field_parent_ptr: [post_traverse: :field_parent_ptr],
+    field_parent_ptr_str: [ignore: true]
+  )
+
+  def field_parent_ptr(rest, [index, src], context, _slot, _bytes) do
+    {rest, [%FieldParentPtr{src: src, index: index}], context}
+  end
 end

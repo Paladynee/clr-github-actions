@@ -48,7 +48,14 @@ defmodule ClrTest.AirParsers.MemTest do
              )
   end
 
-  test "get_union_tag"
+  alias Clr.Air.Instruction.Mem.GetUnionTag
+
+  test "get_union_tag" do
+    assert %GetUnionTag{src: {298, :keep}, type: {:lvalue, _}} =
+             Instruction.parse(
+               "get_union_tag(@typeInfo(debug.Dwarf.readEhPointer__union_4486).@\"union\".tag_type.?, %298)"
+             )
+  end
 
   alias Clr.Air.Instruction.Mem.Set
 
@@ -90,7 +97,11 @@ defmodule ClrTest.AirParsers.MemTest do
              )
   end
 
-  test "union_init"
+  alias Clr.Air.Instruction.Mem.UnionInit
+
+  test "union_init" do
+    assert %UnionInit{index: 0, src: {18, :clobber}} = Instruction.parse("union_init(0, %18!)")
+  end
 
   test "prefetch"
 end

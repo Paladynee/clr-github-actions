@@ -26,4 +26,8 @@ defmodule ParseAirTest do
   test_air("undefined_value_use.main")
 
   test_air("intfloat.main")
+
+  test_air("fieldparentptr.main")
+
+  test_air("vector.main")
 end

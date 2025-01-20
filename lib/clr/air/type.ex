@@ -27,7 +27,7 @@ defmodule Clr.Air.Type do
     sentinel_many_ptr <- '[*:' sentinel ']'
     sentinel_slice_ptr <- '[:' sentinel ']'
     alignment <- align lparen (sub_addr / int) rparen
-    sub_addr <- int colon int colon int
+    sub_addr <- int colon int colon int (colon int)?
 
     sentinel <- 'null' / '0'
 
@@ -210,9 +210,9 @@ defmodule Clr.Air.Type do
     end
   end
 
-  defp sub_addr(rest, [c, b, a], context, _slot, _bytes) do
-    {rest, [{a, b, c}], context}
-  end
+  defp sub_addr(rest, [c, b, a], context, _slot, _bytes), do: {rest, [{a, b, c}], context}
+
+  defp sub_addr(rest, [d, c, b, a], context, _slot, _bytes), do: {rest, [{a, b, c, d}], context}
 
   # function post-traversals
 

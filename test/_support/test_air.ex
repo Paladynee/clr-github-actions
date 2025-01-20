@@ -15,4 +15,12 @@ defmodule ClrTest.TestAir do
       end
     end
   end
+
+  def assert_unimplemented(instruction) do
+    import ExUnit.Assertions
+
+    assert_raise RuntimeError, "Instruction #{instruction} unimplemented", fn ->
+      Clr.Air.Instruction.parse("#{instruction}()")
+    end
+  end
 end

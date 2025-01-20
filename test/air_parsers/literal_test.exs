@@ -136,4 +136,23 @@ defmodule ClrTest.Air.LiteralTest do
     assert {:literal, ~l"Target", {{:enum, "foo"}, :undefined}} =
              Literal.parse("<Target, .{ .foo, undefined }>")
   end
+
+  test "literal with typeinfo function call and at-call and questionmark" do
+    assert {:literal,
+            {:lvalue,
+             [
+               {:comptime_call, ~l"@typeInfo", [~l"debug.Dwarf.readEhPointer__union_4010"]},
+               "@union",
+               "tag_type",
+               :unwrap_optional
+             ]},
+            {:enum, "signed"}} =
+             Literal.parse(
+               "<@typeInfo(debug.Dwarf.readEhPointer__union_4010).@\"union\".tag_type.?, .signed>"
+             )
+  end
+
+  test "vector literal" do
+    assert {:literal, {:lvalue, [{:vector, ~l"u8", 16}]}, _} = Literal.parse("<@Vector(16, u8), .{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }>")
+  end
 end
