@@ -82,7 +82,20 @@ defmodule ClrTest.BlockTest do
       assert {{:u, 32, _}, %{slots: %{48 => {:u, 64, _}}}} = Block.fetch_up!(block, 47)
     end
 
-    test "can be sent an error"
+    test "can be sent an error" do
+      future = make_ref()
+
+      block =
+        %Function{name: ~l"foo.bar"}
+        |> Block.new([])
+        |> Block.put_await(47, future)
+
+      send(self(), {future, {:error, %RuntimeError{message: "foobar"}}})
+
+      assert_raise RuntimeError, "foobar", fn ->
+        Block.fetch_up!(block, 47) 
+      end
+    end
   end
 
   describe "call_meta_adder/1" do

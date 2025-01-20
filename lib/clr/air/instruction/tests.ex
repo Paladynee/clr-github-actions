@@ -1,15 +1,18 @@
 defmodule Clr.Air.Instruction.Tests do
+
+  alias Clr.Air
+
   require Pegasus
-  require Clr.Air
+  require Air
 
   Pegasus.parser_from_string(
     """
-    tests <- compare_instruction / is_instruction / unary_instruction
+    tests <- compare_instruction / is_instruction / unary_instruction / error_set_has_value
     """,
     tests: [export: true]
   )
 
-  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
+  Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
   # compares
 
@@ -116,4 +119,6 @@ defmodule Clr.Air.Instruction.Tests do
   def unary_instruction(rest, [operand, op], context, _loc, _bytes) do
     {rest, [%Unary{operand: operand, op: op}], context}
   end
+
+  Air.ty_op(:error_set_has_value, ErrorSetHasValue)
 end
