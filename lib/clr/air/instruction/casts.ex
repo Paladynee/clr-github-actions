@@ -16,20 +16,6 @@ defmodule Clr.Air.Instruction.Casts do
     casts: [export: true]
   )
 
-  defmodule Bitcast do
-    defstruct [:type, :src]
-
-    use Clr.Air.Instruction
-    alias Clr.Block
-
-    def analyze(%{src: {src_slot, _}}, dst_slot, block) do
-      case Block.fetch_up!(block, src_slot) do
-        {type, block} ->
-          Block.put_type(block, dst_slot, type)
-      end
-    end
-  end
-
   Air.import(~w[argument lvalue type slotref cs lparen rparen literal]a)
 
   Air.ty_op(:bitcast, Bitcast)

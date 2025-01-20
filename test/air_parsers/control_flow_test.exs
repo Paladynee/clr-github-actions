@@ -83,12 +83,12 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
 
     test "loop_switch_br" do
       assert %SwitchBr{test: {104, :clobber}, loop: true} =
-        Instruction.parse("""
-        loop_switch_br(%104!, [<u64, 5>] => {
-            %120!= br(%109, @Air.Inst.Ref.void_value)
-          }
-        )
-        """)
+               Instruction.parse("""
+               loop_switch_br(%104!, [<u64, 5>] => {
+                   %120!= br(%109, @Air.Inst.Ref.void_value)
+                 }
+               )
+               """)
     end
 
     test "else with .cold" do
@@ -112,8 +112,10 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
 
   describe "switch_dispatch" do
     alias Clr.Air.Instruction.ControlFlow.SwitchDispatch
+
     test "switch_dispatch" do
-      %SwitchDispatch{val: val, slot: slot} = Instruction.parse("switch_dispatch(%49, %44!)")
+      %SwitchDispatch{fwd: {44, :clobber}, goto: {49, :keep}} =
+        Instruction.parse("switch_dispatch(%49, %44!)")
     end
   end
 
@@ -170,7 +172,22 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
                """)
     end
 
-    test "try_ptr_cold"
+    test "cold" do
+      assert %TryPtr{
+               src: {259, :keep},
+               cold: true
+             } =
+               Instruction.parse("""
+               try_ptr_cold(%259, *const []const u8, {
+                 %247! %5! %248!
+                 %261 = unwrap_errunion_err_ptr(error{Overflow,EndOfBuffer,InvalidBuffer}, %259!)
+                 %262!= dbg_stmt(35:38)
+                 %263 = bitcast(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}, %261!)
+                 %264 = wrap_errunion_err(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}!debug.Dwarf.FormValue, %263!)
+                 %265!= ret_safe(%264!)
+               } %259!)
+               """) 
+    end
   end
 
   test "unreach" do

@@ -162,7 +162,6 @@ defmodule Clr.Air.Instruction.Maths do
     round <- 'round'
     trunc_float <- 'trunc_float'
     neg <- 'neg'
-    optimized <- '_optimized'
     """,
     unary_instruction: [post_traverse: :unary_instruction],
     sqrt: [token: :sqrt],

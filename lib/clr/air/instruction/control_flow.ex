@@ -162,6 +162,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
     case Enum.reverse(args) do
       [:loop, test | cases] ->
         {rest, [%SwitchBr{test: test, cases: Map.new(cases), loop: true}], context}
+
       [test | cases] ->
         {rest, [%SwitchBr{test: test, cases: Map.new(cases), loop: false}], context}
     end
@@ -268,7 +269,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
 
   defp try_ptr(
          rest,
-         [{:clobbers, clobbers}, error_code, type, src | maybe_cold] = abc,
+         [{:clobbers, clobbers}, error_code, type, src | maybe_cold],
          context,
          _slot,
          _bytes

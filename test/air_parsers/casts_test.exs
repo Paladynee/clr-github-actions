@@ -113,8 +113,11 @@ defmodule ClrTest.AirParsers.CastsTest do
   alias Clr.Air.Instruction.Casts.UnwrapErrunionPayloadPtr
 
   test "unwrap_errunion_payload_ptr" do
-    assert %UnwrapErrunionPayloadPtr{type: {:ptr, :one, {:lvalue, ["u8"]}, [const: true]}, src: {6, :clobber}} =
-      Instruction.parse("unwrap_errunion_payload_ptr(*const u8, %6!)")
+    assert %UnwrapErrunionPayloadPtr{
+             type: {:ptr, :one, {:lvalue, ["u8"]}, [const: true]},
+             src: {6, :clobber}
+           } =
+             Instruction.parse("unwrap_errunion_payload_ptr(*const u8, %6!)")
   end
 
   alias Clr.Air.Instruction.Casts.UnwrapErrunionErrPtr

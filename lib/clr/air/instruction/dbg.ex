@@ -5,8 +5,6 @@ defmodule Clr.Air.Instruction.Dbg do
 
   require Air
 
-  import Clr.Air.Lvalue
-
   Air.import(
     ~w[rparen lparen int colon type cs codeblock clobbers space fn_literal literal slotref dquoted argument]a
   )

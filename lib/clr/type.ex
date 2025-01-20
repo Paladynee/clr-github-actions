@@ -101,7 +101,9 @@ defmodule Clr.Type do
     case one do
       "usize" -> {:usize, %{}}
       "u" <> int -> make_numbered(:u, int)
-      other -> {lvalue, %{}}
+      "i" <> int -> make_numbered(:i, int)
+      "f" <> int -> make_numbered(:f, int)
+      _ -> {lvalue, %{}}
     end
   end
 

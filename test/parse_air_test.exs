@@ -32,4 +32,6 @@ defmodule ParseAirTest do
   test_air("vector.main")
 
   test_air("pointers.main")
+
+  test_air("switch_loop.main")
 end

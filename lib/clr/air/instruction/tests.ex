@@ -17,7 +17,6 @@ defmodule Clr.Air.Instruction.Tests do
     use Clr.Air.Instruction
 
     defstruct ~w[lhs rhs op optimized]a
-    import Clr.Air.Lvalue
     alias Clr.Block
 
     def analyze(_, slot, analysis), do: Block.put_type(analysis, slot, {:bool, %{}})

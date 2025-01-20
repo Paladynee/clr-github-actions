@@ -26,7 +26,7 @@
   } %11!)
   %17 = array_elem_val(<[2]switch_loop.T, .{ .foo, .end }>, %9!)
   %18!= dbg_stmt(5:15)
-  %49!= switch_loop_switch_br(%17!, [<switch_loop.T, .end>] => {
+  %49!= loop_switch_br(%17!, [<switch_loop.T, .end>] => {
       %1!
       %20!= dbg_stmt(6:13)
       %21!= ret_safe(@Air.Inst.Ref.void_value)
