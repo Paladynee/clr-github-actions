@@ -55,6 +55,7 @@ defmodule Clr.Block do
           case Type.get_meta(type) do
             %{deleted: info} ->
               Map.put(req, :transferred, info)
+            _ -> req
           end
       end
     end)

@@ -64,8 +64,6 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
                })
                """)
     end
-
-    test "other cond_br features"
   end
 
   describe "switch_br" do
