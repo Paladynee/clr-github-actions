@@ -1,10 +1,12 @@
 defmodule Clr.Air.Instruction.Vector do
   require Pegasus
-  require Clr.Air
 
-  Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen int space]a)
+  alias Clr.Air
+  require Air
 
-  Pegasus.parser_from_string("vector <- reduce / cmp_vector / select / shuffle # splat\n",
+  Air.import(~w[argument type slotref literal lvalue cs lparen rparen int space]a)
+
+  Pegasus.parser_from_string("vector <- reduce / cmp_vector / select / shuffle / splat\n",
     vector: [export: true]
   )
 
@@ -80,8 +82,7 @@ defmodule Clr.Air.Instruction.Vector do
     {rest, [%Cmp{op: op, lhs: lhs, rhs: rhs, optimized: optimized}], context}
   end
 
-  defmodule Splat do
-  end
+  Air.ty_op(:splat, Splat)
 
   defmodule Shuffle do
     defstruct [:a, :b, :len, :mask]

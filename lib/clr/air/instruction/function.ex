@@ -47,6 +47,7 @@ defmodule Clr.Air.Instruction.Function do
 
     alias Clr.Block
     alias Clr.Type
+    alias Clr.Function
 
     import Clr.Air.Lvalue
 
