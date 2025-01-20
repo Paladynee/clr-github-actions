@@ -48,20 +48,22 @@ defmodule Clr.Air.Instruction.Mem do
     alias Clr.Block
     alias Clr.Type
 
-    def analyze(%{type: type, src: {src_slot, _}}, slot, block) do
-      case Block.fetch_up!(block, src_slot) do
-        {{:ptr, _, _, %{undefined: _src}}, block} ->
-          raise Clr.UndefinedUsage,
-            function: Clr.Air.Lvalue.as_string(block.function),
-            loc: block.loc
+    require Type
 
+    def analyze(%{src: {src_slot, _}}, slot, block) do
+      case Block.fetch_up!(block, src_slot) do
         {{:ptr, _, _, %{deleted: _src}}, block} ->
           raise Clr.UseAfterFreeError,
             function: Clr.Air.Lvalue.as_string(block.function),
             loc: block.loc
 
-        {{:ptr, _, _, _}, block} ->
-          Block.put_type(block, slot, Type.from_air(type))
+        {{:ptr, _, type, _}, block} when Type.has_refinement(type, :undefined) ->
+          raise Clr.UndefinedUsage,
+            function: Clr.Air.Lvalue.as_string(block.function),
+            loc: block.loc
+
+        {{:ptr, _, type, _}, block} ->
+          Block.put_type(block, slot, type)
       end
     end
   end

@@ -22,6 +22,10 @@ defmodule Clr.Type do
   @type comptime_call_type :: {:comptime_call, term, list, meta}
   @type optional_type :: {:optional, t, meta}
 
+  defguard has_refinement(t, key) when (tuple_size(t) == 4 and is_map_key(elem(t, 3), key))
+    or (tuple_size(t) == 3 and is_map_key(elem(t, 2), key))
+    or (tuple_size(t) == 2 and is_map_key(elem(t, 1), key))
+
   # TODO: union types
 
   @type ptr_count :: :one | :many | :slice | :c

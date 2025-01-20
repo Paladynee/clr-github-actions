@@ -186,7 +186,7 @@ defmodule ClrTest.AirParsers.ControlFlowTest do
                  %264 = wrap_errunion_err(error{MissingDebugInfo,InvalidDebugInfo,OutOfMemory,Overflow,EndOfBuffer,InvalidBuffer}!debug.Dwarf.FormValue, %263!)
                  %265!= ret_safe(%264!)
                } %259!)
-               """) 
+               """)
     end
   end
 

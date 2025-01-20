@@ -2,6 +2,7 @@ defmodule ClrTest.Function.BlockAnalysisTest do
   use ExUnit.Case, async: true
 
   alias Clr.Air.Function
+  alias Clr.Air.Instruction.Dbg
   alias Clr.Block
   import Clr.Air.Lvalue
 
@@ -87,9 +88,31 @@ defmodule ClrTest.Function.BlockAnalysisTest do
                )
     end
 
-    test "can detect usage of undefined"
+    test "can detect usage of undefined" do
+      assert_raise Clr.UndefinedUsage, fn ->
+        run_analysis(
+          %{
+            {0, :clobber} => %Dbg.Stmt{loc: {0, 1}},
+            {1, :keep} => %Load{type: ~l"u32", src: {47, :keep}}
+          },
+          [],
+          %{47 => {:ptr, :one, {:u, 32, %{undefined: true}}, %{}}}
+        )
+      end
+    end
 
-    test "can detect a use after free error"
+    test "can detect a use after free error" do
+      assert_raise Clr.UseAfterFreeError, fn ->
+        run_analysis(
+          %{
+            {0, :clobber} => %Dbg.Stmt{loc: {0, 1}},
+            {1, :keep} => %Load{type: ~l"u32", src: {47, :keep}}
+          },
+          [],
+          %{47 => {:ptr, :one, {:u, 32, %{}}, %{deleted: true}}}
+        )
+      end
+    end
   end
 
   describe "maths functions" do
