@@ -1,5 +1,4 @@
 defmodule ClrTest.TestAnalysis do
-
   alias Clr.Air.Function
   alias Clr.Air.Instruction.Dbg
   alias Clr.Block
