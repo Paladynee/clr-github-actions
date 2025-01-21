@@ -27,8 +27,8 @@ defmodule ClrTest.AirParsers.MemTest do
 
     # note that the "safe" extension changes nothing for "Store".
     test "safe" do
-      assert %Store{src: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
-               Instruction.parse("store_safe(%19, @Air.Inst.Ref.zero_usize)")
+      assert %Store{src: ~l"undefined", loc: {19, :keep}, safe: true} =
+               Instruction.parse("store_safe(%19, undefined)")
     end
   end
 

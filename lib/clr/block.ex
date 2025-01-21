@@ -55,7 +55,9 @@ defmodule Clr.Block do
           case Type.get_meta(type) do
             %{deleted: info} ->
               Map.put(req, :transferred, info)
-            _ -> req
+
+            _ ->
+              req
           end
       end
     end)
@@ -84,20 +86,20 @@ defmodule Clr.Block do
 
   # general block operations
 
-  def put_type(block, line, type, meta \\ nil) do
+  def put_type(block, slot, type, meta \\ nil) do
     if meta do
-      %{block | slots: Map.put(block.slots, line, Type.put_meta(type, meta))}
+      %{block | slots: Map.put(block.slots, slot, Type.put_meta(type, meta))}
     else
-      %{block | slots: Map.put(block.slots, line, type)}
+      %{block | slots: Map.put(block.slots, slot, type)}
     end
   end
 
-  def put_meta(block, line, meta) do
-    %{block | slots: Map.update!(block.slots, line, &Type.put_meta(&1, meta))}
+  def put_meta(block, slot, meta) do
+    %{block | slots: Map.update!(block.slots, slot, &Type.put_meta(&1, meta))}
   end
 
-  def put_await(block, line, reference) do
-    %{block | awaits: Map.put(block.awaits, line, reference)}
+  def put_await(block, slot, reference) do
+    %{block | awaits: Map.put(block.awaits, slot, reference)}
   end
 
   def put_reqs(block, arg, reqs) do
@@ -106,6 +108,11 @@ defmodule Clr.Block do
 
   def put_return(block, type, meta \\ %{}) do
     %{block | return: {type, meta}}
+  end
+
+  def get_meta(block, slot) do
+    block.slots
+    |> Map.fetch!(slot)
   end
 
   # used to fetch the type and update the block type.  If the

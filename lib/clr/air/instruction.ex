@@ -2,6 +2,7 @@ use Protoss
 
 defprotocol Clr.Air.Instruction do
   alias Clr.Function
+  @type t :: struct
   @callback analyze(struct, non_neg_integer, Function.t()) :: Function.t()
   def analyze(instruction, slot, state)
 after

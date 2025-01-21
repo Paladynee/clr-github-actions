@@ -93,7 +93,7 @@ defmodule ClrTest.BlockTest do
       send(self(), {future, {:error, %RuntimeError{message: "foobar"}}})
 
       assert_raise RuntimeError, "foobar", fn ->
-        Block.fetch_up!(block, 47) 
+        Block.fetch_up!(block, 47)
       end
     end
   end

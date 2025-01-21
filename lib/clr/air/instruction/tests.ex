@@ -1,5 +1,4 @@
 defmodule Clr.Air.Instruction.Tests do
-
   alias Clr.Air
 
   require Pegasus

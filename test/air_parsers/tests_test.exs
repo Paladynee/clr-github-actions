@@ -128,7 +128,7 @@ defmodule ClrTest.AirParsers.TestsTest do
 
   alias Clr.Air.Instruction.Tests.ErrorSetHasValue
 
-  test "error_set_has_value" do 
+  test "error_set_has_value" do
     assert %ErrorSetHasValue{type: ~l"u8", src: {96, :clobber}} =
              Instruction.parse("error_set_has_value(u8, %96!)")
   end
