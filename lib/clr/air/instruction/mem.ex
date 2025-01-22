@@ -26,8 +26,8 @@ defmodule Clr.Air.Instruction.Mem do
     alias Clr.Block
     alias Clr.Type
 
-    def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis) do
-      Block.put_type(analysis, slot, Type.from_air(type), stack: analysis.function)
+    def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis, _config) do
+      {:halt, Block.put_type(analysis, slot, Type.from_air(type), stack: analysis.function)}
     end
   end
 
@@ -50,7 +50,7 @@ defmodule Clr.Air.Instruction.Mem do
 
     require Type
 
-    def analyze(%{src: {src_slot, _}}, slot, block) do
+    def analyze(%{src: {src_slot, _}}, slot, block, _config) do
       case Block.fetch_up!(block, src_slot) do
         {{:ptr, _, _, %{deleted: _src}}, block} ->
           raise Clr.UseAfterFreeError,
@@ -63,7 +63,7 @@ defmodule Clr.Air.Instruction.Mem do
             loc: block.loc
 
         {{:ptr, _, type, _}, block} ->
-          Block.put_type(block, slot, type)
+          {:halt, Block.put_type(block, slot, type)}
       end
     end
   end

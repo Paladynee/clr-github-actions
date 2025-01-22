@@ -24,10 +24,9 @@ defmodule ClrTest.Analysis.UndefinedTest do
              block
              |> Block.put_type(47, {:u, 8, %{}})
              |> then(
-               &Undefined.analyze(%Store{loc: {47, :keep}, src: ~l"undefined"}, 0, &1, config)
+               &Undefined.analyze(%Store{loc: {47, :keep}, src: ~l"undefined"}, 0, {%{}, &1}, config)
              )
-             |> then(fn {:halt, {:void, new_block}} -> new_block end)
-             |> Block.get_meta(47)
+             |> then(fn {:cont, {_, new_block}} -> Block.get_meta(new_block, 47) end)
   end
 
   alias Clr.Air.Instruction.Mem.Load
@@ -36,7 +35,7 @@ defmodule ClrTest.Analysis.UndefinedTest do
     assert_raise Use, fn ->
       block
       |> Block.put_type(42, {:u, 8, %{undefined: %{function: "foo.bar", loc: {42, 42}}}})
-      |> then(&Undefined.analyze(%Load{type: {:u, 8, %{}}, src: {42, :keep}}, 0, &1, config))
+      |> then(&Undefined.analyze(%Load{type: {:u, 8, %{}}, src: {42, :keep}}, 0, {%{}, &1}, config))
     end
   end
 end

@@ -200,8 +200,8 @@ defmodule Clr.Air.Instruction.Maths do
 
     defstruct ~w[op type lhs rhs]a
 
-    def analyze(%{type: type}, slot, analysis),
-      do: Block.put_type(analysis, slot, Type.from_air(type))
+    def analyze(%{type: type}, slot, analysis, _config),
+      do: {:halt, Block.put_type(analysis, slot, Type.from_air(type))}
   end
 
   Pegasus.parser_from_string(

@@ -51,7 +51,7 @@ defmodule Clr.Air.Instruction.Function do
 
     import Clr.Air.Lvalue
 
-    def analyze(call, slot, block) do
+    def analyze(call, slot, block, _config) do
       case call.fn do
         {:literal, {:fn, [~l"mem.Allocator" | params], type, _fn_opts}, {:function, function}} ->
           process_allocator(function, params, type, call.args, slot, block)
@@ -76,10 +76,10 @@ defmodule Clr.Air.Instruction.Function do
           |> Function.evaluate(args_meta, slots)
           |> case do
             {:future, ref} ->
-              Block.put_await(block, slot, ref)
+              {:halt, {:future, Block.put_await(block, slot, ref)}}
 
             {:ok, result} ->
-              Block.put_type(block, slot, result)
+              {:halt, {result, block}}
           end
       end
     end
@@ -180,30 +180,23 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule Ret do
-    defstruct [:val, :mode]
+    defstruct [:src, :mode]
 
     use Clr.Air.Instruction
 
     alias Clr.Block
 
-    def analyze(%{mode: :safe, val: {:lvalue, _} = lvalue}, _dst_slot, block) do
-      Block.put_return(block, {:TypeOf, lvalue})
+    def analyze(%{src: {:lvalue, _} = lvalue}, _dst_slot, block, _) do
+      {:halt, :void, Block.put_return(block, {:TypeOf, lvalue})}
     end
 
-    def analyze(%{mode: :safe, val: {:literal, type, _}}, _dst_slot, block) do
-      Block.put_return(block, type)
+    def analyze(%{src: {:literal, type, _}}, _dst_slot, block, _) do
+      {:halt, :void, Block.put_return(block, type)}
     end
 
-    def analyze(%{mode: :safe, val: {src_slot, _}}, _dst_slot, %{function: function} = block) do
-      case Block.fetch_up!(block, src_slot) do
-        {{:ptr, _, _, %{stack: ^function}}, block} ->
-          raise Clr.StackPtrEscape,
-            function: Clr.Air.Lvalue.as_string(function),
-            loc: block.loc
-
-        {type, block} ->
-          Block.put_return(block, type)
-      end
+    def analyze(%{src: {slot, _}}, _dst_slot, block, _) do
+      {type, block} = Block.fetch_up!(block, slot)
+      {:halt, :void, Block.put_return(block, type)}
     end
   end
 
@@ -228,7 +221,7 @@ defmodule Clr.Air.Instruction.Function do
         [] -> nil
       end
 
-    {rest, [%Ret{val: value, mode: mode}], context}
+    {rest, [%Ret{src: value, mode: mode}], context}
   end
 
   Pegasus.parser_from_string(

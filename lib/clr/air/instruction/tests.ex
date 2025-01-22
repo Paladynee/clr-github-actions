@@ -21,7 +21,8 @@ defmodule Clr.Air.Instruction.Tests do
     defstruct ~w[lhs rhs op optimized]a
     alias Clr.Block
 
-    def analyze(_, slot, analysis), do: Block.put_type(analysis, slot, {:bool, %{}})
+    def analyze(_, slot, analysis, _config),
+      do: {:halt, Block.put_type(analysis, slot, {:bool, %{}})}
   end
 
   Pegasus.parser_from_string(

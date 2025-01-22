@@ -39,9 +39,7 @@ defmodule Clr.Air.Instruction.Dbg do
 
     use Clr.Air.Instruction
 
-    def analyze(%{loc: loc}, _slot, analysis) do
-      %{analysis | loc: loc}
-    end
+    def analyze(%{loc: loc}, _slot, block, _block), do: {:halt, {:void, %{block | loc: loc}}}
   end
 
   Pegasus.parser_from_string(

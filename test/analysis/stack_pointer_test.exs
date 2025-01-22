@@ -2,7 +2,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
   use ExUnit.Case, async: true
 
   alias Clr.Analysis.StackPointer
-  alias Clr.Analysis.StackPointer.Leak
+  alias Clr.Analysis.StackPointer.Escape
   alias Clr.Air.Function
   alias Clr.Block
 
@@ -20,7 +20,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
   alias Clr.Air.Instruction.Mem.Alloc
 
   test "when you do an alloc", %{config: config, block: block} do
-    assert {:cont, {%{stack: %{function: "foo.bar", loc: {47, 47}}}, _}} =
+    assert {:cont, {%{stack: %{function: ~l"foo.bar", loc: {47, 47}}}, _}} =
              StackPointer.analyze(%Alloc{type: ~l"u8"}, 0, {%{}, block}, config)
   end
 
@@ -37,9 +37,21 @@ defmodule ClrTest.Analysis.StackPointerTest do
                config
              )
 
-    assert %{stack: %{function: "foo.bar", loc: {:arg, 0}}} = Block.get_meta(updated_block, 2)
+    assert %{stack: %{function: ~l"foo.bar", loc: {:arg, 0}}} = Block.get_meta(updated_block, 2)
   end
 
-  # test "when you return a stack pointer", %{config: config, block: block} do
-  # end
+  alias Clr.Air.Instruction.Function.Ret
+
+  test "when you return a stack pointer", %{config: config, block: block} do
+    block = %{
+      block
+      | slots: %{
+          0 => {:ptr, :one, {:u, 8, %{}}, %{stack: %{function: ~l"foo.bar", loc: {48, 48}}}}
+        }
+    }
+
+    assert_raise Escape, fn ->
+      StackPointer.analyze(%Ret{src: {0, :clobber}}, 42, {%{}, block}, config)
+    end
+  end
 end

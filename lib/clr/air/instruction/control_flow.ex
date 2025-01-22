@@ -215,10 +215,10 @@ defmodule Clr.Air.Instruction.ControlFlow do
     use Clr.Air.Instruction
     alias Clr.Block
 
-    def analyze(%{src: {src, _}}, slot, block) do
+    def analyze(%{src: {src, _}}, slot, block, _config) do
       {{:errorable, _, payload, _meta}, block} = Block.fetch_up!(block, src)
       # for now.  Ultimately, we will need to walk the analysis on this, too.
-      Block.put_type(block, slot, payload)
+      {:halt, Block.put_type(block, slot, payload)}
     end
   end
 
@@ -248,10 +248,10 @@ defmodule Clr.Air.Instruction.ControlFlow do
     use Clr.Air.Instruction
     alias Clr.Block
 
-    def analyze(%{src: {src, _}}, slot, block) do
+    def analyze(%{src: {src, _}}, _slot, block, _config) do
       {{:errorable, _, payload, _meta}, block} = Block.fetch_up!(block, src)
       # for now.  Ultimately, we will need to walk the analysis on this, too.
-      Block.put_type(block, slot, payload)
+      {:halt, {payload, block}}
     end
   end
 
