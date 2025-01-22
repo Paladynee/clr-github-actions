@@ -16,7 +16,7 @@ defmodule Clr.Air.Instruction.Function do
 
     use Clr.Air.Instruction
 
-    def analyze(%{type: type}, slot, block) do
+    def analyze(%{type: type}, slot, block, _) do
       # note that metadata is conveyed through the args_meta
       arg_meta = Enum.at(block.args_meta, slot) || raise "unreachable"
       Block.put_type(block, slot, Type.from_air(type), arg_meta)

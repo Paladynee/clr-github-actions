@@ -3,9 +3,19 @@ use Protoss
 defprotocol Clr.Analysis.Undefined do
   @behaviour Clr.Analysis
 
-  def analyze(instruction, slot, block, config)
+  @impl true
+  def analyze(instruction, slot, meta, config)
 after
   defstruct []
+
+  alias Clr.Air.Instruction.Mem.Load
+  alias Clr.Air.Instruction.Mem.Store
+
+  @impl true
+  def always, do: [Load, Store]
+
+  @impl true
+  def when_kept, do: []
 end
 
 defmodule Clr.Analysis.Undefined.Use do
@@ -28,13 +38,15 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
   import Lvalue
 
-  def analyze(%{loc: {src_slot, _}, src: ~l"undefined"}, _dst_slot, block, _config) do
-    {:halt,
-     {:void,
+  def analyze(%{loc: {src_slot, _}, src: ~l"undefined"}, _dst_slot, {meta, block}, _config) do
+    {:cont,
+     {meta,
       Block.put_meta(block, src_slot,
         undefined: %{loc: block.loc, function: Lvalue.as_string(block.function)}
       )}}
   end
+
+  # TODO: figure out other cases.
 end
 
 defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
@@ -43,10 +55,9 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
   alias Clr.Analysis.Undefined.Use
   alias Clr.Block
 
-  import Lvalue
   require Type
 
-  def analyze(%{src: {src_slot, _}}, _dst_slot, block, _config) do
+  def analyze(%{src: {src_slot, _}}, _dst_slot, {meta, block}, _config) do
     case Block.fetch_up!(block, src_slot) do
       {type, block} when Type.has_refinement(type, :undefined) ->
         src = Type.get_meta(type).undefined
@@ -57,8 +68,8 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
           use_function: Lvalue.as_string(block.function),
           use_loc: block.loc
 
-      {type, block} ->
-        {:cont, {type, block}}
+      {_, block} ->
+        {:cont, {meta, block}}
     end
   end
 end

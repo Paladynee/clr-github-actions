@@ -1,11 +1,19 @@
 use Protoss
 
 defprotocol Clr.Air.Instruction do
+  # this protocol is used for the "default implementation" of the analyze function.
+
   alias Clr.Function
   @type t :: struct
-  @callback analyze(struct, non_neg_integer, Function.t()) :: Function.t()
-  def analyze(instruction, slot, state)
+  @callback analyze(struct, non_neg_integer, Function.t(), config) :: Function.t()
+  def analyze(instruction, slot, state, config)
 after
+  defstruct []
+  @type config :: %__MODULE__{}
+
+  def always, do: []
+  def when_kept, do: []
+
   @modules Map.new(
              ~w[assembly vector casts dbg control_flow pointers maths tests atomics function mem],
              fn instruction ->

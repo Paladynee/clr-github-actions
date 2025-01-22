@@ -1,4 +1,4 @@
-defmodule ClrTest.Function.UndefinedAnalysisTest do
+defmodule ClrTest.Analysis.UndefinedTest do
   use ExUnit.Case, async: true
 
   alias Clr.Analysis.Undefined
@@ -6,7 +6,6 @@ defmodule ClrTest.Function.UndefinedAnalysisTest do
   alias Clr.Air.Function
   alias Clr.Block
 
-  import ClrTest.TestAnalysis
   import Clr.Air.Lvalue
 
   setup do
@@ -21,7 +20,7 @@ defmodule ClrTest.Function.UndefinedAnalysisTest do
   alias Clr.Air.Instruction.Mem.Store
 
   test "when you store undefined", %{config: config, block: block} do
-    assert {:u, 8, %{undefined: %{function: "foo.bar", loc: {47, 47}}}} =
+    assert %{undefined: %{function: "foo.bar", loc: {47, 47}}} =
              block
              |> Block.put_type(47, {:u, 8, %{}})
              |> then(

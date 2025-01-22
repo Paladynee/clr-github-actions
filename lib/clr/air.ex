@@ -105,7 +105,7 @@ defmodule Clr.Air do
       opts,
       :do,
       quote do
-        def analyze(_, _, _),
+        def analyze(_, _, _, _),
           do: raise("#{__MODULE__}: #{inspect(__ENV__.function)} unimplemented")
       end
     )

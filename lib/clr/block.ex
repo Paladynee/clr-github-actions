@@ -2,7 +2,6 @@ defmodule Clr.Block do
   @moduledoc false
 
   alias Clr.Air.Function
-  alias Clr.Air.Instruction
   alias Clr.Function
   alias Clr.Type
 
@@ -40,8 +39,10 @@ defmodule Clr.Block do
 
   @spec analyze(t, Clr.Air.codeblock()) :: t
   def analyze(block, code) do
+    mapper = Clr.get_instruction_mapper()
+
     code
-    |> Enum.reduce(block, &analyze_instruction/2)
+    |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
   end
@@ -67,24 +68,28 @@ defmodule Clr.Block do
   # generally, any control flow instruction or dbg_stmt instruction must be
   # analyzed.
 
-  @always [
-    Clr.Air.Instruction.Function.Ret,
-    Clr.Air.Instruction.Mem.Store,
-    Clr.Air.Instruction.Dbg.Stmt,
-    Clr.Air.Instruction.Function.Call
-  ]
+  defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper)
+       when is_map_key(mapper, module) do
+    modulespecs = Map.fetch!(mapper, module)
 
-  # if we have a "keep" instruction or a required instruction, subject the
-  # instruction to analysis.
-  defp analyze_instruction({{slot, mode}, %always{} = instruction}, block)
-       when always in @always or mode == :keep do
-    Instruction.analyze(instruction, slot, block)
+    case mode do
+      :keep ->
+        Enum.reduce_while(modulespecs, {%{}, block}, fn {_, checker}, acc ->
+          checker.analyze(instruction, slot, acc, %{})
+        end)
+
+      :clobber ->
+        Enum.reduce_while(modulespecs, {%{}, block}, fn
+          {:always, checker}, acc ->
+            checker.analyze(instruction, slot, acc, %{})
+
+          _, acc ->
+            acc
+        end)
+    end
   end
 
-  # clobbered instructions can be safely ignored.
-  defp analyze_instruction({{_, :clobber}, _}, state), do: state
-
-  # general block operations
+  defp analyze_instruction(_, block, _), do: block
 
   def put_type(block, slot, type, meta \\ nil) do
     if meta do
@@ -113,9 +118,11 @@ defmodule Clr.Block do
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)
+    |> Type.get_meta()
   end
 
-  # used to fetch the type and update the block type.  If the
+  # used to fetch the type and update the block type.  If it's a future,
+  # await the future.
   def fetch_up!(block, slot) do
     case Map.fetch(block.slots, slot) do
       {:ok, typemeta} ->
@@ -125,6 +132,15 @@ defmodule Clr.Block do
         await_future(block, slot)
     end
   end
+
+  # fetches the type without updating the block.  Should only be used if the
+  # type is known to not be a future
+  def fetch!(block, slot), do: Map.fetch!(block.slots, slot)
+
+  # fetches the typemeta without updating the block.  Should only be used
+  # if the type is known not to be a future, and the type is known to not
+  # be noreturn or void.
+  def fetch_meta!(block, slot), do: Type.get_meta(fetch!(block, slot))
 
   defp await_future(block, slot) do
     block.awaits
