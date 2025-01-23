@@ -49,13 +49,8 @@ defmodule Clr.Air.Instruction.Function do
     alias Clr.Type
     alias Clr.Function
 
-    import Clr.Air.Lvalue
-
     def analyze(call, slot, block, _config) do
       case call.fn do
-        {:literal, {:fn, [~l"mem.Allocator" | params], type, _fn_opts}, {:function, function}} ->
-          process_allocator(function, params, type, call.args, slot, block)
-
         {:literal, _type, {:function, function_name}} ->
           # we also need the context of the current function.
 
@@ -83,68 +78,6 @@ defmodule Clr.Air.Instruction.Function do
           end
       end
     end
-
-    defp process_allocator(
-           "create" <> _,
-           [],
-           {:errorable, e, {:ptr, _, _, _} = ptr_type},
-           [{:literal, ~l"mem.Allocator", struct}],
-           slot,
-           analysis
-         ) do
-      type =
-        ptr_type
-        |> Type.from_air()
-        |> Type.put_meta(heap: Map.fetch!(struct, "vtable"))
-        |> then(&{:errorable, e, &1, %{}})
-
-      Block.put_type(analysis, slot, type)
-    end
-
-    defp process_allocator(
-           "destroy" <> _,
-           [_],
-           ~l"void",
-           [{:literal, ~l"mem.Allocator", struct}, {src, _}],
-           slot,
-           block
-         ) do
-      vtable = Map.fetch!(struct, "vtable")
-      this_function = block.function
-
-      # TODO: consider only flushing the awaits that the function needs.
-      block
-      |> Block.flush_awaits()
-      |> Block.fetch_up!(src)
-      |> case do
-        {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
-          raise Clr.DoubleFreeError,
-            previous: Clr.Air.Lvalue.as_string(prev_function),
-            deletion: Clr.Air.Lvalue.as_string(this_function),
-            loc: block.loc
-
-        {{:ptr, :one, _type, %{heap: ^vtable}}, block} ->
-          block
-          |> Block.put_meta(src, deleted: this_function)
-          |> Block.put_type(slot, Type.void())
-
-        {{:ptr, :one, _type, %{heap: other}}, block} ->
-          raise Clr.AllocatorMismatchError,
-            original: Clr.Air.Lvalue.as_string(other),
-            attempted: Clr.Air.Lvalue.as_string(vtable),
-            function: Clr.Air.Lvalue.as_string(this_function),
-            loc: block.loc
-
-        _ ->
-          raise Clr.AllocatorMismatchError,
-            original: :stack,
-            attempted: Clr.Air.Lvalue.as_string(vtable),
-            function: Clr.Air.Lvalue.as_string(this_function),
-            loc: block.loc
-      end
-    end
-
-    # utility functions
 
     defp merge_name({:lvalue, lvalue}, function_name) do
       {:lvalue, List.replace_at(lvalue, -1, function_name)}

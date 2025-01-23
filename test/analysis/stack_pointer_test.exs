@@ -19,7 +19,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
 
   alias Clr.Air.Instruction.Mem.Alloc
 
-  test "when you do an alloc", %{config: config, block: block} do
+  test "when you do a stack allocation", %{config: config, block: block} do
     assert {:cont, {%{stack: %{function: ~l"foo.bar", loc: {47, 47}}}, _}} =
              StackPointer.analyze(%Alloc{type: ~l"u8"}, 0, {%{}, block}, config)
   end

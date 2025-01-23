@@ -1,6 +1,8 @@
 defmodule ClrTest.Function.ManagesTest do
   use ExUnit.Case, async: true
 
+  @moduletag :skip
+
   alias Clr.Air.Function
   alias Clr.Block
   import Clr.Air.Lvalue

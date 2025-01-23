@@ -12,7 +12,7 @@ after
   alias Clr.Air.Instruction.Mem.Store
 
   @impl true
-  def always, do: [Alloc, Store]
+  def always, do: [Alloc, Store, Ret]
 
   @impl true
   def when_kept, do: []

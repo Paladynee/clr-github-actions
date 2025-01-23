@@ -11,6 +11,8 @@ after
   alias Clr.Air.Instruction.Mem.Load
   alias Clr.Air.Instruction.Mem.Store
 
+  def meta(block), do: Map.take(block, ~w[loc function]a)
+
   @impl true
   def always, do: [Load, Store]
 
@@ -35,15 +37,12 @@ end
 
 defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Air.Lvalue
+  alias Clr.Analysis.Undefined
   alias Clr.Block
   import Lvalue
 
   def analyze(%{loc: {src_slot, _}, src: ~l"undefined"}, _dst_slot, {meta, block}, _config) do
-    {:cont,
-     {meta,
-      Block.put_meta(block, src_slot,
-        undefined: %{loc: block.loc, function: Lvalue.as_string(block.function)}
-      )}}
+    {:cont, {meta, Block.put_meta(block, src_slot, undefined: Undefined.meta(block))}}
   end
 
   # TODO: figure out other cases.
