@@ -22,6 +22,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
   @allocator {:fn, [~l"mem.Allocator"],
               {:errorable, ["OutOfMemory"], {:ptr, :one, {:lvalue, ["u8"]}, []}}, []}
   @create_literal {:literal, @allocator, {:function, "create__anon_2535"}}
+  @delete_literal {:literal, @allocator, {:function, "destroy__anon_2535"}}
   @c_allocator_literal {:literal, ~l"mem.Allocator",
                         %{
                           "ptr" => :undefined,
@@ -51,5 +52,17 @@ defmodule ClrTest.Analysis.AllocatorTest do
   end
 
   describe "when you run a deallocation" do
+    test "it marks as deleted in the basic case", %{config: config, block: block} do
+      block = Block.put_type(block, 47, {:ptr, :one, ~l"u8", %{heap: %{function: ~l"foo.bar", loc: {42, 42}, vtable: ~l"heap.c_allocator_vtable"}}})
+
+      assert {{:void, %{}}, block} = Allocator.analyze(
+        %Call{fn: @delete_literal, args: [@c_allocator_literal, {47, :keep}]},
+        0,
+        {%{}, block},
+        config
+      )
+
+      assert %{deleted: %{function: ~l"foo.bar", loc: {47, 47}}} = Block.get_meta(block, 47)
+    end
   end
 end

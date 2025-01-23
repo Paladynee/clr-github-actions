@@ -23,6 +23,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   import Clr.Air.Lvalue
 
   alias Clr.Analysis.Undefined
+  alias Clr.Block
 
   @impl true
   def analyze(call, _slot, metablock, config) do
@@ -47,7 +48,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     heapinfo = %{vtable: Map.fetch!(struct, "vtable"), function: block.function, loc: block.loc}
 
     # probably need a better "metas" system, but for now this will have to do.
-    
+
     type =
       type
       |> Type.from_air()
@@ -64,38 +65,35 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     vtable = Map.fetch!(struct, "vtable")
     this_function = block.function
 
-    raise "aap"
-
     # TODO: consider only flushing the awaits that the function needs.
-    # block
-    # |> Block.flush_awaits()
-    # |> Block.fetch_up!(src)
-    # |> case do
-    #  {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
-    #    raise Clr.DoubleFreeError,
-    #      previous: Clr.Air.Lvalue.as_string(prev_function),
-    #      deletion: Clr.Air.Lvalue.as_string(this_function),
-    #      loc: block.loc
-    #
-    #  {{:ptr, :one, _type, %{heap: ^vtable}}, block} ->
-    #    block
-    #    |> Block.put_meta(src, deleted: this_function)
-    #    |> Block.put_type(slot, Type.void())
-    #
-    #  {{:ptr, :one, _type, %{heap: other}}, block} ->
-    #    raise Clr.AllocatorMismatchError,
-    #      original: Clr.Air.Lvalue.as_string(other),
-    #      attempted: Clr.Air.Lvalue.as_string(vtable),
-    #      function: Clr.Air.Lvalue.as_string(this_function),
-    #      loc: block.loc
-    #
-    #  _ ->
-    #    raise Clr.AllocatorMismatchError,
-    #      original: :stack,
-    #      attempted: Clr.Air.Lvalue.as_string(vtable),
-    #      function: Clr.Air.Lvalue.as_string(this_function),
-    #      loc: block.loc
-    # end
+    block
+    |> Block.flush_awaits()
+    |> Block.fetch_up!(src)
+    |> case do
+      {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
+        raise Clr.DoubleFreeError,
+          previous: Clr.Air.Lvalue.as_string(prev_function),
+          deletion: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
+
+      {{:ptr, :one, _type, %{heap: %{vtable: ^vtable}}}, block} ->
+        deleted_info = %{function: this_function, loc: block.loc}
+        {Type.void(), Block.put_meta(block, src, deleted: deleted_info)}
+
+      {{:ptr, :one, _type, %{heap: other}}, block} ->
+        raise Clr.AllocatorMismatchError,
+          original: Clr.Air.Lvalue.as_string(other),
+          attempted: Clr.Air.Lvalue.as_string(vtable),
+          function: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
+
+      _ ->
+        raise Clr.AllocatorMismatchError,
+          original: :stack,
+          attempted: Clr.Air.Lvalue.as_string(vtable),
+          function: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
+    end
   end
 end
 
