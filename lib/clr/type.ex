@@ -8,6 +8,7 @@ defmodule Clr.Type do
           | lvalue_type
           | comptime_call_type
           | optional_type
+          | unused_type
 
   @type ptr_type :: {:ptr, ptr_count, t, meta}
   @type array_type :: {:array, non_neg_integer, t, meta}
@@ -21,6 +22,9 @@ defmodule Clr.Type do
   @type lvalue_type :: {:lvalue, term, meta}
   @type comptime_call_type :: {:comptime_call, term, list, meta}
   @type optional_type :: {:optional, t, meta}
+
+  # note that unused_type will fail if metadata are accessed, and that is intentional.
+  @type unused_type :: :void | :noreturn
 
   defguard has_refinement(t, key)
            when (tuple_size(t) == 4 and is_map_key(elem(t, 3), key)) or
@@ -44,7 +48,7 @@ defmodule Clr.Type do
       comptime_call_type?(maybe_type) or
       optional_type?(maybe_type) or
       errorable_type?(maybe_type) or
-      void_type?(maybe_type)
+      unused_type?(maybe_type)
   end
 
   defp ptr_type?(maybe_type) do
@@ -77,7 +81,7 @@ defmodule Clr.Type do
 
   defp bool_type?(maybe_type), do: match?({:bool, %{}}, maybe_type)
   defp usize_type?(maybe_type), do: match?({:usize, %{}}, maybe_type)
-  defp void_type?(maybe_type), do: maybe_type == {:void, %{}}
+  defp unused_type?(maybe_type), do: maybe_type == :void or :noreturn
 
   defp typeof_type?(maybe_type), do: match?({:TypeOf, _lvalue, %{}}, maybe_type)
 
@@ -139,6 +143,11 @@ defmodule Clr.Type do
   def get_meta({_, meta}), do: meta
   def get_meta({_, _, meta}), do: meta
   def get_meta({_, _, _, meta}), do: meta
+
+  @spec update_meta(t, (meta -> meta)) :: t
+  def update_meta({a, meta}, fun), do: {a, fun.(meta)}
+  def update_meta({a, b, meta}, fun), do: {a, b, fun.(meta)}
+  def update_meta({a, b, c, meta}, fun), do: {a, b, c, fun.(meta)}
 
   def make_numbered(class, int) do
     case Integer.parse(int) do

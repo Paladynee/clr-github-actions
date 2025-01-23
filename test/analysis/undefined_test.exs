@@ -20,7 +20,7 @@ defmodule ClrTest.Analysis.UndefinedTest do
   alias Clr.Air.Instruction.Mem.Store
 
   test "when you store undefined", %{config: config, block: block} do
-    assert %{undefined: %{function: "foo.bar", loc: {47, 47}}} =
+    assert %{undefined: %{function: ~l"foo.bar", loc: {47, 47}}} =
              block
              |> Block.put_type(47, {:u, 8, %{}})
              |> then(

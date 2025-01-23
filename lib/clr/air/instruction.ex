@@ -6,8 +6,8 @@ defprotocol Clr.Air.Instruction do
   alias Clr.Block
   @type t :: struct
 
-  @callback set_initial_type(t) :: Clr.Type.t
-  def set_initial_type(t)
+  @callback slot_type(t, Block.t()) :: Clr.Type.t()
+  def slot_type(t, block)
 
   @callback analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
   def analyze(instruction, slot, state, config)

@@ -2,6 +2,7 @@ defmodule Clr.Block do
   @moduledoc false
 
   alias Clr.Air.Function
+  alias Clr.Air.Instruction
   alias Clr.Function
   alias Clr.Type
 
@@ -72,14 +73,16 @@ defmodule Clr.Block do
        when is_map_key(mapper, module) do
     modulespecs = Map.fetch!(mapper, module)
 
+    block = put_type(block, slot, Instruction.slot_type(instruction, block))
+
     case mode do
       :keep ->
-        Enum.reduce_while(modulespecs, {%{}, block}, fn {_, checker}, acc ->
+        Enum.reduce_while(modulespecs, block, fn {_, checker}, acc ->
           checker.analyze(instruction, slot, acc, %{})
         end)
 
       :clobber ->
-        Enum.reduce_while(modulespecs, {%{}, block}, fn
+        Enum.reduce_while(modulespecs, block, fn
           {:always, checker}, acc ->
             checker.analyze(instruction, slot, acc, %{})
 
@@ -141,6 +144,8 @@ defmodule Clr.Block do
   # if the type is known not to be a future, and the type is known to not
   # be noreturn or void.
   def fetch_meta!(block, slot), do: Type.get_meta(fetch!(block, slot))
+
+  def update_type!(block, slot, fun), do: %{block | slots: Map.update!(block.slots, slot, fun)}
 
   defp await_future(block, slot) do
     block.awaits

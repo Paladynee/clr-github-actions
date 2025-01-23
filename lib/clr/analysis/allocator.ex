@@ -26,42 +26,39 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   alias Clr.Block
 
   @impl true
-  def analyze(call, _slot, metablock, config) do
+  def analyze(call, slot, block, config) do
     case call.fn do
-      {:literal, {:fn, [~l"mem.Allocator" | _], type, _fn_opts}, {:function, "create_" <> _}} ->
-        process_create(type, call.args, metablock, config)
+      {:literal, {:fn, [~l"mem.Allocator" | _], _, _fn_opts}, {:function, "create_" <> _}} ->
+        process_create(call.args, slot, block, config)
 
       {:literal, {:fn, [~l"mem.Allocator" | _], _, _fn_opts}, {:function, "destroy" <> _}} ->
-        process_destroy(call.args, metablock, config)
+        process_destroy(call.args, slot, block, config)
 
       _ ->
-        {:cont, metablock}
+        {:cont, block}
     end
   end
 
   defp process_create(
-         {:errorable, e, {:ptr, :one, type, _}},
          [{:literal, ~l"mem.Allocator", struct}],
-         {meta, block},
+         slot,
+         block,
          _config
        ) do
     heapinfo = %{vtable: Map.fetch!(struct, "vtable"), function: block.function, loc: block.loc}
 
-    # probably need a better "metas" system, but for now this will have to do.
+    block =
+      Block.update_type!(block, slot, fn
+        {:errorable, e, {:ptr, :one, type, ptr_meta}, err_meta} ->
+          {:errorable, e,
+           {:ptr, :one, Type.put_meta(type, undefined: Undefined.meta(block)),
+            Map.put(ptr_meta, :heap, heapinfo)}, err_meta}
+      end)
 
-    type =
-      type
-      |> Type.from_air()
-      |> Type.put_meta(undefined: Undefined.meta(block))
-      |> then(&{:ptr, :one, &1, %{heap: heapinfo}})
-      |> Type.put_meta(meta)
-      |> then(&{:errorable, e, &1, %{}})
-
-    # prevent further analysis on this function.
-    {:halt, {type, block}}
+    {:halt, block}
   end
 
-  defp process_destroy([{:literal, ~l"mem.Allocator", struct}, {src, _}], {meta, block}, _config) do
+  defp process_destroy([{:literal, ~l"mem.Allocator", struct}, {src, _}], slot, block, _config) do
     vtable = Map.fetch!(struct, "vtable")
     this_function = block.function
 
