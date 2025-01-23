@@ -3,9 +3,13 @@ use Protoss
 defprotocol Clr.Air.Instruction do
   # this protocol is used for the "default implementation" of the analyze function.
 
-  alias Clr.Function
+  alias Clr.Block
   @type t :: struct
-  @callback analyze(struct, non_neg_integer, Function.t(), config) :: Function.t()
+
+  @callback set_initial_type(t) :: Clr.Type.t
+  def set_initial_type(t)
+
+  @callback analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
   def analyze(instruction, slot, state, config)
 after
   defstruct []
