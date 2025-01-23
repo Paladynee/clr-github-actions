@@ -8,10 +8,86 @@ defprotocol Clr.Analysis.Allocator do
 after
   defstruct []
 
+  defmodule UseAfterFree do
+    defexception [:function, :loc, :del_loc, :del_function]
+
+    def message(%{
+          function: function,
+          del_function: function,
+          loc: {row, col},
+          del_loc: {del_row, del_col}
+        }) do
+      "Use after free detected in function `#{function}` at #{row}:#{col}, deleted at #{del_row}:#{del_col}"
+    end
+
+    def message(%{
+          function: function,
+          del_function: del_function,
+          loc: {row, col},
+          del_loc: {del_row, del_col}
+        }) do
+      "Use after free detected in function `#{function}` at #{row}:#{col}, function #{del_function} was passed the pointer at #{del_row}:#{del_col} and deletes it"
+    end
+  end
+
+  defmodule DoubleFree do
+    defexception [:previous, :prev_loc, :deletion, :loc, transferred: false]
+
+    def message(
+          %{
+            previous: function,
+            loc: {row, col},
+            prev_loc: {prev_row, prev_col},
+            transferred: true
+          } =
+            exception
+        ) do
+      "Double free detected in function `#{exception.deletion}` at #{row}:#{col}, function `#{function}` was passed the pointer at #{prev_row}:#{prev_col} and deletes it"
+    end
+
+    def message(%{
+          previous: function,
+          deletion: function,
+          loc: {row, col},
+          prev_loc: {prev_row, prev_col}
+        }) do
+      "Double free detected in function `#{function}` at #{row}:#{col}, previously deleted at #{prev_row}:#{prev_col}"
+    end
+
+    def message(%{loc: {row, col}} = exception) do
+      "Double free detected in function `#{exception.deletion}` at #{row}:#{col}, function already deleted by `#{exception.previous}`"
+    end
+  end
+
+  defmodule Mismatch do
+    defexception [:original, :attempted, :function, :loc]
+
+    def message(%{original: {:stack, function, {srow, scol}}, loc: {row, col}} = exception) do
+      "Stack memory (of #{function} created at #{srow}:#{scol}) attempted to be freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
+    end
+
+    def message(%{loc: {row, col}} = exception) do
+      "Heap memory allocated by `#{exception.original}` freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
+    end
+  end
+
+  defmodule CallDeleted do
+    defexception [:function, :loc, :deleted_loc, :transferred_function]
+
+    def message(%{function: function, loc: {row, col}, transferred_function: nil, deleted_loc: {del_row, del_col}}) do
+      "Function `#{function}` at #{row}:#{col} called with a deleted pointer at #{del_row}:#{del_col}"
+    end
+
+    def message(%{function: function, loc: {row, col}, transferred_function: transferred_function, deleted_loc: {del_row, del_col}}) do
+      "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
+    end
+  end
+
   alias Clr.Air.Instruction.Function.Call
+  alias Clr.Air.Instruction.Mem.Load
 
   @impl true
-  def always, do: [Call]
+  def always, do: [Call, Load]
 
   @impl true
   def when_kept, do: []
@@ -23,6 +99,9 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   import Clr.Air.Lvalue
 
   alias Clr.Analysis.Undefined
+  alias Clr.Analysis.Allocator.DoubleFree
+  alias Clr.Analysis.Allocator.Mismatch
+  alias Clr.Analysis.Allocator.CallDeleted
   alias Clr.Block
 
   @impl true
@@ -35,6 +114,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
         process_destroy(call.args, slot, block, config)
 
       _ ->
+        check_passing_deleted(call, block, config)
         {:cont, block}
     end
   end
@@ -67,44 +147,90 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     |> Block.flush_awaits()
     |> Block.fetch_up!(src)
     |> case do
-      {{:ptr, :one, _type, %{deleted: prev_function}}, block} ->
-        raise Clr.DoubleFreeError,
+      {{:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}}}, block} ->
+        raise DoubleFree,
           previous: Clr.Air.Lvalue.as_string(prev_function),
+          prev_loc: prev_loc,
+          deletion: Clr.Air.Lvalue.as_string(this_function),
+          loc: block.loc
+
+      {{:ptr, :one, _type, %{transferred: %{function: prev_function, loc: prev_loc}}}, block} ->
+        raise DoubleFree,
+          previous: Clr.Air.Lvalue.as_string(prev_function),
+          prev_loc: prev_loc,
           deletion: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
       {{:ptr, :one, _type, %{heap: %{vtable: ^vtable}}}, block} ->
         deleted_info = %{function: this_function, loc: block.loc}
-        {Type.void(), Block.put_meta(block, src, deleted: deleted_info)}
+        {:halt, Block.put_meta(block, src, deleted: deleted_info)}
 
       {{:ptr, :one, _type, %{heap: other}}, block} ->
-        raise Clr.AllocatorMismatchError,
-          original: Clr.Air.Lvalue.as_string(other),
+        raise Mismatch,
+          original: Clr.Air.Lvalue.as_string(other.vtable),
           attempted: Clr.Air.Lvalue.as_string(vtable),
           function: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      _ ->
-        raise Clr.AllocatorMismatchError,
-          original: :stack,
+      {{:ptr, :one, _type, %{stack: %{function: function, loc: loc}}}, block} ->
+        raise Mismatch,
+          original: {:stack, Clr.Air.Lvalue.as_string(function), loc},
           attempted: Clr.Air.Lvalue.as_string(vtable),
           function: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
+
+      {_, block} ->
+        {:cont, block}
     end
+  end
+
+  defp check_passing_deleted(call, block, _config) do
+    Enum.reduce(call.args, block, fn {slot, _}, block ->
+      # TODO: check other types and make sure none of them are deleted too.
+      case Block.fetch_up!(block, slot) do
+        {{:ptr, _, _, %{deleted: d}}, block} ->
+          raise CallDeleted,
+            function: Clr.Air.Lvalue.as_string(block.function),
+            loc: block.loc,
+            deleted_loc: d.loc
+
+        {{:ptr, _, _, %{transferred: t}}, block} ->
+
+          raise CallDeleted,
+            function: Clr.Air.Lvalue.as_string(block.function),
+            loc: block.loc,
+            transferred_function: Clr.Air.Lvalue.as_string(t.function),
+            deleted_loc: t.loc
+
+        {_, block} ->
+          block
+      end
+    end)
   end
 end
 
-#
-# defp process_allocator(
-#  "destroy" <> _,
-#  [_],
-#  ~l"void",
-#  [{:literal, ~l"mem.Allocator", struct}, {src, _}],
-#  slot,
-#  block
-# ) do
-# vtable = Map.fetch!(struct, "vtable")
+defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
+  alias Clr.Analysis.Allocator.UseAfterFree
+  alias Clr.Block
 
-# end
+  def analyze(%{src: {src_slot, _}}, slot, block, config) do
+    case Block.fetch_up!(block, src_slot) do
+      {{:ptr, _, _, %{deleted: %{function: function, loc: loc}}}, block} ->
+        raise UseAfterFree,
+          del_function: Clr.Air.Lvalue.as_string(function),
+          del_loc: loc,
+          function: Clr.Air.Lvalue.as_string(block.function),
+          loc: block.loc
 
-# utility functions
+      {{:ptr, _, _, %{transferred: %{function: function, loc: loc}}}, block} ->
+        raise UseAfterFree,
+          del_function: Clr.Air.Lvalue.as_string(function),
+          del_loc: loc,
+          function: Clr.Air.Lvalue.as_string(block.function),
+          loc: block.loc
+
+      _ ->
+        {:cont, block}
+    end
+  end
+end

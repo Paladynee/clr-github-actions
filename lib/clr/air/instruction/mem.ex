@@ -51,20 +51,6 @@ defmodule Clr.Air.Instruction.Mem do
     require Type
 
     def analyze(%{src: {src_slot, _}}, slot, block, _config) do
-      case Block.fetch_up!(block, src_slot) do
-        {{:ptr, _, _, %{deleted: _src}}, block} ->
-          raise Clr.UseAfterFreeError,
-            function: Clr.Air.Lvalue.as_string(block.function),
-            loc: block.loc
-
-        {{:ptr, _, type, _}, block} when Type.has_refinement(type, :undefined) ->
-          raise Clr.UndefinedUsage,
-            function: Clr.Air.Lvalue.as_string(block.function),
-            loc: block.loc
-
-        {{:ptr, _, type, _}, block} ->
-          {:halt, Block.put_type(block, slot, type)}
-      end
     end
   end
 

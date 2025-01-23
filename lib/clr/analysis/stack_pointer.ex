@@ -6,6 +6,18 @@ defprotocol Clr.Analysis.StackPointer do
   @impl true
   def analyze(instruction, slot, block, config)
 after
+  defmodule Escape do
+    defexception [
+      :function,
+      :src_loc,
+      :esc_loc
+    ]
+
+    def message(error) do
+      "Stack pointer escaped from function #{error.function}, created at #{inspect(error.src_loc)}, returned from #{inspect(error.esc_loc)}"
+    end
+  end
+
   defstruct []
 
   alias Clr.Air.Instruction.Mem.Alloc
@@ -16,18 +28,6 @@ after
 
   @impl true
   def when_kept, do: []
-end
-
-defmodule Clr.Analysis.StackPointer.Escape do
-  defexception [
-    :function,
-    :src_loc,
-    :esc_loc
-  ]
-
-  def message(error) do
-    "Stack pointer escaped from function #{error.function}, created at #{inspect(error.src_loc)}, returned from #{inspect(error.esc_loc)}"
-  end
 end
 
 defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Alloc do
