@@ -16,25 +16,11 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg: [export: true]
   )
 
-  defmodule Trap do
-    # represents a `trap` statement.
-    defstruct []
-  end
-
-  Pegasus.parser_from_string(
-    """
-    trap <- trap_str 
-    trap_str <- 'trap()'
-    """,
-    trap: [post_traverse: :trap],
-    trap_str: [ignore: true]
-  )
-
-  def trap(rest, [], context, _, _) do
-    {rest, [%Trap{}], context}
-  end
-
   defmodule Stmt do
+    # Notes the beginning of a source code statement and marks the line and column.
+    # Result type is always void.
+    # Uses the `dbg_stmt` field.
+
     defstruct [:loc]
 
     use Clr.Air.Instruction
@@ -59,6 +45,8 @@ defmodule Clr.Air.Instruction.Dbg do
   end
 
   defmodule EmptyStmt do
+    # Marks a statement that can be stepped to but produces no code.
+
     defstruct []
   end
 
@@ -76,6 +64,9 @@ defmodule Clr.Air.Instruction.Dbg do
   end
 
   defmodule InlineBlock do
+    # A block that represents an inlined function call.
+    # Uses the `ty_pl` field. Payload is `DbgInlineBlock`.
+
     defstruct [:type, :what, :code, clobbers: []]
   end
 
@@ -103,7 +94,13 @@ defmodule Clr.Air.Instruction.Dbg do
   end
 
   defmodule VarPtr do
-    defstruct [:src, :val]
+    # Marks the beginning of a local variable. The operand is a pointer pointing
+    # to the storage for the variable. The local may be a const or a var.
+    # Result type is always void.
+    # Uses `pl_op`. The payload index is the variable name. It points to the extra
+    # array, reinterpreting the bytes there as a null-terminated string.
+
+    defstruct [:src, :name]
   end
 
   Pegasus.parser_from_string(
@@ -120,7 +117,10 @@ defmodule Clr.Air.Instruction.Dbg do
   end
 
   defmodule VarVal do
-    defstruct [:src, :val]
+    # Same as `dbg_var_ptr` except the local is a const, not a var, and the
+    # operand is the local's value.
+
+    defstruct [:src, :name]
   end
 
   Pegasus.parser_from_string(
@@ -137,7 +137,8 @@ defmodule Clr.Air.Instruction.Dbg do
   end
 
   defmodule ArgInline do
-    defstruct [:val, :key]
+    # Same as `dbg_var_val` except the local is an inline function argument.
+    defstruct [:val, :name]
   end
 
   Pegasus.parser_from_string(
@@ -153,5 +154,6 @@ defmodule Clr.Air.Instruction.Dbg do
     {rest, [%ArgInline{val: value, key: key}], context}
   end
 
+  Air.unimplemented(:trap)
   Air.unimplemented(:breakpoint)
 end

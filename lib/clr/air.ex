@@ -70,6 +70,8 @@ defmodule Clr.Air do
         defstruct [:type, :src]
         use Clr.Air.Instruction
         unquote(default_code(opts))
+        require Clr.Air.Instruction
+        Clr.Air.Instruction.default_slot_type_function(:ty_op)
       end
 
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))

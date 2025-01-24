@@ -80,6 +80,9 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   defmodule Slice do
+    # Constructs a slice from a pointer and a length.
+    # Uses the `ty_pl` field, payload is `Bin`. lhs is ptr, rhs is len.
+
     defstruct [:type, :src, :len]
   end
 
@@ -96,15 +99,28 @@ defmodule Clr.Air.Instruction.Pointers do
     {rest, [%Slice{type: type, src: src, len: len}], context}
   end
 
+  # Given a slice value, return the length.
+  # Result type is always usize.
+  # Uses the `ty_op` field.
   Air.ty_op(:slice_len, SliceLen)
 
+  # Given a slice value, return the pointer.
+  # Uses the `ty_op` field.
   Air.ty_op(:slice_ptr, SlicePtr)
 
+  # Given a pointer to a slice, return a pointer to the length of the slice.
+  # Uses the `ty_op` field.
   Air.ty_op(:ptr_slice_len_ptr, PtrSliceLenPtr)
 
+  # Given a pointer to a slice, return a pointer to the pointer of the slice.
+  # Uses the `ty_op` field.
   Air.ty_op(:ptr_slice_ptr_ptr, PtrSlicePtrPtr)
 
   defmodule ArrayElemVal do
+    # Given an (array value or vector value) and element index,
+    # return the element value at that index.
+    # Result type is the element type of the array operand.
+    # Uses the `bin_op` field.
     defstruct [:src, :index_src]
   end
 
@@ -122,6 +138,9 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   defmodule SliceElemVal do
+    # Given a slice value, and element index, return the element value at that index.
+    # Result type is the element type of the slice operand.
+    # Uses the `bin_op` field.
     defstruct [:src, :index_src]
   end
 
@@ -139,6 +158,9 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   defmodule SliceElemPtr do
+    # Given a slice value and element index, return a pointer to the element value at that index.
+    # Result type is a pointer to the element type of the slice operand.
+    # Uses the `ty_pl` field with payload `Bin`.
     defstruct [:type, :src, :index]
   end
 
@@ -156,6 +178,9 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   defmodule PtrElemVal do
+    # Given a pointer value, and element index, return the element value at that index.
+    # Result type is the element type of the pointer operand.
+    # Uses the `bin_op` field.
     defstruct [:src, :index_src]
   end
 
@@ -173,6 +198,9 @@ defmodule Clr.Air.Instruction.Pointers do
   end
 
   defmodule PtrElemPtr do
+    # Given a pointer value, and element index, return the element pointer at that index.
+    # Result type is pointer to the element type of the pointer operand.
+    # Uses the `ty_pl` field with payload `Bin`.
     defstruct [:loc, :val, :type]
   end
 
@@ -189,6 +217,8 @@ defmodule Clr.Air.Instruction.Pointers do
     {rest, [%PtrElemPtr{loc: loc, val: val, type: type}], context}
   end
 
+  # Given a pointer to an array, return a slice.
+  # Uses the `ty_op` field.
   Air.ty_op(:array_to_slice, ArrayToSlice)
 
   Air.unimplemented(:error_return_trace)

@@ -54,11 +54,15 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
 
   describe "store" do
     alias Clr.Air.Instruction.Mem.Store
+
     test "sets slot_type to the type of the slotref", %{block: block} do
       block = Block.put_type(block, 0, {:u, 8, %{}})
 
       assert {:void, _} =
-               Instruction.slot_type(%Store{src: ~l"@Air.Inst.Ref.one_u8", dst: {0, :keep}, safe: false}, block)
+               Instruction.slot_type(
+                 %Store{src: ~l"@Air.Inst.Ref.one_u8", dst: {0, :keep}, safe: false},
+                 block
+               )
     end
   end
 

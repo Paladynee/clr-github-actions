@@ -13,6 +13,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
   )
 
   defmodule Block do
+    # Uses the `ty_pl` field with payload `Block`.  A block runs its body which always ends
+    # with a `noreturn` instruction, so the only way to proceed to the code after the `block`
+    # is to encounter a `br` that targets this `block`.  If the `block` type is `noreturn`,
+    # then there do not exist any `br` instructions targeting this `block`.
+
     defstruct [:type, :code, clobbers: []]
   end
 
@@ -34,6 +39,12 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule Loop do
+    # A labeled block of code that loops forever. The body must be `noreturn`: loops
+    # occur through an explicit `repeat` instruction pointing back to this one.
+    # Result type is always `noreturn`; no instructions in a block follow this one.
+    # There is always at least one `repeat` instruction referencing the loop.
+    # Uses the `ty_pl` field. Payload is `Block`.
+
     defstruct [:type, :code]
   end
 
@@ -51,6 +62,8 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule Repeat do
+    # Sends control flow back to the beginning of a parent `loop` body.
+    # Uses the `repeat` field.
     defstruct [:goto]
   end
 
@@ -68,6 +81,9 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule Br do
+    # Return from a block with a result.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `br` field.
     defstruct [:goto, :value]
   end
 
@@ -85,6 +101,10 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule CondBr do
+    # Conditional branch.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `pl_op` field. Operand is the condition. Payload is `CondBr`.
+
     defstruct [:cond, :true_branch, :false_branch]
   end
 
@@ -125,6 +145,10 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule SwitchBr do
+    # Switch branch.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `pl_op` field. Operand is the condition. Payload is `SwitchBr`.
+
     defstruct [:test, :cases, :loop]
   end
 
@@ -193,6 +217,10 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule SwitchDispatch do
+    # Dispatches back to a branch of a parent `loop_switch_br`.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `br` field. `block_inst` is a `loop_switch_br` instruction.
+
     defstruct [:fwd, :goto]
   end
 
@@ -210,6 +238,16 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule Try do
+    # Given an operand which is an error union, splits control flow. In
+    # case of error, control flow goes into the block that is part of this
+    # instruction, which is guaranteed to end with a return instruction
+    # and never breaks out of the block.
+    # In the case of non-error, control flow proceeds to the next instruction
+    # after the `try`, with the result of this instruction being the unwrapped
+    # payload value, as if `unwrap_errunion_payload` was executed on the operand.
+    # The error branch is considered to have a branch hint of `.unlikely`.
+    # Uses the `pl_op` field. Payload is `Try`.
+
     defstruct [:src, :error_code, clobbers: [], ptr: false, cold: false]
 
     use Clr.Air.Instruction
@@ -243,6 +281,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
   defp cold?([]), do: false
 
   defmodule TryPtr do
+    # Same as `try` except the operand is a pointer to an error union, and the
+    # result is a pointer to the payload. Result is as if `unwrap_errunion_payload_ptr`
+    # was executed on the operand.
+    # Uses the `ty_pl` field. Payload is `TryPtr`.
+
     defstruct [:src, :type, :error_code, clobbers: [], cold: false]
 
     use Clr.Air.Instruction
@@ -287,6 +330,8 @@ defmodule Clr.Air.Instruction.ControlFlow do
   end
 
   defmodule Unreach do
+    # Indicates the program counter will never get to this instruction.
+    # Result type is always noreturn; no instructions in a block follow this one.
     defstruct []
   end
 

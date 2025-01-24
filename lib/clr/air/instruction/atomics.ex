@@ -58,6 +58,8 @@ defmodule Clr.Air.Instruction.Atomics do
   )
 
   defmodule Load do
+    # Read a value from a pointer.
+    # Uses the `ty_op` field.
     defstruct ~w[from mode]a
   end
 
@@ -66,6 +68,14 @@ defmodule Clr.Air.Instruction.Atomics do
   end
 
   defmodule Store do
+    # Write a value to a pointer. LHS is pointer, RHS is value.
+    # Result type is always void.
+    # Uses the `bin_op` field.
+    # The value to store may be undefined, in which case the destination
+    # memory region has undefined bytes after this instruction is
+    # evaluated. In such case ignoring this instruction is legal
+    # lowering.
+
     defstruct ~w[from to mode]a
   end
 

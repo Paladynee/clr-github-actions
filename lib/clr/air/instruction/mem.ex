@@ -19,6 +19,8 @@ defmodule Clr.Air.Instruction.Mem do
   )
 
   defmodule Alloc do
+    # Allocates stack local memory.
+    # Uses the `ty` field.
     defstruct [:type]
 
     use Clr.Air.Instruction
@@ -108,6 +110,9 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   defmodule SetUnionTag do
+    # Given a pointer to a tagged union, set its tag to the provided value.
+    # Result type is always void.
+    # Uses the `bin_op` field. LHS is union pointer, RHS is new tag value.
     defstruct [:src, :val]
   end
 
@@ -124,9 +129,22 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%SetUnionTag{src: src, val: val}], context}
   end
 
+  # Given a tagged union value, get its tag value.
+  # Uses the `ty_op` field.
   Air.ty_op(:get_union_tag, GetUnionTag)
 
   defmodule Set do
+    # Given dest pointer and value, set all elements at dest to value.
+    # Dest pointer is either a slice or a pointer to array.
+    # The element type may be any type, and the slice may have any alignment.
+    # Result type is always void.
+    # Uses the `bin_op` field. LHS is the dest slice. RHS is the element value.
+    # The element value may be undefined, in which case the destination
+    # memory region has undefined bytes after this instruction is
+    # evaluated. In such case ignoring this instruction is legal
+    # lowering.
+    # If the length is compile-time known (due to the destination being a
+    # pointer-to-array), then it is guaranteed to be greater than zero.
     defstruct [:src, :val, :safe]
   end
 
@@ -150,6 +168,17 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   defmodule Cpy do
+    # Given dest pointer and source pointer, copy elements from source to dest.
+    # Dest pointer is either a slice or a pointer to array.
+    # The dest element type may be any type.
+    # Source pointer must have same element type as dest element type.
+    # Dest slice may have any alignment; source pointer may have any alignment.
+    # The two memory regions must not overlap.
+    # Result type is always void.
+    # Uses the `bin_op` field. LHS is the dest slice. RHS is the source pointer.
+    # If the length is compile-time known (due to the destination or
+    # source being a pointer-to-array), then it is guaranteed to be
+    # greater than ze
     defstruct [:loc, :val]
   end
 
@@ -166,11 +195,22 @@ defmodule Clr.Air.Instruction.Mem do
     {rest, [%Cpy{loc: loc, val: val}], context}
   end
 
+  # Given an enum tag value, returns the tag name. The enum type may be non-exhaustive.
+  # Result type is always `[:0]const u8`.
+  # Uses the `un_op` field
   Air.un_op(:tag_name, TagName)
 
+  # Given an error value, return the error name. Result type is always `[:0]const u8`.
+  # Uses the `un_op` field.
   Air.un_op(:error_name, ErrorName)
 
   defmodule AggregateInit do
+    # Constructs a vector, tuple, struct, or array value out of runtime-known elements.
+    # Some of the elements may be comptime-known.
+    # Uses the `ty_pl` field, payload is index of an array of elements, each of which
+    # is a `Ref`. Length of the array is given by the vector type.
+    # If the type is an array with a sentinel, the AIR elements do not include it
+    # explicitly.
     defstruct [:init, :params]
   end
 
@@ -218,6 +258,8 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   defmodule UnionInit do
+    # Constructs a union from a field index and a runtime-known init value.
+    # Uses the `ty_pl` field with payload `UnionIni
     defstruct [:index, :src]
   end
 
@@ -235,6 +277,9 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   defmodule Prefetch do
+    # Communicates an intent to load memory.
+    # Result is always unused.
+    # Uses the `prefetch` field.
     defstruct [:src, :rw, :locality, :cache]
   end
 

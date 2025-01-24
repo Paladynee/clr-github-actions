@@ -8,7 +8,6 @@ defprotocol Clr.Air.Instruction do
 
   @callback slot_type(t, Block.t()) :: {Clr.Type.t(), Block.t()}
   def slot_type(t, block)
-
 after
   defstruct []
   @type config :: %__MODULE__{}
@@ -76,6 +75,34 @@ after
       module.analyze(struct, slot, block, config)
     else
       {:cont, block}
+    end
+  end
+
+  # default slot type functions
+  defmacro default_slot_type_function(instr_type) do
+    case instr_type do
+      :ty_op ->
+        quote do
+          def slot_type(%{type: type, src: {src, _}}, block) when is_integer(src) do
+            alias Clr.Block
+            alias Clr.Type
+            {src_type, block} = Block.fetch_up!(block, src)
+
+            res_type =
+              type
+              |> Type.from_air()
+              |> Type.put_meta(Type.get_meta(src_type))
+
+            {res_type, block}
+          end
+
+          def slot_type(%{type: type}, block) do
+            alias Clr.Type
+            {Type.from_air(type), block}
+          end
+
+          defoverridable slot_type: 2
+        end
     end
   end
 end

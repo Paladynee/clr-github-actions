@@ -12,6 +12,11 @@ defmodule Clr.Air.Instruction.Function do
   )
 
   defmodule Arg do
+    # The first N instructions in the main block must be one arg instruction per
+    # function parameter. This makes function parameters participate in
+    # liveness analysis without any special handling.
+    # Uses the `arg` field.
+
     defstruct [:type, :name]
 
     use Clr.Air.Instruction
@@ -41,6 +46,11 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule Call do
+    # Function call.
+    # Result type is the return type of the function being called.
+    # Uses the `pl_op` field with the `Call` payload. operand is the callee.
+    # Triggers `resolveTypeLayout` on the return type of the callee.
+
     use Clr.Air.Instruction
 
     defstruct [:fn, :args, :opt]
@@ -113,6 +123,21 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule Ret do
+    # Return a value from a function.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `un_op` field.
+    # Triggers `resolveTypeLayout` on the return type.
+    #
+    # if it's `mode: :load`
+    #
+    # This instruction communicates that the function's result value is pointed to by
+    # the operand. If the function will pass the result by-ref, the operand is a
+    # `ret_ptr` instruction. Otherwise, this instruction is equivalent to a `load`
+    # on the operand, followed by a `ret` on the loaded value.
+    # Result type is always noreturn; no instructions in a block follow this one.
+    # Uses the `un_op` field.
+    # Triggers `resolveTypeLayout` on the return type.
+
     defstruct [:src, :mode]
 
     use Clr.Air.Instruction
@@ -168,6 +193,10 @@ defmodule Clr.Air.Instruction.Function do
   )
 
   defmodule RetPtr do
+    # If the function will pass the result by-ref, this instruction returns the
+    # result pointer. Otherwise it is equivalent to `alloc`.
+    # Uses the `ty` field.
+
     defstruct [:type]
   end
 
@@ -176,6 +205,8 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule RetAddr do
+    # Implements @frameAddress builtin.
+    # Uses the `no_op` field.
     defstruct []
   end
 
