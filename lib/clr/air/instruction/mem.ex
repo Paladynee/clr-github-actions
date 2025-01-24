@@ -26,9 +26,7 @@ defmodule Clr.Air.Instruction.Mem do
     alias Clr.Block
     alias Clr.Type
 
-    def analyze(%{type: {:ptr, _, _, _} = type}, slot, analysis, _config) do
-      {:halt, Block.put_type(analysis, slot, Type.from_air(type), stack: analysis.function)}
-    end
+    def slot_type(%Alloc{type: type}, _block), do: Type.from_air(type)
   end
 
   Pegasus.parser_from_string(
@@ -50,12 +48,17 @@ defmodule Clr.Air.Instruction.Mem do
 
     require Type
 
-    def analyze(%{src: {src_slot, _}}, slot, block, _config) do
-    end
+    def slot_type(%{type: type, src: {:lvalue, _}}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type, src: {:literal, _, _}}, block), do: {Type.from_air(type), block}
+    def slot_type(%{src: {slot, _}}, block), do: Block.fetch_up!(block, slot)
   end
 
   defmodule Store do
-    defstruct [:loc, :src, :safe]
+    defstruct [:dst, :src, :safe]
+
+    use Clr.Air.Instruction
+
+    def slot_type(_type, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(
@@ -67,14 +70,14 @@ defmodule Clr.Air.Instruction.Mem do
     store_str: [ignore: true]
   )
 
-  def store(rest, [src, loc | rest_args], context, _loc, _bytes) do
+  def store(rest, [src, dst | rest_args], context, _loc, _bytes) do
     safe =
       case rest_args do
         [] -> false
         [:safe] -> true
       end
 
-    {rest, [%Store{src: src, loc: loc, safe: safe}], context}
+    {rest, [%Store{src: src, dst: dst, safe: safe}], context}
   end
 
   defmodule StructFieldVal do

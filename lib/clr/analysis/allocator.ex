@@ -74,11 +74,21 @@ after
   defmodule CallDeleted do
     defexception [:function, :loc, :deleted_loc, :transferred_function]
 
-    def message(%{function: function, loc: {row, col}, transferred_function: nil, deleted_loc: {del_row, del_col}}) do
+    def message(%{
+          function: function,
+          loc: {row, col},
+          transferred_function: nil,
+          deleted_loc: {del_row, del_col}
+        }) do
       "Function `#{function}` at #{row}:#{col} called with a deleted pointer at #{del_row}:#{del_col}"
     end
 
-    def message(%{function: function, loc: {row, col}, transferred_function: transferred_function, deleted_loc: {del_row, del_col}}) do
+    def message(%{
+          function: function,
+          loc: {row, col},
+          transferred_function: transferred_function,
+          deleted_loc: {del_row, del_col}
+        }) do
       "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
     end
   end
@@ -195,7 +205,6 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
             deleted_loc: d.loc
 
         {{:ptr, _, _, %{transferred: t}}, block} ->
-
           raise CallDeleted,
             function: Clr.Air.Lvalue.as_string(block.function),
             loc: block.loc,

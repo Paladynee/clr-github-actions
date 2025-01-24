@@ -43,7 +43,7 @@ defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
 
   @impl true
-  def analyze(%{loc: {loc, _}, src: {src, _}}, _slot, {store_meta, block}, _config)
+  def analyze(%{dst: {loc, _}, src: {src, _}}, _slot, {store_meta, block}, _config)
       when src < length(block.args_meta) do
     stack_meta =
       %{loc: {:arg, src}, function: block.function, name: "param"}

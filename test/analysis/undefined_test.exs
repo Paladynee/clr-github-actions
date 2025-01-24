@@ -25,7 +25,7 @@ defmodule ClrTest.Analysis.UndefinedTest do
              |> Block.put_type(47, {:u, 8, %{}})
              |> then(
                &Undefined.analyze(
-                 %Store{loc: {47, :keep}, src: ~l"undefined"},
+                 %Store{dst: {47, :keep}, src: ~l"undefined"},
                  0,
                  {%{}, &1},
                  config

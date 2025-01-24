@@ -21,13 +21,13 @@ defmodule ClrTest.AirParsers.MemTest do
 
   describe "store" do
     test "basic" do
-      assert %Store{src: ~l"@Air.Inst.Ref.zero_usize", loc: {19, :keep}} =
+      assert %Store{src: ~l"@Air.Inst.Ref.zero_usize", dst: {19, :keep}} =
                Instruction.parse("store(%19, @Air.Inst.Ref.zero_usize)")
     end
 
     # note that the "safe" extension changes nothing for "Store".
     test "safe" do
-      assert %Store{src: ~l"undefined", loc: {19, :keep}, safe: true} =
+      assert %Store{src: ~l"undefined", dst: {19, :keep}, safe: true} =
                Instruction.parse("store_safe(%19, undefined)")
     end
   end

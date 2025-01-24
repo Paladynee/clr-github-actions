@@ -6,14 +6,17 @@ defprotocol Clr.Air.Instruction do
   alias Clr.Block
   @type t :: struct
 
-  @callback slot_type(t, Block.t()) :: Clr.Type.t()
+  @callback slot_type(t, Block.t()) :: {Clr.Type.t(), Block.t()}
   def slot_type(t, block)
 
-  @callback analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
-  def analyze(instruction, slot, state, config)
 after
   defstruct []
   @type config :: %__MODULE__{}
+
+  @callback analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
+
+  # analyze is optional because we provide a default implementation.
+  @optional_callbacks analyze: 4
 
   def always, do: []
   def when_kept, do: []
@@ -64,6 +67,15 @@ after
   def parse(content) do
     case instruction(content) do
       {:ok, [instruction], rest, _, _, _} when rest in ["", "\n"] -> instruction
+    end
+  end
+
+  @spec analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
+  def analyze(%module{} = struct, slot, block, config) do
+    if function_exported?(module, :analyze, 4) do
+      module.analyze(struct, slot, block, config)
+    else
+      {:cont, block}
     end
   end
 end

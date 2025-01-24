@@ -31,7 +31,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
 
     assert {:cont, {_, updated_block}} =
              StackPointer.analyze(
-               %Store{loc: {2, :keep}, src: {0, :keep}},
+               %Store{dst: {2, :keep}, src: {0, :keep}},
                3,
                {%{}, block},
                config

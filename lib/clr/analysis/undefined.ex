@@ -41,7 +41,7 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
   import Lvalue
 
-  def analyze(%{loc: {src_slot, _}, src: ~l"undefined"}, _dst_slot, {meta, block}, _config) do
+  def analyze(%{dst: {src_slot, _}, src: ~l"undefined"}, _dst_slot, {meta, block}, _config) do
     {:cont, {meta, Block.put_meta(block, src_slot, undefined: Undefined.meta(block))}}
   end
 
