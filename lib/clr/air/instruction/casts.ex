@@ -87,11 +87,20 @@ defmodule Clr.Air.Instruction.Casts do
 
   # wrap from T to E!T
   # Uses the `ty_op` field.
-  Air.ty_op(:wrap_errunion_payload, WrapErrunionPayload)
+  Air.ty_op(:wrap_errunion_payload, WrapErrunionPayload) do
+    def slot_type(%{type: {:errorable, errors, _}, src: {slot, _}}, block) when is_integer(slot) do
+      {type, block} = Block.fetch_up!(block, slot) 
+      {{:errorable, errors, type, %{}}, block}
+    end
+  end
 
   # wrap from E to E!T
   # Uses the `ty_op` field.
-  Air.ty_op(:wrap_errunion_err, WrapErrunionErr)
+  Air.ty_op :wrap_errunion_err, WrapErrunionErr do
+    def slot_type(%{type: type}, block) do
+      {Type.from_air(type), block}
+    end
+  end
 
   defmodule IntFromFloat do
     # Given a float operand, return the integer with the closest mathematical meaning.

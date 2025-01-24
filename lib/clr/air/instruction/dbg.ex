@@ -16,6 +16,23 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg: [export: true]
   )
 
+  defmodule Trap do
+    defstruct []
+  end
+
+  Pegasus.parser_from_string(
+    """
+    trap <- trap_str lparen rparen
+    trap_str <- 'trap'
+    """,
+    trap: [post_traverse: :trap],
+    trap_str: [ignore: true]
+  )
+
+  def trap(rest, [], context, _loc, _bytes) do
+    {rest, [%Trap{}], context}
+  end
+
   defmodule Stmt do
     # Notes the beginning of a source code statement and marks the line and column.
     # Result type is always void.
@@ -100,7 +117,7 @@ defmodule Clr.Air.Instruction.Dbg do
     # Uses `pl_op`. The payload index is the variable name. It points to the extra
     # array, reinterpreting the bytes there as a null-terminated string.
 
-    defstruct [:src, :name]
+    defstruct [:slot, :name]
   end
 
   Pegasus.parser_from_string(
@@ -112,15 +129,15 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_var_ptr_str: [ignore: true]
   )
 
-  def dbg_var_ptr(rest, [value, src], context, _loc, _bytes) do
-    {rest, [%VarPtr{val: value, src: src}], context}
+  def dbg_var_ptr(rest, [name, slot], context, _loc, _bytes) do
+    {rest, [%VarPtr{name: name, slot: slot}], context}
   end
 
   defmodule VarVal do
     # Same as `dbg_var_ptr` except the local is a const, not a var, and the
     # operand is the local's value.
 
-    defstruct [:src, :name]
+    defstruct [:slot, :name]
   end
 
   Pegasus.parser_from_string(
@@ -132,13 +149,13 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_var_val_str: [ignore: true]
   )
 
-  def dbg_var_val(rest, [value, src], context, _loc, _bytes) do
-    {rest, [%VarVal{val: value, src: src}], context}
+  def dbg_var_val(rest, [name, slot], context, _loc, _bytes) do
+    {rest, [%VarVal{name: name, slot: slot}], context}
   end
 
   defmodule ArgInline do
     # Same as `dbg_var_val` except the local is an inline function argument.
-    defstruct [:val, :name]
+    defstruct [:arg, :name]
   end
 
   Pegasus.parser_from_string(
@@ -150,10 +167,9 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg_arg_inline_str: [ignore: true]
   )
 
-  def dbg_arg_inline(rest, [key, value], context, _loc, _bytes) do
-    {rest, [%ArgInline{val: value, key: key}], context}
+  def dbg_arg_inline(rest, [name, slot], context, _loc, _bytes) do
+    {rest, [%ArgInline{name: name, arg: slot}], context}
   end
 
-  Air.unimplemented(:trap)
   Air.unimplemented(:breakpoint)
 end

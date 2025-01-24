@@ -45,12 +45,12 @@ defmodule ClrTest.AirParsers.DbgTest do
   end
 
   test "dbg_var_ptr" do
-    assert %Dbg.VarPtr{src: {0, :keep}, val: "envp_count"} =
+    assert %Dbg.VarPtr{slot: {0, :keep}, name: "envp_count"} =
              Instruction.parse(~S/dbg_var_ptr(%0, "envp_count")/)
   end
 
   test "dbg_var_val" do
-    assert %Dbg.VarVal{src: {0, :keep}, val: "argc"} =
+    assert %Dbg.VarVal{slot: {0, :keep}, name: "argc"} =
              Instruction.parse(~S/dbg_var_val(%0, "argc")/)
 
     # more complex case
@@ -62,7 +62,7 @@ defmodule ClrTest.AirParsers.DbgTest do
   end
 
   test "dbg_arg_inline" do
-    assert %Dbg.ArgInline{val: {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}}, key: "arch"} =
+    assert %Dbg.ArgInline{arg: {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}}, name: "arch"} =
              Instruction.parse("dbg_arg_inline(<Target.Cpu.Arch, .x86_64>, \"arch\")")
   end
 end

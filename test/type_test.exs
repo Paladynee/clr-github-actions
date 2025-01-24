@@ -12,4 +12,6 @@ defmodule ClrTest.TypeTest do
              {:ptr, :one, {:u, 8, %{}}, %{stack: {:lvalue, ["undefined_value_use", "main"]}}}
            )
   end
+
+  test "other types"
 end

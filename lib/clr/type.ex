@@ -124,7 +124,7 @@ defmodule Clr.Type do
 
   def from_air({:errorable, errors, child}), do: {:errorable, errors, from_air(child), %{}}
 
-  def void, do: {:void, %{}}
+  def from_air(basic) when basic in ~w[void undefined]a, do: basic
 
   @spec put_meta(t, meta | keyword) :: t
   @two_tuple ~w[bool usize void]a
