@@ -139,12 +139,12 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "error type" do
-    assert {:errorable, ["Unexpected"], ~l"os.linux.rlimit"} =
+    assert {:errorunion, ["Unexpected"], ~l"os.linux.rlimit"} =
              Type.parse("error{Unexpected}!os.linux.rlimit")
   end
 
   test "anyerror type" do
-    assert {:errorable, :any, ~l"os.linux.rlimit"} =
+    assert {:errorunion, :any, ~l"os.linux.rlimit"} =
              Type.parse("anyerror!os.linux.rlimit")
   end
 
@@ -154,7 +154,7 @@ defmodule ClrTest.Air.TypeTest do
   end
 
   test "lvalue error union type" do
-    assert {:errorable, ~l"foo.bar", ~l"baz"} =
+    assert {:errorunion, ~l"foo.bar", ~l"baz"} =
              Type.parse("foo.bar!baz")
   end
 

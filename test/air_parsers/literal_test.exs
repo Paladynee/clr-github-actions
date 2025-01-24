@@ -44,7 +44,7 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "function literal with error union type" do
-    assert {:literal, {:fn, _, {:errorable, _, _}, []}, {:function, "getrlimit"}} =
+    assert {:literal, {:fn, _, {:errorunion, _, _}, []}, {:function, "getrlimit"}} =
              Literal.parse(
                "<fn (os.linux.rlimit_resource__enum_2617) error{Unexpected}!os.linux.rlimit, (function 'getrlimit')>"
              )
@@ -108,12 +108,13 @@ defmodule ClrTest.Air.LiteralTest do
   end
 
   test "void value" do
-    assert {:literal, {:errorable, ~w[LimitTooBig PermissionDenied Unexpected], ~l"void"}, :void} =
+    assert {:literal, {:errorunion, ~w[LimitTooBig PermissionDenied Unexpected], ~l"void"}, :void} =
              Literal.parse("<error{Unexpected,PermissionDenied,LimitTooBig}!void, {}>")
   end
 
   test "another function literal" do
-    assert {:literal, {:fn, [~l"io.Writer", {:struct, [~l"u32"]}], {:errorable, _, ~l"void"}, []},
+    assert {:literal,
+            {:fn, [~l"io.Writer", {:struct, [~l"u32"]}], {:errorunion, _, ~l"void"}, []},
             {:function, "format__anon_3497"}} =
              Literal.parse(
                "<fn (io.Writer, struct { u32 }) @typeInfo(@typeInfo(@TypeOf(fmt.format__anon_3497)).@\"fn\".return_type.?).error_union.error_set!void, (function 'format__anon_3497')>"

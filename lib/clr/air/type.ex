@@ -98,15 +98,15 @@ defmodule Clr.Air.Type do
   end
 
   defp errorable_types(rest, [payload, :!, :anyerror], context, _loc, _bytes) do
-    {rest, [{:errorable, :any, payload}], context}
+    {rest, [{:errorunion, :any, payload}], context}
   end
 
   defp errorable_types(rest, [payload, :!, errortype], context, _loc, _bytes) do
-    {rest, [{:errorable, errortype, payload}], context}
+    {rest, [{:errorunion, errortype, payload}], context}
   end
 
   defp errorable_types(rest, [payload, :!, errorset, :error], context, _loc, _bytes) do
-    {rest, [{:errorable, errorset, payload}], context}
+    {rest, [{:errorunion, errorset, payload}], context}
   end
 
   defp general_types(rest, [errorset, :error], context, _loc, _bytes) do

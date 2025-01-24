@@ -139,8 +139,8 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
     block =
       Block.update_type!(block, slot, fn
-        {:errorable, e, {:ptr, :one, type, ptr_meta}, err_meta} ->
-          {:errorable, e,
+        {:errorunion, e, {:ptr, :one, type, ptr_meta}, err_meta} ->
+          {:errorunion, e,
            {:ptr, :one, Type.put_meta(type, undefined: Undefined.meta(block)),
             Map.put(ptr_meta, :heap, heapinfo)}, err_meta}
       end)

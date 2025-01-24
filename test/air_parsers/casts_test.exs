@@ -146,7 +146,7 @@ defmodule ClrTest.AirParsers.CastsTest do
 
   test "wrap_errunion_payload" do
     assert %WrapErrunionPayload{
-             type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+             type: {:errorunion, ["Unexpected"], ~l"os.linux.rlimit"},
              src: {16, :clobber}
            } =
              Instruction.parse("wrap_errunion_payload(error{Unexpected}!os.linux.rlimit, %16!)")
@@ -156,7 +156,7 @@ defmodule ClrTest.AirParsers.CastsTest do
 
   test "wrap_errunion_err" do
     assert %WrapErrunionErr{
-             type: {:errorable, ["Unexpected"], ~l"os.linux.rlimit"},
+             type: {:errorunion, ["Unexpected"], ~l"os.linux.rlimit"},
              src: {16, :clobber}
            } =
              Instruction.parse("wrap_errunion_err(error{Unexpected}!os.linux.rlimit, %16!)")

@@ -22,7 +22,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
   end
 
   @allocator {:fn, [~l"mem.Allocator"],
-              {:errorable, ["OutOfMemory"], {:ptr, :one, {:lvalue, ["u8"]}, []}}, []}
+              {:errorunion, ["OutOfMemory"], {:ptr, :one, {:lvalue, ["u8"]}, []}}, []}
   @create_literal {:literal, @allocator, {:function, "create__anon_2535"}}
   @delete_literal {:literal, @allocator, {:function, "destroy__anon_2535"}}
   @c_allocator_literal {:literal, ~l"mem.Allocator",
@@ -38,7 +38,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
         Block.put_type(
           block,
           0,
-          {:errorable, [~l"FooError"], {:ptr, :one, {:u, 8, %{}}, %{}}, %{}}
+          {:errorunion, [~l"FooError"], {:ptr, :one, {:u, 8, %{}}, %{}}, %{}}
         )
 
       assert {:halt, block} =
@@ -49,7 +49,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
                  config
                )
 
-      assert {:errorable, _,
+      assert {:errorunion, _,
               {:ptr, :one, {:u, 8, %{undefined: %{function: ~l"foo.bar", loc: {47, 47}}}},
                %{
                  heap: %{

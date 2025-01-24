@@ -75,22 +75,45 @@ defmodule Clr.Air.Instruction.Casts do
 
   # *(E!T) -> *T. If the value is an error, undefined behavior.
   # Uses the `ty_op` field.
-  Air.ty_op(:unwrap_errunion_payload_ptr, UnwrapErrunionPayloadPtr)
+  Air.ty_op :unwrap_errunion_payload_ptr, UnwrapErrunionPayloadPtr do
+    def slot_type(%{type: type, src: {slot, _}}, block) when is_integer(slot) do
+      {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
+        Block.fetch_up!(block, slot)
+
+      {{:ptr, :one, child, ptr_meta}, block}
+    end
+
+    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+  end
 
   # *(E!T) -> E. If the value is not an error, undefined behavior.
   # Uses the `ty_op` field.
-  Air.ty_op(:unwrap_errunion_err_ptr, UnwrapErrunionErrPtr)
+  Air.ty_op(:unwrap_errunion_err_ptr, UnwrapErrunionErrPtr) do
+    def slot_type(%{type: type}, block) do
+      {Type.from_air(type), block}
+    end
+  end
 
   # *(E!T) => *T. Sets the value to non-error with an undefined payload value.
   # Uses the `ty_op` field.
-  Air.ty_op(:errunion_payload_ptr_set, ErrunionPayloadPtrSet)
+  Air.ty_op :errunion_payload_ptr_set, ErrunionPayloadPtrSet do
+    def slot_type(%{type: type, src: {slot, _}}, block) when is_integer(slot) do
+      {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
+        Block.fetch_up!(block, slot)
+
+      {{:ptr, :one, child, ptr_meta}, block}
+    end
+
+    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+  end
 
   # wrap from T to E!T
   # Uses the `ty_op` field.
-  Air.ty_op(:wrap_errunion_payload, WrapErrunionPayload) do
-    def slot_type(%{type: {:errorable, errors, _}, src: {slot, _}}, block) when is_integer(slot) do
-      {type, block} = Block.fetch_up!(block, slot) 
-      {{:errorable, errors, type, %{}}, block}
+  Air.ty_op :wrap_errunion_payload, WrapErrunionPayload do
+    def slot_type(%{type: {:errorunion, errors, _}, src: {slot, _}}, block)
+        when is_integer(slot) do
+      {type, block} = Block.fetch_up!(block, slot)
+      {{:errorunion, errors, type, %{}}, block}
     end
   end
 

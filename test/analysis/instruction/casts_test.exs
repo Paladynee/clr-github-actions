@@ -38,28 +38,99 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
   test "unwrap_errunion_err"
 
-  test "unwrap_errunion_payload_ptr"
+  describe "unwrap_errunion_payload_ptr" do
+    alias Clr.Air.Instruction.Casts.UnwrapErrunionPayloadPtr
 
-  test "unwrap_errunion_err_ptr"
+    test "unwraps the child when it's a slot", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:ptr, :one, {:errorunion, [~l"foo"], {:u, 8, %{foo: :bar}}, %{}}, %{}}
+        )
 
-  test "errunion_payload_ptr_set"
+      assert {{:ptr, :one, {:u, 8, %{foo: :bar}}, %{}}, _} =
+               Instruction.slot_type(
+                 %UnwrapErrunionPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 block
+               )
+    end
+
+    test "generates new data when it's not a slot", %{block: block} do
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(
+                 %UnwrapErrunionPayloadPtr{
+                   type: {:ptr, :one, ~l"u8", []},
+                   src: ~l"some.constant"
+                 },
+                 block
+               )
+    end
+  end
+
+  alias Clr.Air.Instruction.Casts.UnwrapErrunionErrPtr
+
+  test "unwaps error", %{block: block} do
+    assert {{:errorset, [~l"foo"], %{}}, _} = 
+      Instruction.slot_type(
+        %UnwrapErrunionErrPtr{
+          type: {:errorset, [~l"foo"]},
+          src: {0, :keep}
+        },
+        block
+      )
+  end
+
+  describe "errunion_payload_ptr_set" do
+    alias Clr.Air.Instruction.Casts.ErrunionPayloadPtrSet
+
+    test "unwraps the child when it's a slot", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:ptr, :one, {:errorunion, [~l"foo"], {:u, 8, %{foo: :bar}}, %{}}, %{}}
+        )
+
+      assert {{:ptr, :one, {:u, 8, %{foo: :bar}}, %{}}, _} =
+               Instruction.slot_type(
+                 %ErrunionPayloadPtrSet{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 block
+               )
+    end
+
+    test "generates new data when it's not a slot", %{block: block} do
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(
+                 %ErrunionPayloadPtrSet{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 block
+               )
+    end
+  end
 
   describe "wrap_errunion_payload" do
     alias Clr.Air.Instruction.Casts.WrapErrunionPayload
+
     test "makes default type when it's not a slotref", %{block: block} do
-      assert {{:errorable, [~l"OutOfMemory"], {:u, 8, %{}}, %{}}, _} =
-        Instruction.slot_type(
-          %WrapErrunionPayload{type: {:errorable, [~l"OutOfMemory"], ~l"u8"}, src: ~l"some.constant"},
-          block
-        )
+      assert {{:errorunion, [~l"OutOfMemory"], {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(
+                 %WrapErrunionPayload{
+                   type: {:errorunion, [~l"OutOfMemory"], ~l"u8"},
+                   src: ~l"some.constant"
+                 },
+                 block
+               )
     end
 
     test "correctly transfers child metadata", %{block: block} do
       block = Block.put_type(block, 0, {:u, 8, %{}}, foo: :bar)
 
-      assert {{:errorable, [~l"OutOfMemory"], {:u, 8, %{foo: :bar}}, %{}}, _} =
+      assert {{:errorunion, [~l"OutOfMemory"], {:u, 8, %{foo: :bar}}, %{}}, _} =
                Instruction.slot_type(
-                 %WrapErrunionPayload{type: {:errorable, [~l"OutOfMemory"], ~l"u8"}, src: {0, :keep}},
+                 %WrapErrunionPayload{
+                   type: {:errorunion, [~l"OutOfMemory"], ~l"u8"},
+                   src: {0, :keep}
+                 },
                  block
                )
     end
@@ -68,9 +139,9 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
   alias Clr.Air.Instruction.Casts.WrapErrunionErr
 
   test "wrap_errunion_err", %{block: block} do
-    assert {{:errorable, [~l"OutOfMemory"], :void, %{}}, _} =
+    assert {{:errorunion, [~l"OutOfMemory"], :void, %{}}, _} =
              Instruction.slot_type(
-               %WrapErrunionErr{type: {:errorable, [~l"OutOfMemory"], :void}, src: {0, :keep}},
+               %WrapErrunionErr{type: {:errorunion, [~l"OutOfMemory"], :void}, src: {0, :keep}},
                block
              )
   end

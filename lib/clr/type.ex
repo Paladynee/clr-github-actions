@@ -48,6 +48,7 @@ defmodule Clr.Type do
       comptime_call_type?(maybe_type) or
       optional_type?(maybe_type) or
       errorable_type?(maybe_type) or
+      errorset_type?(maybe_type) or
       unused_type?(maybe_type)
   end
 
@@ -94,8 +95,12 @@ defmodule Clr.Type do
       valid?(elem(maybe_type, 1))
   end
 
+  defp errorset_type?(maybe_type) do
+    match?({:errorset, [_ | _]}, maybe_type)
+  end
+
   defp errorable_type?(maybe_type) do
-    match?({:errorable, _, _, %{}}, maybe_type) and
+    match?({:errorunion, _, _, %{}}, maybe_type) and
       valid?(elem(maybe_type, 2))
   end
 
@@ -122,14 +127,16 @@ defmodule Clr.Type do
 
   def from_air({:optional, child}), do: {:optional, from_air(child), %{}}
 
-  def from_air({:errorable, errors, child}), do: {:errorable, errors, from_air(child), %{}}
+  def from_air({:errorset, set}), do: {:errorset, set, %{}}
+
+  def from_air({:errorunion, errors, child}), do: {:errorunion, errors, from_air(child), %{}}
 
   def from_air(basic) when basic in ~w[void undefined]a, do: basic
 
   @spec put_meta(t, meta | keyword) :: t
   @two_tuple ~w[bool usize void]a
   @three_tuple ~w[i u f struct TypeOf lvalue optional]a
-  @four_tuple ~w[ptr array comptime_call errorable]a
+  @four_tuple ~w[ptr array comptime_call errorunion]a
 
   def put_meta({two, meta}, more) when two in @two_tuple, do: {two, Enum.into(more, meta)}
 
