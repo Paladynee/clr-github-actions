@@ -66,8 +66,18 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
     test "returns the type of the ret_addr statement", %{block: block} do
       block = %{block | args: [{:u, 8, %{}}], return: {:u, 8, %{}}}
 
-      assert {{:ptr, :one, {:fn, [{:u, 8, %{}}], {:u, 8, %{}}, %{}}, %{}}, _} =
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(%RetAddr{}, 0, block)
+    end
+  end
+
+  describe "frame_addr" do
+    alias Clr.Air.Instruction.Function.FrameAddr
+
+    test "returns the type of the ret_addr statement", %{block: block} do
+      block = %{block | args: [{:u, 8, %{}}], return: {:u, 8, %{}}}
+
+      assert {{:usize, %{}}, _} = Instruction.slot_type(%FrameAddr{}, 0, block)
     end
   end
 end

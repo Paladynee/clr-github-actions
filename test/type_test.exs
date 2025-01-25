@@ -13,5 +13,5 @@ defmodule ClrTest.TypeTest do
            )
   end
 
-  test "other types"
+  test "other types" 
 end

@@ -292,6 +292,11 @@ defmodule ClrTest.AirParsers.MathsTest do
                Instruction.parse("clz(usize, %96)")
     end
 
+    test "ctz" do
+      assert %UnaryTyped{op: :ctz, operand: {96, :keep}, type: ~l"usize"} =
+               Instruction.parse("ctz(usize, %96)")
+    end
+
     test "popcount" do
       assert %UnaryTyped{op: :popcount, operand: {96, :keep}, type: ~l"usize"} =
                Instruction.parse("popcount(usize, %96)")

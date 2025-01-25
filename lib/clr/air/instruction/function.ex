@@ -230,14 +230,14 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule RetAddr do
-    # Implements @frameAddress builtin.
+    # Yields the return address of the current function.
     # Uses the `no_op` field.
     defstruct []
 
     use Clr.Air.Instruction
 
     def slot_type(_, _, block) do
-      {{:ptr, :one, {:fn, block.args, block.return, %{}}, %{}}, block}
+      {{:ptr, :one, block.return, %{}}, block}
     end
   end
 
@@ -255,7 +255,15 @@ defmodule Clr.Air.Instruction.Function do
   end
 
   defmodule FrameAddr do
+    # Implements @frameAddress builtin.
+    # Uses the `no_op` field.
     defstruct []
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block) do
+      {{:usize, %{}}, block}
+    end
   end
 
   Pegasus.parser_from_string(

@@ -9,12 +9,28 @@ defmodule Clr.Air.Instruction.Maths do
     maths: [export: true]
   )
 
+  def peer_type_resolution({:u, size1, _}, {:u, size2, _}), do: {:u, max(size1, size2), %{}}
+  def peer_type_resolution({:i, size1, _}, {:i, size2, _}), do: {:i, max(size1, size2), %{}}
+  def peer_type_resolution({:f, size1, _}, {:f, size2, _}), do: {:f, max(size1, size2), %{}}
+  def peer_type_resolution({:bool, _}, {:bool, _}), do: {:bool, %{}}
+
   Clr.Air.import(~w[argument type slotref literal lvalue cs lparen rparen]a)
 
   # binary instructions
 
   defmodule Binary do
     defstruct ~w[lhs rhs op mode]a
+    alias Clr.Air.Instruction.Maths
+    alias Clr.Block
+
+    use Clr.Air.Instruction
+
+    def slot_type(%{lhs: {lhs, _}, rhs: {rhs, _}}, _, block) when is_integer(lhs) and is_integer(rhs) do
+      {lhs_type, block} = Block.fetch_up!(block, lhs)
+      {rhs_type, block} = Block.fetch_up!(block, rhs)
+
+      {Maths.peer_type_resolution(lhs_type, rhs_type), block}
+    end
   end
 
   Pegasus.parser_from_string(
@@ -107,17 +123,24 @@ defmodule Clr.Air.Instruction.Maths do
 
   defmodule UnaryTyped do
     defstruct ~w[operand op type]a
+
+    use Clr.Air.Instruction
+
+    alias Clr.Type
+
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
     """
     unary_type_instruction <- unary_type_op lparen type cs argument rparen
 
-    unary_type_op <- not / abs / clz / popcount / byte_swap / bit_reverse
+    unary_type_op <- not / abs / clz / ctz / popcount / byte_swap / bit_reverse
 
     abs <- 'abs'
     not <- 'not'
     clz <- 'clz'
+    ctz <- 'ctz'
     popcount <- 'popcount'
     byte_swap <- 'byte_swap'
     bit_reverse <- 'bit_reverse'
@@ -126,6 +149,7 @@ defmodule Clr.Air.Instruction.Maths do
     not: [token: :not],
     abs: [token: :abs],
     clz: [token: :clz],
+    ctz: [token: :ctz],
     popcount: [token: :popcount],
     byte_swap: [token: :byte_swap],
     bit_reverse: [token: :bit_reverse]
@@ -139,6 +163,17 @@ defmodule Clr.Air.Instruction.Maths do
 
   defmodule Unary do
     defstruct ~w[op operand]a ++ [optimized: false]
+
+    alias Clr.Block
+
+    use Clr.Air.Instruction
+
+    def slot_type(%{operand: {operand, _}}, _, block) when is_integer(operand) do
+      case Block.fetch_up!(block, operand) do
+        {{a, b, _}, block} -> {{a, b, %{}}, block}
+        {{a, _}, block} -> {{a, %{}}, block}
+      end
+    end
   end
 
   Pegasus.parser_from_string(
@@ -194,14 +229,11 @@ defmodule Clr.Air.Instruction.Maths do
   # Overflow operations
 
   defmodule Overflow do
-    use Clr.Air.Instruction
-    alias Clr.Block
-    alias Clr.Type
-
     defstruct ~w[op type lhs rhs]a
+    use Clr.Air.Instruction
 
-    def analyze(%{type: type}, slot, analysis, _config),
-      do: {:halt, Block.put_type(analysis, slot, Type.from_air(type))}
+    alias Clr.Type
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
