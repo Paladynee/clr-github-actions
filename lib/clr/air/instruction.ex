@@ -103,6 +103,7 @@ after
 
           defoverridable slot_type: 2
         end
+
       {:un_op, type} ->
         quote do
           def slot_type(%{src: {src, _}}, block) when is_integer(src) do

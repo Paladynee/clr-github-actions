@@ -21,14 +21,20 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
-               Instruction.slot_type(%Bitcast{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"}, block)
+               Instruction.slot_type(
+                 %Bitcast{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 block
+               )
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:usize, %{foo: :bar}})
 
       assert {{:ptr, :one, {:u, 8, %{}}, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Bitcast{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}}, block)
+               Instruction.slot_type(
+                 %Bitcast{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 block
+               )
     end
   end
 

@@ -1,8 +1,10 @@
 defmodule Clr.Air.Instruction.ControlFlow do
-  require Pegasus
-  require Clr.Air
+  alias Clr.Air
 
-  Clr.Air.import(
+  require Pegasus
+  require Air
+
+  Air.import(
     ~w[argument cs slotref lparen rparen type lvalue literal fn_literal rbrack lbrack clobbers space codeblock
       codeblock_clobbers fatarrow elision newline]a
   )
@@ -253,6 +255,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
     use Clr.Air.Instruction
     alias Clr.Block
 
+    def slot_type(%{src: {src, _}}, block) do
+      {{:errorunion, _, payload, _}, block} = Block.fetch_up!(block, src)
+      {payload, block}
+    end
+
     def analyze(%{src: {src, _}}, slot, block, _config) do
       {{:errorunion, _, payload, _meta}, block} = Block.fetch_up!(block, src)
       # for now.  Ultimately, we will need to walk the analysis on this, too.
@@ -291,10 +298,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
     use Clr.Air.Instruction
     alias Clr.Block
 
-    def analyze(%{src: {src, _}}, _slot, block, _config) do
-      {{:errorunion, _, payload, _meta}, block} = Block.fetch_up!(block, src)
-      # for now.  Ultimately, we will need to walk the analysis on this, too.
-      {:halt, {payload, block}}
+    def slot_type(%{src: {src, _}}, block) do
+      {{:ptr, :one, {:errorunion, _, payload, _}, ptr_meta}, block} =
+        Block.fetch_up!(block, src)
+
+      {{:ptr, :one, payload, ptr_meta}, block}
     end
   end
 
@@ -329,22 +337,7 @@ defmodule Clr.Air.Instruction.ControlFlow do
      ], context}
   end
 
-  defmodule Unreach do
-    # Indicates the program counter will never get to this instruction.
-    # Result type is always noreturn; no instructions in a block follow this one.
-    defstruct []
-  end
-
-  Pegasus.parser_from_string(
-    """
-    unreach <- unreach_str
-    unreach_str <- 'unreach()'  
-    """,
-    unreach: [post_traverse: :unreach],
-    unreach_str: [ignore: true]
-  )
-
-  def unreach(rest, [], context, _, _) do
-    {rest, [%Unreach{}], context}
-  end
+  # Indicates the program counter will never get to this instruction.
+  # Result type is always noreturn; no instructions in a block follow this one.
+  Air.noreturn(:unreach, Unreach)
 end

@@ -16,22 +16,11 @@ defmodule Clr.Air.Instruction.Dbg do
     dbg: [export: true]
   )
 
-  defmodule Trap do
-    defstruct []
-  end
-
-  Pegasus.parser_from_string(
-    """
-    trap <- trap_str lparen rparen
-    trap_str <- 'trap'
-    """,
-    trap: [post_traverse: :trap],
-    trap_str: [ignore: true]
-  )
-
-  def trap(rest, [], context, _loc, _bytes) do
-    {rest, [%Trap{}], context}
-  end
+  # Lowers to a trap/jam instruction causing program abortion.
+  # This may lower to an instruction known to be invalid.
+  # Sometimes, for the lack of a better instruction, `trap` and `breakpoint` may compile down to the same code.
+  # Result type is always noreturn; no instructions in a block follow this one.
+  Air.noreturn(:trap, Trap)
 
   defmodule Stmt do
     # Notes the beginning of a source code statement and marks the line and column.
