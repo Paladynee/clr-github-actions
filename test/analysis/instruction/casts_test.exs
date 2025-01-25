@@ -16,15 +16,85 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
     {:ok, block: block, config: %Instruction{}}
   end
 
-  test "bitcast"
+  describe "bitcast" do
+    alias Clr.Air.Instruction.Casts.Bitcast
 
-  test "int_from_ptr"
+    test "makes default type when it's not a slotref", %{block: block} do
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(%Bitcast{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"}, block)
+    end
 
-  test "int_from_bool"
+    test "transfers type metadata", %{block: block} do
+      block = Block.put_type(block, 0, {:usize, %{foo: :bar}})
 
-  test "intcast"
+      assert {{:ptr, :one, {:u, 8, %{}}, %{foo: :bar}}, _} =
+               Instruction.slot_type(%Bitcast{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}}, block)
+    end
+  end
 
-  test "trunc"
+  describe "int_from_ptr" do
+    alias Clr.Air.Instruction.Casts.IntFromPtr
+
+    test "makes default type when it's not a slotref", %{block: block} do
+      assert {{:usize, %{}}, _} =
+               Instruction.slot_type(%IntFromPtr{src: ~l"some.constant"}, block)
+    end
+
+    test "transfers type metadata", %{block: block} do
+      block = Block.put_type(block, 0, {:usize, %{foo: :bar}})
+
+      assert {{:usize, %{foo: :bar}}, _} =
+               Instruction.slot_type(%IntFromPtr{src: {0, :keep}}, block)
+    end
+  end
+
+  describe "int_from_bool" do
+    alias Clr.Air.Instruction.Casts.IntFromBool
+
+    test "makes default type when it's not a slotref", %{block: block} do
+      assert {{:u, 1, %{}}, _} =
+               Instruction.slot_type(%IntFromBool{src: ~l"some.constant"}, block)
+    end
+
+    test "transfers type metadata", %{block: block} do
+      block = Block.put_type(block, 0, {:i, 1, %{foo: :bar}})
+
+      assert {{:u, 1, %{foo: :bar}}, _} =
+               Instruction.slot_type(%IntFromBool{src: {0, :keep}}, block)
+    end
+  end
+
+  describe "intcast" do
+    alias Clr.Air.Instruction.Casts.Intcast
+
+    test "makes default type when it's not a slotref", %{block: block} do
+      assert {{:i, 8, %{}}, _} =
+               Instruction.slot_type(%Intcast{type: ~l"i8", src: ~l"some.constant"}, block)
+    end
+
+    test "transfers type metadata", %{block: block} do
+      block = Block.put_type(block, 0, {:i, 8, %{foo: :bar}})
+
+      assert {{:i, 8, %{foo: :bar}}, _} =
+               Instruction.slot_type(%Intcast{type: ~l"i8", src: {0, :keep}}, block)
+    end
+  end
+
+  describe "trunc" do
+    alias Clr.Air.Instruction.Casts.Trunc
+
+    test "makes default type when it's not a slotref", %{block: block} do
+      assert {{:i, 8, %{}}, _} =
+               Instruction.slot_type(%Trunc{type: ~l"i8", src: ~l"some.constant"}, block)
+    end
+
+    test "transfers type metadata", %{block: block} do
+      block = Block.put_type(block, 0, {:i, 8, %{foo: :bar}})
+
+      assert {{:i, 8, %{foo: :bar}}, _} =
+               Instruction.slot_type(%Trunc{type: ~l"i8", src: {0, :keep}}, block)
+    end
+  end
 
   describe "optional_payload" do
     alias Clr.Air.Instruction.Casts.OptionalPayload

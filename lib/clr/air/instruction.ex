@@ -103,6 +103,26 @@ after
 
           defoverridable slot_type: 2
         end
+      {:un_op, type} ->
+        quote do
+          def slot_type(%{src: {src, _}}, block) when is_integer(src) do
+            alias Clr.Block
+            alias Clr.Type
+            {src_type, block} = Block.fetch_up!(block, src)
+
+            res_type =
+              unquote(type)
+              |> Type.from_air()
+              |> Type.put_meta(Type.get_meta(src_type))
+
+            {res_type, block}
+          end
+
+          def slot_type(_, block) do
+            alias Clr.Type
+            {Type.from_air(unquote(type)), block}
+          end
+        end
     end
   end
 end

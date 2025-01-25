@@ -26,12 +26,12 @@ defmodule Clr.Air.Instruction.Casts do
   # Converts a pointer to its address. Result type is always `usize`.
   # Pointer type size may be any, including slice.
   # Uses the `un_op` field.
-  Air.un_op(:int_from_ptr, IntFromPtr)
+  Air.un_op(:int_from_ptr, IntFromPtr, {:lvalue, ["usize"]})
 
   # Given a boolean, returns 0 or 1.
   # Result type is always `u1`.
   # Uses the `un_op` field.
-  Air.un_op(:int_from_bool, IntFromBool)
+  Air.un_op(:int_from_bool, IntFromBool, {:lvalue, ["u1"]})
 
   # Returns an integer with a different type than the operand. The new type may have
   # fewer, the same, or more bits than the operand type. The new type may also
@@ -50,7 +50,7 @@ defmodule Clr.Air.Instruction.Casts do
 
   # ?T => T. If the value is null, undefined behavior.
   # Uses the `ty_op` field.
-  Air.ty_op(:optional_payload, OptionalPayload) do
+  Air.ty_op :optional_payload, OptionalPayload do
     def slot_type(%{src: {slot, _}}, block) when is_integer(slot) do
       {{:optional, type, opt_meta}, block} = Block.fetch_up!(block, slot)
       type = Type.put_meta(type, opt_meta)

@@ -198,11 +198,11 @@ defmodule Clr.Air.Instruction.Mem do
   # Given an enum tag value, returns the tag name. The enum type may be non-exhaustive.
   # Result type is always `[:0]const u8`.
   # Uses the `un_op` field
-  Air.un_op(:tag_name, TagName)
+  Air.un_op(:tag_name, TagName, :str)
 
   # Given an error value, return the error name. Result type is always `[:0]const u8`.
   # Uses the `un_op` field.
-  Air.un_op(:error_name, ErrorName)
+  Air.un_op(:error_name, ErrorName, :str)
 
   defmodule AggregateInit do
     # Constructs a vector, tuple, struct, or array value out of runtime-known elements.

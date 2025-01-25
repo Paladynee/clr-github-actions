@@ -34,7 +34,7 @@ defmodule Clr.Air do
     end
   end
 
-  defmacro un_op(op, module, opts \\ []) do
+  defmacro un_op(op, module, type, opts \\ []) do
     op_str = :"#{op}_str"
 
     parser = """
@@ -42,11 +42,20 @@ defmodule Clr.Air do
     #{op_str} <- '#{op}'
     """
 
+    type = case type do
+      :str -> quote do 
+        {:ptr, :slice, {:lvalue, ["u8"]}, const: true, sentinel: 0}
+      end
+      _ -> type
+    end
+
     quote do
       defmodule unquote(module) do
-        defstruct [:type, :src]
+        defstruct [:src]
         use Clr.Air.Instruction
         unquote(default_code(opts))
+        require Clr.Air.Instruction
+        Clr.Air.Instruction.default_slot_type_function({:un_op, unquote(type)})
       end
 
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts(op, op_str)))
