@@ -51,13 +51,13 @@ defmodule Clr.Air.Instruction.Casts do
   # ?T => T. If the value is null, undefined behavior.
   # Uses the `ty_op` field.
   Air.ty_op :optional_payload, OptionalPayload do
-    def slot_type(%{src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {{:optional, type, opt_meta}, block} = Block.fetch_up!(block, slot)
       type = Type.put_meta(type, opt_meta)
       {type, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # *?T => *T. If the value is null, undefined behavior.
@@ -67,13 +67,13 @@ defmodule Clr.Air.Instruction.Casts do
 
     use Clr.Air.Instruction
 
-    def slot_type(%{src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {{:ptr, :one, {:optional, type, opt_meta}, ptr_meta}, block} = Block.fetch_up!(block, slot)
       type = Type.put_meta(type, opt_meta)
       {{:ptr, :one, type, ptr_meta}, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
@@ -94,67 +94,67 @@ defmodule Clr.Air.Instruction.Casts do
   # Given a payload value, wraps it in an optional type.
   # Uses the `ty_op` field.
   Air.ty_op :wrap_optional, WrapOptional do
-    def slot_type(%{src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {type, block} = Block.fetch_up!(block, slot)
       {{:optional, type, %{}}, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # E!T -> T. If the value is an error, undefined behavior.
   # Uses the `ty_op` field
   Air.ty_op :unwrap_errunion_payload, UnwrapErrunionPayload do
-    def slot_type(%{src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {{:errorunion, _, type, _}, block} = Block.fetch_up!(block, slot)
       {type, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # E!T -> E. If the value is not an error, undefined behavior.
   # Uses the `ty_op` field.
   Air.ty_op :unwrap_errunion_err, UnwrapErrunionErr do
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # *(E!T) -> *T. If the value is an error, undefined behavior.
   # Uses the `ty_op` field.
   Air.ty_op :unwrap_errunion_payload_ptr, UnwrapErrunionPayloadPtr do
-    def slot_type(%{type: type, src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{type: type, src: {slot, _}}, _, block) when is_integer(slot) do
       {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
         Block.fetch_up!(block, slot)
 
       {{:ptr, :one, child, ptr_meta}, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # *(E!T) -> E. If the value is not an error, undefined behavior.
   # Uses the `ty_op` field.
   Air.ty_op :unwrap_errunion_err_ptr, UnwrapErrunionErrPtr do
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # *(E!T) => *T. Sets the value to non-error with an undefined payload value.
   # Uses the `ty_op` field.
   Air.ty_op :errunion_payload_ptr_set, ErrunionPayloadPtrSet do
-    def slot_type(%{type: type, src: {slot, _}}, block) when is_integer(slot) do
+    def slot_type(%{type: type, src: {slot, _}}, _, block) when is_integer(slot) do
       {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
         Block.fetch_up!(block, slot)
 
       {{:ptr, :one, child, ptr_meta}, block}
     end
 
-    def slot_type(%{type: type}, block), do: {Type.from_air(type), block}
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   # wrap from T to E!T
   # Uses the `ty_op` field.
   Air.ty_op :wrap_errunion_payload, WrapErrunionPayload do
-    def slot_type(%{type: {:errorunion, errors, _}, src: {slot, _}}, block)
+    def slot_type(%{type: {:errorunion, errors, _}, src: {slot, _}}, _, block)
         when is_integer(slot) do
       {type, block} = Block.fetch_up!(block, slot)
       {{:errorunion, errors, type, %{}}, block}
@@ -164,7 +164,7 @@ defmodule Clr.Air.Instruction.Casts do
   # wrap from E to E!T
   # Uses the `ty_op` field.
   Air.ty_op :wrap_errunion_err, WrapErrunionErr do
-    def slot_type(%{type: type}, block) do
+    def slot_type(%{type: type}, _, block) do
       {Type.from_air(type), block}
     end
   end

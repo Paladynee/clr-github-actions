@@ -6,7 +6,7 @@ defmodule Clr.Block do
   alias Clr.Function
   alias Clr.Type
 
-  @enforce_keys ~w[function args_meta reqs]a
+  @enforce_keys ~w[function args reqs]a
   defstruct @enforce_keys ++
               [
                 :loc,
@@ -22,7 +22,7 @@ defmodule Clr.Block do
 
   @type t :: %__MODULE__{
           function: term,
-          args_meta: [Clr.meta()],
+          args: [Clr.type()],
           reqs: [Clr.meta()],
           return: nil | {Clr.type(), meta :: keyword},
           loc: nil | loc,
@@ -32,10 +32,10 @@ defmodule Clr.Block do
         }
 
   @spec new(Function.t(), [Clr.type()]) :: t
-  def new(function, args_meta) do
+  def new(function, args) do
     # fill requirements with an empty set for each argument.
-    reqs = Enum.map(args_meta, fn _ -> %{} end)
-    %__MODULE__{function: function.name, args_meta: args_meta, reqs: reqs}
+    reqs = Enum.map(args, fn _ -> %{} end)
+    %__MODULE__{function: function.name, args: args, reqs: reqs}
   end
 
   @spec analyze(t, Clr.Air.codeblock()) :: t
@@ -73,7 +73,7 @@ defmodule Clr.Block do
        when is_map_key(mapper, module) do
     modulespecs = Map.fetch!(mapper, module)
 
-    block = put_type(block, slot, Instruction.slot_type(instruction, block))
+    block = put_type(block, slot, Instruction.slot_type(instruction, slot, block))
 
     case mode do
       :keep ->

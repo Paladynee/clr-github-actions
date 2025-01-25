@@ -8,12 +8,10 @@ defmodule Clr.Analysis do
   @type t :: struct()
 
   # The `analyze` function is designed to be called within an Enum.reduce_while.
-  # note that the reduction will always be passed metadata + block, but on termination
-  # it is responsible for returning a full type + block tuple, and is responsible
-  # for integrating all previous metdata accumulated by continuation calls.
-  @callback analyze(Instruction.t(), Type.slot(), {Type.meta(), Block.t()}, t) ::
-              {:cont, {Type.meta(), Block.t()}} | {:halt, {Type.t(), Block.t()}}
-
+  # prior to being called, the slot location should have an initial type set in there
+  # and if any changes are to be made, the `analyze` function should alter them
+  # in there.
+  @callback analyze(Instruction.t(), Type.slot(), Block.t(), t) :: {:cont | :halt, Block.t()}
   @callback always() :: [module]
   @callback when_kept() :: [module]
 end

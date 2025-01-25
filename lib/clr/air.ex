@@ -110,7 +110,7 @@ defmodule Clr.Air do
       defmodule unquote(module) do
         defstruct []
         use Clr.Air.Instruction
-        def slot_type(_, block), do: {:noreturn, block}
+        def slot_type(_, _, block), do: {:noreturn, block}
       end
 
       Pegasus.parser_from_string(unquote(parser), unquote(parser_opts))

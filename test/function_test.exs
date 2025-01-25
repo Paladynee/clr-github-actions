@@ -22,7 +22,7 @@ defmodule ClrTest.FunctionTest do
     {:ok, table: table_name}
   end
 
-  defp stub_eval(type), do: %Block{function: ~l"foo.bar", return: type, args_meta: [], reqs: []}
+  defp stub_eval(type), do: %Block{function: ~l"foo.bar", return: type, args: [], reqs: []}
 
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :analyze, fn _, _ -> stub_eval(:result) end)

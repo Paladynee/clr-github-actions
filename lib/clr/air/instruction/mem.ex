@@ -50,9 +50,12 @@ defmodule Clr.Air.Instruction.Mem do
 
     require Type
 
-    def slot_type(%{type: type, src: {:lvalue, _}}, block), do: {Type.from_air(type), block}
-    def slot_type(%{type: type, src: {:literal, _, _}}, block), do: {Type.from_air(type), block}
-    def slot_type(%{src: {slot, _}}, block), do: Block.fetch_up!(block, slot)
+    def slot_type(%{type: type, src: {:lvalue, _}}, _, block), do: {Type.from_air(type), block}
+
+    def slot_type(%{type: type, src: {:literal, _, _}}, _, block),
+      do: {Type.from_air(type), block}
+
+    def slot_type(%{src: {slot, _}}, _, block), do: Block.fetch_up!(block, slot)
   end
 
   defmodule Store do
@@ -60,7 +63,7 @@ defmodule Clr.Air.Instruction.Mem do
 
     use Clr.Air.Instruction
 
-    def slot_type(_type, block), do: {:void, block}
+    def slot_type(_type, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(

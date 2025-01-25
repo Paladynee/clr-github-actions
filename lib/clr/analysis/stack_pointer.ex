@@ -31,11 +31,11 @@ after
 end
 
 defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Alloc do
-  @impl true
-  def analyze(_, _slot, {meta, block}, _config) do
-    meta = Map.put(meta, :stack, %{loc: block.loc, function: block.function})
+  alias Clr.Block
 
-    {:cont, {meta, block}}
+  @impl true
+  def analyze(_, slot, block, _config) do
+    {:cont, Block.put_meta(block, slot, stack: %{loc: block.loc, function: block.function})}
   end
 end
 
@@ -43,39 +43,39 @@ defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
 
   @impl true
-  def analyze(%{dst: {loc, _}, src: {src, _}}, _slot, {store_meta, block}, _config)
-      when src < length(block.args_meta) do
-    stack_meta =
-      %{loc: {:arg, src}, function: block.function, name: "param"}
+  def analyze(%{dst: {loc, _}, src: {src, _}}, _slot, block, _config)
+      when src < length(block.args) do
+    # TODO: save parameter names.
 
-    new_block = Block.put_meta(block, loc, stack: stack_meta)
-
-    {:cont, {store_meta, new_block}}
+    {:cont,
+     Block.put_meta(block, loc,
+       stack: %{loc: {:arg, src}, function: block.function, name: "param"}
+     )}
   end
 
-  def analyze(_, _slot, meta_block, _config), do: {:cont, meta_block}
+  def analyze(_, _slot, block, _config), do: {:cont, block}
 end
 
-defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Function.Ret do
-  @impl true
-
+defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Function.Ret do  
   alias Clr.Air.Lvalue
   alias Clr.Analysis.StackPointer.Escape
   alias Clr.Block
   alias Clr.Type
-
-  def analyze(%{src: {slot, _}}, _slot, {meta, %{function: function} = block}, _) do
-    {type, block} = Block.fetch_up!(block, slot)
-
-    case Type.get_meta(type) do
-      %{stack: %{function: ^function} = stack_info} ->
+  
+  @impl true
+  def analyze(%{src: {slot, _}}, _slot, %{function: function} = block, _) do
+    block
+    |> Block.fetch!(slot)
+    |> Type.get_meta()
+    |> case do
+      %{stack: %{function: ^function, loc: src_loc}} ->
         raise Escape,
           function: Lvalue.as_string(function),
-          src_loc: stack_info.loc,
+          src_loc: src_loc,
           esc_loc: block.loc
 
       _ ->
-        {:cont, {meta, block}}
+        {:cont, block}
     end
   end
 end

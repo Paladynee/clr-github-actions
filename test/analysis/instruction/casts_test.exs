@@ -23,6 +23,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(
                  %Bitcast{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -33,6 +34,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{}}, %{foo: :bar}}, _} =
                Instruction.slot_type(
                  %Bitcast{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -43,14 +45,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:usize, %{}}, _} =
-               Instruction.slot_type(%IntFromPtr{src: ~l"some.constant"}, block)
+               Instruction.slot_type(%IntFromPtr{src: ~l"some.constant"}, 0, block)
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:usize, %{foo: :bar}})
 
       assert {{:usize, %{foo: :bar}}, _} =
-               Instruction.slot_type(%IntFromPtr{src: {0, :keep}}, block)
+               Instruction.slot_type(%IntFromPtr{src: {0, :keep}}, 0, block)
     end
   end
 
@@ -59,14 +61,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:u, 1, %{}}, _} =
-               Instruction.slot_type(%IntFromBool{src: ~l"some.constant"}, block)
+               Instruction.slot_type(%IntFromBool{src: ~l"some.constant"}, 0, block)
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:i, 1, %{foo: :bar}})
 
       assert {{:u, 1, %{foo: :bar}}, _} =
-               Instruction.slot_type(%IntFromBool{src: {0, :keep}}, block)
+               Instruction.slot_type(%IntFromBool{src: {0, :keep}}, 0, block)
     end
   end
 
@@ -75,14 +77,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:i, 8, %{}}, _} =
-               Instruction.slot_type(%Intcast{type: ~l"i8", src: ~l"some.constant"}, block)
+               Instruction.slot_type(%Intcast{type: ~l"i8", src: ~l"some.constant"}, 0, block)
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:i, 8, %{foo: :bar}})
 
       assert {{:i, 8, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Intcast{type: ~l"i8", src: {0, :keep}}, block)
+               Instruction.slot_type(%Intcast{type: ~l"i8", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -91,14 +93,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:i, 8, %{}}, _} =
-               Instruction.slot_type(%Trunc{type: ~l"i8", src: ~l"some.constant"}, block)
+               Instruction.slot_type(%Trunc{type: ~l"i8", src: ~l"some.constant"}, 0, block)
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:i, 8, %{foo: :bar}})
 
       assert {{:i, 8, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Trunc{type: ~l"i8", src: {0, :keep}}, block)
+               Instruction.slot_type(%Trunc{type: ~l"i8", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -116,6 +118,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:u, 8, %{foo: :bar, bar: :baz}}, _} =
                Instruction.slot_type(
                  %OptionalPayload{type: ~l"u8", src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -124,6 +127,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:u, 8, %{}}, _} =
                Instruction.slot_type(
                  %OptionalPayload{type: ~l"u8", src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -143,6 +147,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{foo: :bar, bar: :baz}}, %{quux: :mlem}}, _} =
                Instruction.slot_type(
                  %OptionalPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -151,6 +156,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(
                  %OptionalPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -165,6 +171,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:optional, {:u, 8, %{foo: :bar}}, %{}}, _} =
                Instruction.slot_type(
                  %WrapOptional{type: {:optional, ~l"u8"}, src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -173,6 +180,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:optional, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(
                  %WrapOptional{type: {:optional, ~l"u8"}, src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -192,6 +200,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:u, 8, %{foo: :bar}}, _} =
                Instruction.slot_type(
                  %UnwrapErrunionPayload{type: ~l"u8", src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -200,6 +209,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:u, 8, %{}}, _} =
                Instruction.slot_type(
                  %UnwrapErrunionPayload{type: ~l"u8", src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -211,6 +221,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
     assert {{:errorset, [~l"foo"], _}, _} =
              Instruction.slot_type(
                %UnwrapErrunionErr{type: {:errorset, [~l"foo"]}, src: {0, :keep}},
+               0,
                block
              )
   end
@@ -229,6 +240,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{foo: :bar}}, %{}}, _} =
                Instruction.slot_type(
                  %UnwrapErrunionPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -240,6 +252,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
                    type: {:ptr, :one, ~l"u8", []},
                    src: ~l"some.constant"
                  },
+                 0,
                  block
                )
     end
@@ -254,6 +267,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
                  type: {:errorset, [~l"foo"]},
                  src: {0, :keep}
                },
+               0,
                block
              )
   end
@@ -272,6 +286,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{foo: :bar}}, %{}}, _} =
                Instruction.slot_type(
                  %ErrunionPayloadPtrSet{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 0,
                  block
                )
     end
@@ -280,6 +295,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
       assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(
                  %ErrunionPayloadPtrSet{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 0,
                  block
                )
     end
@@ -295,6 +311,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
                    type: {:errorunion, [~l"OutOfMemory"], ~l"u8"},
                    src: ~l"some.constant"
                  },
+                 0,
                  block
                )
     end
@@ -308,6 +325,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
                    type: {:errorunion, [~l"OutOfMemory"], ~l"u8"},
                    src: {0, :keep}
                  },
+                 0,
                  block
                )
     end
@@ -319,6 +337,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
     assert {{:errorunion, [~l"OutOfMemory"], :void, %{}}, _} =
              Instruction.slot_type(
                %WrapErrunionErr{type: {:errorunion, [~l"OutOfMemory"], :void}, src: {0, :keep}},
+               0,
                block
              )
   end
@@ -328,14 +347,18 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "makes default type when it's not a slotref", %{block: block} do
       assert {{:i, 32, %{}}, _} =
-               Instruction.slot_type(%IntFromFloat{type: ~l"i32", src: ~l"some.constant"}, block)
+               Instruction.slot_type(
+                 %IntFromFloat{type: ~l"i32", src: ~l"some.constant"},
+                 0,
+                 block
+               )
     end
 
     test "transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:f, 32, %{foo: :bar}})
 
       assert {{:i, 32, %{foo: :bar}}, _} =
-               Instruction.slot_type(%IntFromFloat{type: ~l"i32", src: {0, :keep}}, block)
+               Instruction.slot_type(%IntFromFloat{type: ~l"i32", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -344,14 +367,18 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "correctly makes the type when it's not a slotref", %{block: block} do
       assert {{:f, 32, %{}}, _} =
-               Instruction.slot_type(%FloatFromInt{type: ~l"f32", src: ~l"some.constant"}, block)
+               Instruction.slot_type(
+                 %FloatFromInt{type: ~l"f32", src: ~l"some.constant"},
+                 0,
+                 block
+               )
     end
 
     test "correctly transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:i, 32, %{foo: :bar}})
 
       assert {{:f, 32, %{foo: :bar}}, _} =
-               Instruction.slot_type(%FloatFromInt{type: ~l"f32", src: {0, :keep}}, block)
+               Instruction.slot_type(%FloatFromInt{type: ~l"f32", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -360,14 +387,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "correctly makes the type when it's not a slotref", %{block: block} do
       assert {{:f, 64, %{}}, _} =
-               Instruction.slot_type(%Fpext{type: ~l"f64", src: ~l"some.constant"}, block)
+               Instruction.slot_type(%Fpext{type: ~l"f64", src: ~l"some.constant"}, 0, block)
     end
 
     test "correctly transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:f, 32, %{foo: :bar}})
 
       assert {{:f, 64, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Fpext{type: ~l"f64", src: {0, :keep}}, block)
+               Instruction.slot_type(%Fpext{type: ~l"f64", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -376,14 +403,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
     test "correctly makes the type when it's not a slotref", %{block: block} do
       assert {{:f, 16, %{}}, _} =
-               Instruction.slot_type(%Fptrunc{type: ~l"f16", src: ~l"some.constant"}, block)
+               Instruction.slot_type(%Fptrunc{type: ~l"f16", src: ~l"some.constant"}, 0, block)
     end
 
     test "correctly transfers type metadata", %{block: block} do
       block = Block.put_type(block, 0, {:f, 16, %{foo: :bar}})
 
       assert {{:f, 16, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Fptrunc{type: ~l"f16", src: {0, :keep}}, block)
+               Instruction.slot_type(%Fptrunc{type: ~l"f16", src: {0, :keep}}, 0, block)
     end
   end
 end

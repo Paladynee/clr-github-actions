@@ -6,8 +6,8 @@ defprotocol Clr.Air.Instruction do
   alias Clr.Block
   @type t :: struct
 
-  @callback slot_type(t, Block.t()) :: {Clr.Type.t(), Block.t()}
-  def slot_type(t, block)
+  @callback slot_type(t, arity, Block.t()) :: {Clr.Type.t(), Block.t()}
+  def slot_type(t, arg_index, block)
 after
   defstruct []
   @type config :: %__MODULE__{}
@@ -83,7 +83,7 @@ after
     case instr_type do
       :ty_op ->
         quote do
-          def slot_type(%{type: type, src: {src, _}}, block) when is_integer(src) do
+          def slot_type(%{type: type, src: {src, _}}, _, block) when is_integer(src) do
             alias Clr.Block
             alias Clr.Type
             {src_type, block} = Block.fetch_up!(block, src)
@@ -96,17 +96,17 @@ after
             {res_type, block}
           end
 
-          def slot_type(%{type: type}, block) do
+          def slot_type(%{type: type}, _, block) do
             alias Clr.Type
             {Type.from_air(type), block}
           end
 
-          defoverridable slot_type: 2
+          defoverridable slot_type: 3
         end
 
       {:un_op, type} ->
         quote do
-          def slot_type(%{src: {src, _}}, block) when is_integer(src) do
+          def slot_type(%{src: {src, _}}, _, block) when is_integer(src) do
             alias Clr.Block
             alias Clr.Type
             {src_type, block} = Block.fetch_up!(block, src)
@@ -119,7 +119,7 @@ after
             {res_type, block}
           end
 
-          def slot_type(_, block) do
+          def slot_type(_, _, block) do
             alias Clr.Type
             {Type.from_air(unquote(type)), block}
           end

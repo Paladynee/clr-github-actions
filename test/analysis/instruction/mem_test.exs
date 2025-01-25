@@ -21,7 +21,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
 
     test "correctly makes the type", %{block: block} do
       assert {:ptr, :one, {:u, 8, %{}}, %{}} =
-               Instruction.slot_type(%Alloc{type: {:ptr, :one, ~l"u8", []}}, block)
+               Instruction.slot_type(%Alloc{type: {:ptr, :one, ~l"u8", []}}, 0, block)
     end
   end
 
@@ -32,6 +32,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
       assert {{:u, 8, %{}}, _} =
                Instruction.slot_type(
                  %Load{type: ~l"u8", src: {:literal, {:ptr, :one, ~l"u8", []}, ~l"bar.baz"}},
+                 0,
                  block
                )
     end
@@ -40,6 +41,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
       assert {{:u, 8, %{}}, _} =
                Instruction.slot_type(
                  %Load{type: ~l"u8", src: ~l"@Air.Inst.Ref.one_u8"},
+                 0,
                  block
                )
     end
@@ -48,7 +50,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
       block = Block.put_type(block, 0, {:u, 8, %{foo: :bar}})
 
       assert {{:u, 8, %{foo: :bar}}, _} =
-               Instruction.slot_type(%Load{type: ~l"u8", src: {0, :keep}}, block)
+               Instruction.slot_type(%Load{type: ~l"u8", src: {0, :keep}}, 0, block)
     end
   end
 
@@ -61,6 +63,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
       assert {:void, _} =
                Instruction.slot_type(
                  %Store{src: ~l"@Air.Inst.Ref.one_u8", dst: {0, :keep}, safe: false},
+                 0,
                  block
                )
     end

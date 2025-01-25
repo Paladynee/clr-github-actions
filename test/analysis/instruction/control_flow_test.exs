@@ -1,4 +1,4 @@
-defmodule ClrTest.Analysis.Instruction.CastsTest do
+defmodule ClrTest.Analysis.Instruction.ControlFlowTest do
   use ExUnit.Case, async: true
 
   alias Clr.Air.Instruction
@@ -66,7 +66,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
         Block.put_type(block, 0, {:errorunion, [~l"error"], {:u, 8, %{foo: :bar}}, %{}})
 
       assert {{:u, 8, %{foo: :bar}}, _block} =
-               Instruction.slot_type(%Try{src: {0, :keep}}, block)
+               Instruction.slot_type(%Try{src: {0, :keep}}, 0, block)
     end
   end
 
@@ -82,7 +82,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
         )
 
       assert {{:ptr, :one, {:u, 8, %{}}, %{foo: :bar}}, _block} =
-               Instruction.slot_type(%TryPtr{src: {0, :keep}}, block)
+               Instruction.slot_type(%TryPtr{src: {0, :keep}}, 0, block)
     end
   end
 
@@ -90,7 +90,7 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
     alias Clr.Air.Instruction.ControlFlow.Unreach
 
     test "returns noreturn as the type", %{block: block} do
-      assert {:noreturn, _} = Instruction.slot_type(%Unreach{}, block)
+      assert {:noreturn, _} = Instruction.slot_type(%Unreach{}, 0, block)
     end
   end
 end

@@ -31,6 +31,8 @@ defmodule Clr.Air.Instruction.Dbg do
 
     use Clr.Air.Instruction
 
+    def slot_type(_, _, block), do: {:void, block}
+
     def analyze(%{loc: loc}, _slot, block, _block), do: {:halt, {:void, %{block | loc: loc}}}
   end
 
@@ -54,6 +56,10 @@ defmodule Clr.Air.Instruction.Dbg do
     # Marks a statement that can be stepped to but produces no code.
 
     defstruct []
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(
@@ -107,6 +113,10 @@ defmodule Clr.Air.Instruction.Dbg do
     # array, reinterpreting the bytes there as a null-terminated string.
 
     defstruct [:slot, :name]
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(
@@ -127,6 +137,10 @@ defmodule Clr.Air.Instruction.Dbg do
     # operand is the local's value.
 
     defstruct [:slot, :name]
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(
@@ -145,6 +159,10 @@ defmodule Clr.Air.Instruction.Dbg do
   defmodule ArgInline do
     # Same as `dbg_var_val` except the local is an inline function argument.
     defstruct [:arg, :name]
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(

@@ -21,10 +21,21 @@ defmodule Clr.Air.Instruction.Function do
 
     use Clr.Air.Instruction
 
-    def analyze(%{type: type}, slot, block, _) do
-      # note that metadata is conveyed through the args_meta
-      arg_meta = Enum.at(block.args_meta, slot) || raise "unreachable"
-      Block.put_type(block, slot, Type.from_air(type), arg_meta)
+    def slot_type(%{type: {:ptr, :one, type, ptr_meta}}, slot, block) do
+      arg_meta =
+        block.args
+        |> Enum.at(slot)
+        |> Kernel.||(raise "unreachable")
+        |> Type.get_meta()
+
+      slot_type =
+        type
+        |> Type.from_air()
+        |> Type.put_meta(arg_meta)
+        |> then(&{:ptr, :one, &1, %{}})
+        |> Type.put_meta(ptr_meta)
+
+      {slot_type, block}
     end
   end
 
@@ -58,6 +69,10 @@ defmodule Clr.Air.Instruction.Function do
     alias Clr.Block
     alias Clr.Type
     alias Clr.Function
+
+    def slot_type(%{fn: {:literal, {:fn, _, return, _}, _}}, _, block) do
+      {Type.from_air(return), block}
+    end
 
     def analyze(call, slot, block, _config) do
       case call.fn do
@@ -144,6 +159,8 @@ defmodule Clr.Air.Instruction.Function do
 
     alias Clr.Block
 
+    def slot_type(_, _, block), do: {:noreturn, block}
+
     def analyze(%{src: {:lvalue, _} = lvalue}, _dst_slot, block, _) do
       {:halt, :void, Block.put_return(block, {:TypeOf, lvalue})}
     end
@@ -198,6 +215,14 @@ defmodule Clr.Air.Instruction.Function do
     # Uses the `ty` field.
 
     defstruct [:type]
+
+    use Clr.Air.Instruction
+
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
+
+    def analyze(_, _, _, _) do
+      raise "implement saving the return pointer slot into the block here."
+    end
   end
 
   def ret_ptr(rest, [value], context, _loc, _bytes) do

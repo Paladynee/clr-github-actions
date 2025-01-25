@@ -75,8 +75,6 @@ defmodule ClrTest.AirParsers.CastsTest do
              )
   end
 
-  alias Clr.Air.Instruction.Casts.OptionalPayloadPtrSet
-
   test "optional_payload_ptr_set" do
     assert %OptionalPayloadPtr{
              type: {:ptr, :one, {:lvalue, ["debug", "SelfInfo"]}, []},
