@@ -233,6 +233,12 @@ defmodule Clr.Air.Instruction.Function do
     # Implements @frameAddress builtin.
     # Uses the `no_op` field.
     defstruct []
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, block) do
+      {{:ptr, :one, {:fn, block.args, block.return, %{}}, %{}}, block}
+    end
   end
 
   Pegasus.parser_from_string(

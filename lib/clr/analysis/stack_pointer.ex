@@ -56,12 +56,12 @@ defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Store do
   def analyze(_, _slot, block, _config), do: {:cont, block}
 end
 
-defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Function.Ret do  
+defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Function.Ret do
   alias Clr.Air.Lvalue
   alias Clr.Analysis.StackPointer.Escape
   alias Clr.Block
   alias Clr.Type
-  
+
   @impl true
   def analyze(%{src: {slot, _}}, _slot, %{function: function} = block, _) do
     block

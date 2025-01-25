@@ -20,29 +20,22 @@ defmodule ClrTest.Analysis.UndefinedTest do
   alias Clr.Air.Instruction.Mem.Store
 
   test "when you store undefined", %{config: config, block: block} do
-    assert %{undefined: %{function: ~l"foo.bar", loc: {47, 47}}} =
-             block
-             |> Block.put_type(47, {:u, 8, %{}})
-             |> then(
-               &Undefined.analyze(
-                 %Store{dst: {47, :keep}, src: ~l"undefined"},
-                 0,
-                 {%{}, &1},
-                 config
-               )
-             )
-             |> then(fn {:cont, {_, new_block}} -> Block.get_meta(new_block, 47) end)
+    block = Block.put_type(block, 47, {:u, 8, %{}})
+
+    assert {:cont, new_block} =
+             Undefined.analyze(%Store{dst: {47, :keep}, src: ~l"undefined"}, 0, block, config)
+
+    assert %{undefined: %{function: ~l"foo.bar", loc: {47, 47}}} = Block.get_meta(new_block, 47)
   end
 
   alias Clr.Air.Instruction.Mem.Load
 
   test "when you load undefined", %{config: config, block: block} do
+    block =
+      Block.put_type(block, 42, {:u, 8, %{undefined: %{function: ~l"foo.bar", loc: {42, 42}}}})
+
     assert_raise Use, fn ->
-      block
-      |> Block.put_type(42, {:u, 8, %{undefined: %{function: "foo.bar", loc: {42, 42}}}})
-      |> then(
-        &Undefined.analyze(%Load{type: {:u, 8, %{}}, src: {42, :keep}}, 0, {%{}, &1}, config)
-      )
+      Undefined.analyze(%Load{type: {:u, 8, %{}}, src: {42, :keep}}, 0, block, config)
     end
   end
 end

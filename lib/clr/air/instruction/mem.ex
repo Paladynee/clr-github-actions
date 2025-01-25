@@ -28,7 +28,7 @@ defmodule Clr.Air.Instruction.Mem do
     alias Clr.Block
     alias Clr.Type
 
-    def slot_type(%Alloc{type: type}, _block), do: Type.from_air(type)
+    def slot_type(%Alloc{type: type}, _, _block), do: Type.from_air(type)
   end
 
   Pegasus.parser_from_string(

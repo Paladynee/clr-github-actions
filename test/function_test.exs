@@ -77,10 +77,10 @@ defmodule ClrTest.FunctionTest do
 
   test "different metadata have different entries" do
     AnalyzerMock
-    |> Mox.expect(:analyze, fn %{args_meta: [%{foo: :bar}]}, _ ->
+    |> Mox.expect(:analyze, fn %{args: [%{foo: :bar}]}, _ ->
       stub_eval(:fooresult)
     end)
-    |> Mox.expect(:analyze, fn %{args_meta: [%{bar: :baz}]}, _ ->
+    |> Mox.expect(:analyze, fn %{args: [%{bar: :baz}]}, _ ->
       stub_eval(:barresult)
     end)
 

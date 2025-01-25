@@ -41,8 +41,8 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
   import Lvalue
 
-  def analyze(%{dst: {src_slot, _}, src: ~l"undefined"}, _dst_slot, {meta, block}, _config) do
-    {:cont, {meta, Block.put_meta(block, src_slot, undefined: Undefined.meta(block))}}
+  def analyze(%{dst: {src_slot, _}, src: ~l"undefined"}, _dst_slot, block, _config) do
+    {:cont, Block.put_meta(block, src_slot, undefined: Undefined.meta(block))}
   end
 
   # TODO: figure out other cases.
@@ -56,9 +56,9 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
 
   require Type
 
-  def analyze(%{src: {src_slot, _}}, _dst_slot, {meta, block}, _config) do
-    case Block.fetch_up!(block, src_slot) do
-      {type, block} when Type.has_refinement(type, :undefined) ->
+  def analyze(%{src: {src_slot, _}}, _dst_slot, block, _config) do
+    case Block.fetch!(block, src_slot) do
+      type when Type.has_refinement(type, :undefined) ->
         src = Type.get_meta(type).undefined
 
         raise Use,
@@ -67,8 +67,8 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
           use_function: Lvalue.as_string(block.function),
           use_loc: block.loc
 
-      {_, block} ->
-        {:cont, {meta, block}}
+      _ ->
+        {:cont, block}
     end
   end
 end
