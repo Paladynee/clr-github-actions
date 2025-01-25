@@ -26,17 +26,118 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
 
   test "trunc"
 
-  test "optional_payload"
+  describe "optional_payload" do
+    alias Clr.Air.Instruction.Casts.OptionalPayload
 
-  test "optional_payload_ptr"
+    test "unwraps slot information, merging from optionals", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:optional, {:u, 8, %{foo: :bar}}, %{bar: :baz}}
+        )
 
-  test "optional_payload_ptr_set"
+      assert {{:u, 8, %{foo: :bar, bar: :baz}}, _} =
+               Instruction.slot_type(
+                 %OptionalPayload{type: ~l"u8", src: {0, :keep}},
+                 block
+               )
+    end
 
-  test "wrap_optional"
+    test "creates when there is no slot information", %{block: block} do
+      assert {{:u, 8, %{}}, _} =
+               Instruction.slot_type(
+                 %OptionalPayload{type: ~l"u8", src: ~l"some.constant"},
+                 block
+               )
+    end
+  end
 
-  test "unwrap_errunion_payload"
+  describe "optional_payload_ptr" do
+    alias Clr.Air.Instruction.Casts.OptionalPayloadPtr
 
-  test "unwrap_errunion_err"
+    test "unwraps slot information, merging from optionals", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:ptr, :one, {:optional, {:u, 8, %{foo: :bar}}, %{bar: :baz}}, %{quux: :mlem}}
+        )
+
+      assert {{:ptr, :one, {:u, 8, %{foo: :bar, bar: :baz}}, %{quux: :mlem}}, _} =
+               Instruction.slot_type(
+                 %OptionalPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 block
+               )
+    end
+
+    test "creates when there is no slot information", %{block: block} do
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(
+                 %OptionalPayloadPtr{type: {:ptr, :one, ~l"u8", []}, src: ~l"some.constant"},
+                 block
+               )
+    end
+  end
+
+  describe "wrap_optional" do
+    alias Clr.Air.Instruction.Casts.WrapOptional
+
+    test "wraps the child when it's a slot", %{block: block} do
+      block = Block.put_type(block, 0, {:u, 8, %{}}, foo: :bar)
+
+      assert {{:optional, {:u, 8, %{foo: :bar}}, %{}}, _} =
+               Instruction.slot_type(
+                 %WrapOptional{type: {:optional, ~l"u8"}, src: {0, :keep}},
+                 block
+               )
+    end
+
+    test "generates new data when it's not a slot", %{block: block} do
+      assert {{:optional, {:u, 8, %{}}, %{}}, _} =
+               Instruction.slot_type(
+                 %WrapOptional{type: {:optional, ~l"u8"}, src: ~l"some.constant"},
+                 block
+               )
+    end
+  end
+
+  describe "unwrap_errunion_payload" do
+    alias Clr.Air.Instruction.Casts.UnwrapErrunionPayload
+
+    test "unwraps the child when it's a slot", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:errorunion, [~l"foo"], {:u, 8, %{foo: :bar}}, %{}}
+        )
+
+      assert {{:u, 8, %{foo: :bar}}, _} =
+               Instruction.slot_type(
+                 %UnwrapErrunionPayload{type: ~l"u8", src: {0, :keep}},
+                 block
+               )
+    end
+
+    test "generates new data when it's not a slot", %{block: block} do
+      assert {{:u, 8, %{}}, _} =
+               Instruction.slot_type(
+                 %UnwrapErrunionPayload{type: ~l"u8", src: ~l"some.constant"},
+                 block
+               )
+    end
+  end
+
+  alias Clr.Air.Instruction.Casts.UnwrapErrunionErr
+
+  test "unwrap_errunion_err", %{block: block} do
+    assert {{:errorset, [~l"foo"], _}, _} =
+             Instruction.slot_type(
+               %UnwrapErrunionErr{type: {:errorset, [~l"foo"]}, src: {0, :keep}},
+               block
+             )
+  end
 
   describe "unwrap_errunion_payload_ptr" do
     alias Clr.Air.Instruction.Casts.UnwrapErrunionPayloadPtr
@@ -71,14 +172,14 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
   alias Clr.Air.Instruction.Casts.UnwrapErrunionErrPtr
 
   test "unwaps error", %{block: block} do
-    assert {{:errorset, [~l"foo"], %{}}, _} = 
-      Instruction.slot_type(
-        %UnwrapErrunionErrPtr{
-          type: {:errorset, [~l"foo"]},
-          src: {0, :keep}
-        },
-        block
-      )
+    assert {{:errorset, [~l"foo"], %{}}, _} =
+             Instruction.slot_type(
+               %UnwrapErrunionErrPtr{
+                 type: {:errorset, [~l"foo"]},
+                 src: {0, :keep}
+               },
+               block
+             )
   end
 
   describe "errunion_payload_ptr_set" do
