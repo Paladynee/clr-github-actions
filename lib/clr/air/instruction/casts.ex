@@ -82,7 +82,7 @@ defmodule Clr.Air.Instruction.Casts do
     optional_payload_ptr_str <- 'optional_payload_ptr'
     set <- '_set'
     """,
-    optional_payload_ptr: [post_traverse: :int_from_float],
+    optional_payload_ptr: [post_traverse: :optional_payload_ptr],
     optional_payload_ptr_str: [ignore: true],
     set: [ignore: true]
   )
