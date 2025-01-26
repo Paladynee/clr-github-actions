@@ -1,4 +1,4 @@
-defmodule Clr.Air.Instruction.Pointers do
+defmodule Clr.Air.Instruction.Pointer do
   alias Clr.Air
 
   require Air
@@ -21,6 +21,11 @@ defmodule Clr.Air.Instruction.Pointers do
   # operations (ptr_add and ptr_sub)
   defmodule Op do
     defstruct [:op, :type, :src, :val]
+
+    alias Clr.Type
+
+    use Clr.Air.Instruction
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
@@ -84,6 +89,12 @@ defmodule Clr.Air.Instruction.Pointers do
     # Uses the `ty_pl` field, payload is `Bin`. lhs is ptr, rhs is len.
 
     defstruct [:type, :src, :len]
+
+    alias Clr.Type
+
+    use Clr.Air.Instruction
+
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
@@ -122,6 +133,15 @@ defmodule Clr.Air.Instruction.Pointers do
     # Result type is the element type of the array operand.
     # Uses the `bin_op` field.
     defstruct [:src, :index_src]
+
+    use Clr.Air.Instruction
+
+    alias Clr.Block
+
+    def slot_type(%{src: {src, _}}, _, block) do
+      {{:array, type, _}, block} = Block.fetch_up!(block, src)
+      {type, block}
+    end
   end
 
   Pegasus.parser_from_string(
@@ -142,6 +162,15 @@ defmodule Clr.Air.Instruction.Pointers do
     # Result type is the element type of the slice operand.
     # Uses the `bin_op` field.
     defstruct [:src, :index_src]
+
+    use Clr.Air.Instruction
+
+    alias Clr.Block
+
+    def slot_type(%{src: {src, _}}, _, block) do
+      {{:ptr, :slice, type, _}, block} = Block.fetch_up!(block, src)
+      {type, block}
+    end
   end
 
   Pegasus.parser_from_string(
@@ -162,6 +191,10 @@ defmodule Clr.Air.Instruction.Pointers do
     # Result type is a pointer to the element type of the slice operand.
     # Uses the `ty_pl` field with payload `Bin`.
     defstruct [:type, :src, :index]
+
+    use Clr.Air.Instruction
+
+    def slot_type(_, _, _), do: raise "unimplemented"
   end
 
   Pegasus.parser_from_string(

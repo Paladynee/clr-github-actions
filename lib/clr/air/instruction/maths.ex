@@ -25,7 +25,8 @@ defmodule Clr.Air.Instruction.Maths do
 
     use Clr.Air.Instruction
 
-    def slot_type(%{lhs: {lhs, _}, rhs: {rhs, _}}, _, block) when is_integer(lhs) and is_integer(rhs) do
+    def slot_type(%{lhs: {lhs, _}, rhs: {rhs, _}}, _, block)
+        when is_integer(lhs) and is_integer(rhs) do
       {lhs_type, block} = Block.fetch_up!(block, lhs)
       {rhs_type, block} = Block.fetch_up!(block, rhs)
 
