@@ -211,7 +211,8 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
             transferred_function: Clr.Air.Lvalue.as_string(t.function),
             deleted_loc: t.loc
 
-        _ -> {:cont, block}
+        _ ->
+          {:cont, block}
       end
     end)
   end
@@ -223,14 +224,14 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
 
   def analyze(%{src: {src_slot, _}}, _slot, block, _config) do
     case Block.fetch!(block, src_slot) do
-      {:ptr, _, _, %{deleted: %{function: function, loc: loc}}}->
+      {:ptr, _, _, %{deleted: %{function: function, loc: loc}}} ->
         raise UseAfterFree,
           del_function: Clr.Air.Lvalue.as_string(function),
           del_loc: loc,
           function: Clr.Air.Lvalue.as_string(block.function),
           loc: block.loc
 
-      {:ptr, _, _, %{transferred: %{function: function, loc: loc}}}->
+      {:ptr, _, _, %{transferred: %{function: function, loc: loc}}} ->
         raise UseAfterFree,
           del_function: Clr.Air.Lvalue.as_string(function),
           del_loc: loc,

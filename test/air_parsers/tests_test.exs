@@ -120,8 +120,8 @@ defmodule ClrTest.AirParsers.TestsTest do
   alias Clr.Air.Instruction.Tests.CmpLtErrorsLen
 
   test "cmp_lt_errors_len" do
-    assert %CmpLtErrorsLen{src: {96, :clobber}} = 
-      Instruction.parse("cmp_lt_errors_len(%96!)")
+    assert %CmpLtErrorsLen{src: {96, :clobber}} =
+             Instruction.parse("cmp_lt_errors_len(%96!)")
   end
 
   alias Clr.Air.Instruction.Tests.ErrorSetHasValue

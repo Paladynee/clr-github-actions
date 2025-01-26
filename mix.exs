@@ -27,6 +27,7 @@ defmodule Clr.MixProject do
     [
       {:pegasus, "~> 0.2"},
       {:protoss, "~> 1.0"},
+      {:zig_parser, "~> 0.2"},
       {:mox, "~> 1.0", only: :test}
     ]
   end

@@ -90,8 +90,7 @@ defmodule Clr.Air.Instruction.Mem do
 
     use Clr.Air.Instruction
 
-    def slot_type(_, _, _), do: raise "unimplemented"
-
+    def slot_type(_, _, _), do: raise("unimplemented")
   end
 
   Pegasus.parser_from_string(
