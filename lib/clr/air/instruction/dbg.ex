@@ -33,7 +33,7 @@ defmodule Clr.Air.Instruction.Dbg do
 
     def slot_type(_, _, block), do: {:void, block}
 
-    def analyze(%{loc: loc}, _slot, block, _block), do: {:halt, {:void, %{block | loc: loc}}}
+    def analyze(%{loc: loc}, _slot, block, _config), do: {:halt, %{block | loc: loc}}
   end
 
   Pegasus.parser_from_string(

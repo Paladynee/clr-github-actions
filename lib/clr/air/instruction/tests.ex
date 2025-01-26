@@ -107,7 +107,24 @@ defmodule Clr.Air.Instruction.Tests do
     {rest, [%Is{operand: operand, op: op}], context}
   end
 
-  Air.unimplemented(:cmp_lt_errors_len)
+  defmodule CmpLtErrorsLen do
+    defstruct ~w[src]a
+
+    use Clr.Air.Instruction
+  end
+
+  Pegasus.parser_from_string(
+    """
+    cmp_lt_errors_len <- cmp_lt_errors_len_str lparen slotref rparen
+    cmp_lt_errors_len_str <- 'cmp_lt_errors_len'
+    """,
+    cmp_lt_errors_len: [post_traverse: :cmp_lt_errors_len],
+    cmp_lt_errors_len_str: [ignore: true]
+  )
+
+  def cmp_lt_errors_len(rest, [src], context, _loc, _bytes) do
+    {rest, [%CmpLtErrorsLen{src: src}], context}
+  end
 
   Air.ty_op(:error_set_has_value, ErrorSetHasValue)
 end

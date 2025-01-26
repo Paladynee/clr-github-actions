@@ -1,7 +1,6 @@
 defmodule ClrTest.AirParsers.TestsTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
-  alias ClrTest.TestAir
 
   import Clr.Air.Lvalue
 
@@ -118,8 +117,11 @@ defmodule ClrTest.AirParsers.TestsTest do
     end
   end
 
+  alias Clr.Air.Instruction.Tests.CmpLtErrorsLen
+
   test "cmp_lt_errors_len" do
-    TestAir.assert_unimplemented("cmp_lt_errors_len")
+    assert %CmpLtErrorsLen{src: {96, :clobber}} = 
+      Instruction.parse("cmp_lt_errors_len(%96!)")
   end
 
   alias Clr.Air.Instruction.Tests.ErrorSetHasValue

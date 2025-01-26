@@ -71,6 +71,7 @@ defmodule Clr.Block do
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper)
        when is_map_key(mapper, module) do
+
     modulespecs = Map.fetch!(mapper, module)
 
     block = put_type(block, slot, Instruction.slot_type(instruction, slot, block))

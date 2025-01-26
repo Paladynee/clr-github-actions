@@ -17,7 +17,7 @@ after
   # analyze is optional because we provide a default implementation.
   @optional_callbacks analyze: 4
 
-  def always, do: []
+  def always, do: [Clr.Air.Instruction.Dbg.Stmt]
   def when_kept, do: []
 
   @modules Map.new(
