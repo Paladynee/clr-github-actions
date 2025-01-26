@@ -8,13 +8,13 @@ defmodule Clr.Air.Instruction.Pointer do
 
   Pegasus.parser_from_string(
     """
-    pointers <- ptr_op / struct_field_ptr_index / struct_field_ptr / slice_len / slice_ptr /
+    pointer <- ptr_op / struct_field_ptr_index / struct_field_ptr / slice_len / slice_ptr /
       slice_elem_val / slice_elem_ptr / slice / array_elem_val / ptr_slice_len_ptr / ptr_slice_ptr_ptr /
       ptr_elem_val / ptr_elem_ptr / array_to_slice / error_return_trace / set_error_return_trace_index /
       set_error_return_trace / field_parent_ptr
     prefix <- 'ptr_'
     """,
-    pointers: [export: true],
+    pointer: [export: true],
     prefix: [ignore: true]
   )
 
@@ -194,7 +194,7 @@ defmodule Clr.Air.Instruction.Pointer do
 
     use Clr.Air.Instruction
 
-    def slot_type(_, _, _), do: raise "unimplemented"
+    def slot_type(_, _, _), do: raise("unimplemented")
   end
 
   Pegasus.parser_from_string(

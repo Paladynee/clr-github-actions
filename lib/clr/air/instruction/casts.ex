@@ -122,7 +122,7 @@ defmodule Clr.Air.Instruction.Casts do
   # *(E!T) -> *T. If the value is an error, undefined behavior.
   # Uses the `ty_op` field.
   Air.ty_op :unwrap_errunion_payload_ptr, UnwrapErrunionPayloadPtr do
-    def slot_type(%{type: type, src: {slot, _}}, _, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
         Block.fetch_up!(block, slot)
 
@@ -141,7 +141,7 @@ defmodule Clr.Air.Instruction.Casts do
   # *(E!T) => *T. Sets the value to non-error with an undefined payload value.
   # Uses the `ty_op` field.
   Air.ty_op :errunion_payload_ptr_set, ErrunionPayloadPtrSet do
-    def slot_type(%{type: type, src: {slot, _}}, _, block) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
       {{:ptr, :one, {:errorunion, _errors, child, _}, ptr_meta}, block} =
         Block.fetch_up!(block, slot)
 

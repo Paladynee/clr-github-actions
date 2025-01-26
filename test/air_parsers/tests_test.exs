@@ -1,6 +1,7 @@
 defmodule ClrTest.AirParsers.TestsTest do
   use ExUnit.Case, async: true
   alias Clr.Air.Instruction
+  alias ClrTest.TestAir
 
   import Clr.Air.Lvalue
 
@@ -68,15 +69,6 @@ defmodule ClrTest.AirParsers.TestsTest do
     end
   end
 
-  describe "unary test operations" do
-    alias Clr.Air.Instruction.Tests.Unary
-
-    test "cmp_lt_errors_len" do
-      assert %Unary{op: :cmp_lt_errors_len, operand: {30, :keep}} =
-               Instruction.parse("cmp_lt_errors_len(%30)")
-    end
-  end
-
   describe "is operations" do
     alias Clr.Air.Instruction.Tests.Is
 
@@ -124,6 +116,10 @@ defmodule ClrTest.AirParsers.TestsTest do
       assert %Is{op: :named_enum_value, operand: {95, :clobber}} =
                Instruction.parse("is_named_enum_value(%95!)")
     end
+  end
+
+  test "cmp_lt_errors_len" do
+    TestAir.assert_unimplemented("cmp_lt_errors_len")
   end
 
   alias Clr.Air.Instruction.Tests.ErrorSetHasValue

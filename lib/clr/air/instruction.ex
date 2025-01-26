@@ -21,7 +21,7 @@ after
   def when_kept, do: []
 
   @modules Map.new(
-             ~w[assembly vector casts dbg control_flow pointers maths tests atomics function mem],
+             ~w[assembly vector casts dbg control_flow pointer maths tests atomics function mem],
              fn instruction ->
                {String.to_atom(instruction),
                 instruction |> Macro.camelize() |> then(&Module.concat(Clr.Air.Instruction, &1))}
@@ -44,7 +44,7 @@ after
   Pegasus.parser_from_string(
     """
     instruction <- mem / dbg / casts / control_flow / atomics / vector /
-                   pointers / tests / maths / assembly / function /
+                   pointer / tests / maths / assembly / function /
                    # debug 
                    unknown_instruction
 

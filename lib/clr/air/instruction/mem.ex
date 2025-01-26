@@ -90,13 +90,8 @@ defmodule Clr.Air.Instruction.Mem do
 
     use Clr.Air.Instruction
 
-    alias Clr.Block
+    def slot_type(_, _, _), do: raise "unimplemented"
 
-    def analyze(%{src: {src_slot, _keep_or_clobber}, index: index}, dst_slot, analysis, _config) do
-      {{:struct, struct_types, _meta}, analysis} = Block.fetch_up!(analysis, src_slot)
-      line_type = Enum.at(struct_types, index) || raise "unreachable"
-      Block.put_type(analysis, dst_slot, line_type)
-    end
   end
 
   Pegasus.parser_from_string(

@@ -125,7 +125,6 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
       _ ->
         check_passing_deleted(call, block, config)
-        {:cont, block}
     end
   end
 
@@ -148,48 +147,49 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     {:halt, block}
   end
 
-  defp process_destroy([{:literal, ~l"mem.Allocator", struct}, {src, _}], slot, block, _config) do
+  defp process_destroy([{:literal, ~l"mem.Allocator", struct}, {src, _}], _slot, block, _config) do
     vtable = Map.fetch!(struct, "vtable")
     this_function = block.function
 
     # TODO: consider only flushing the awaits that the function needs.
+    block = Block.flush_awaits(block)
+
     block
-    |> Block.flush_awaits()
-    |> Block.fetch_up!(src)
+    |> Block.fetch!(src)
     |> case do
-      {{:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}}}, block} ->
+      {:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}}} ->
         raise DoubleFree,
           previous: Clr.Air.Lvalue.as_string(prev_function),
           prev_loc: prev_loc,
           deletion: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      {{:ptr, :one, _type, %{transferred: %{function: prev_function, loc: prev_loc}}}, block} ->
+      {:ptr, :one, _type, %{transferred: %{function: prev_function, loc: prev_loc}}} ->
         raise DoubleFree,
           previous: Clr.Air.Lvalue.as_string(prev_function),
           prev_loc: prev_loc,
           deletion: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      {{:ptr, :one, _type, %{heap: %{vtable: ^vtable}}}, block} ->
+      {:ptr, :one, _type, %{heap: %{vtable: ^vtable}}} ->
         deleted_info = %{function: this_function, loc: block.loc}
         {:halt, Block.put_meta(block, src, deleted: deleted_info)}
 
-      {{:ptr, :one, _type, %{heap: other}}, block} ->
+      {:ptr, :one, _type, %{heap: other}} ->
         raise Mismatch,
           original: Clr.Air.Lvalue.as_string(other.vtable),
           attempted: Clr.Air.Lvalue.as_string(vtable),
           function: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      {{:ptr, :one, _type, %{stack: %{function: function, loc: loc}}}, block} ->
+      {:ptr, :one, _type, %{stack: %{function: function, loc: loc}}} ->
         raise Mismatch,
           original: {:stack, Clr.Air.Lvalue.as_string(function), loc},
           attempted: Clr.Air.Lvalue.as_string(vtable),
           function: Clr.Air.Lvalue.as_string(this_function),
           loc: block.loc
 
-      {_, block} ->
+      _ ->
         {:cont, block}
     end
   end
@@ -197,22 +197,21 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   defp check_passing_deleted(call, block, _config) do
     Enum.reduce(call.args, block, fn {slot, _}, block ->
       # TODO: check other types and make sure none of them are deleted too.
-      case Block.fetch_up!(block, slot) do
-        {{:ptr, _, _, %{deleted: d}}, block} ->
+      case Block.fetch!(block, slot) do
+        {:ptr, _, _, %{deleted: d}} ->
           raise CallDeleted,
             function: Clr.Air.Lvalue.as_string(block.function),
             loc: block.loc,
             deleted_loc: d.loc
 
-        {{:ptr, _, _, %{transferred: t}}, block} ->
+        {:ptr, _, _, %{transferred: t}} ->
           raise CallDeleted,
             function: Clr.Air.Lvalue.as_string(block.function),
             loc: block.loc,
             transferred_function: Clr.Air.Lvalue.as_string(t.function),
             deleted_loc: t.loc
 
-        {_, block} ->
-          block
+        _ -> {:cont, block}
       end
     end)
   end
@@ -222,16 +221,16 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
   alias Clr.Analysis.Allocator.UseAfterFree
   alias Clr.Block
 
-  def analyze(%{src: {src_slot, _}}, slot, block, config) do
-    case Block.fetch_up!(block, src_slot) do
-      {{:ptr, _, _, %{deleted: %{function: function, loc: loc}}}, block} ->
+  def analyze(%{src: {src_slot, _}}, _slot, block, _config) do
+    case Block.fetch!(block, src_slot) do
+      {:ptr, _, _, %{deleted: %{function: function, loc: loc}}}->
         raise UseAfterFree,
           del_function: Clr.Air.Lvalue.as_string(function),
           del_loc: loc,
           function: Clr.Air.Lvalue.as_string(block.function),
           loc: block.loc
 
-      {{:ptr, _, _, %{transferred: %{function: function, loc: loc}}}, block} ->
+      {:ptr, _, _, %{transferred: %{function: function, loc: loc}}}->
         raise UseAfterFree,
           del_function: Clr.Air.Lvalue.as_string(function),
           del_loc: loc,

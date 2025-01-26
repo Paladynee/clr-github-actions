@@ -6,7 +6,7 @@ defmodule Clr.Air.Instruction.Tests do
 
   Pegasus.parser_from_string(
     """
-    tests <- compare_instruction / is_instruction / unary_instruction / error_set_has_value
+    tests <- compare_instruction / is_instruction / cmp_lt_errors_len / error_set_has_value
     """,
     tests: [export: true]
   )
@@ -19,10 +19,11 @@ defmodule Clr.Air.Instruction.Tests do
     use Clr.Air.Instruction
 
     defstruct ~w[lhs rhs op optimized]a
-    alias Clr.Block
 
-    def analyze(_, slot, analysis, _config),
-      do: {:halt, Block.put_type(analysis, slot, {:bool, %{}})}
+    # TODO: resolve the lhs and rhs types
+    def slot_type(_, _, block) do
+      {{:bool, %{}}, block}
+    end
   end
 
   Pegasus.parser_from_string(
@@ -62,6 +63,13 @@ defmodule Clr.Air.Instruction.Tests do
 
   defmodule Is do
     defstruct ~w[operand op]a
+
+    use Clr.Air.Instruction
+
+    # TODO: resolve the operand types
+    def slot_type(_, _, block) do
+      {{:bool, %{}}, block}
+    end
   end
 
   Pegasus.parser_from_string(
@@ -99,26 +107,7 @@ defmodule Clr.Air.Instruction.Tests do
     {rest, [%Is{operand: operand, op: op}], context}
   end
 
-  defmodule Unary do
-    defstruct ~w[operand op]a
-  end
-
-  Pegasus.parser_from_string(
-    """
-    unary_instruction <- unary_op lparen argument rparen
-
-    unary_op <- cmp_lt_errors_len
-
-    cmp_lt_errors_len <- 'cmp_lt_errors_len'
-    """,
-    unary_instruction: [post_traverse: :unary_instruction],
-    unary_prefix: [ignore: true],
-    cmp_lt_errors_len: [token: :cmp_lt_errors_len]
-  )
-
-  def unary_instruction(rest, [operand, op], context, _loc, _bytes) do
-    {rest, [%Unary{operand: operand, op: op}], context}
-  end
+  Air.unimplemented(:cmp_lt_errors_len)
 
   Air.ty_op(:error_set_has_value, ErrorSetHasValue)
 end
