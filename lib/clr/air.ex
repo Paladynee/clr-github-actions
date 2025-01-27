@@ -1,6 +1,7 @@
 defmodule Clr.Air do
-  @base ~w[slotref clobbers keep clobber squoted dquoted dstring identifier alpha alnum int cs singleq doubleq comma space colon dot 
-           lparen rparen langle rangle lbrace rbrace lbrack rbrack fatarrow newline equals null undefined elision notnewline]a
+  @base ~w[slotref clobbers keep clobber squoted dquoted dstring identifier alpha alnum float int cs singleq doubleq comma space 
+           colon dot lparen rparen langle rangle lbrace rbrace lbrack rbrack fatarrow newline equals null undefined 
+           elision notnewline]a
 
   @literal ~w[literal fn_literal convertible enum_value]a
 

@@ -43,6 +43,7 @@ defmodule Clr.Block do
     mapper = Clr.get_instruction_mapper()
 
     code
+    |> Enum.sort
     |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
@@ -70,7 +71,7 @@ defmodule Clr.Block do
   # analyzed.
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
-    # {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
+    {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
     {type, block} = Instruction.slot_type(instruction, slot, block)
     block = put_type(block, slot, type)
 

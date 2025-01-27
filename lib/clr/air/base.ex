@@ -20,6 +20,7 @@ defmodule Clr.Air.Base do
     alpha <- [a-zA-Z_]
     alnum <- [a-zA-Z0-9_]
 
+    float <- '-'? [0-9]+ '.' [0-9]+
     int <- '-'? [0-9]+
 
     # this is convenient because it occurs all over the place
@@ -62,6 +63,7 @@ defmodule Clr.Air.Base do
     dquoted: [export: true],
     dstring: [export: true, collect: true],
     identifier: [export: true, collect: true, post_traverse: :identifier],
+    float: [export: true, collect: true, post_traverse: :float],
     int: [export: true, collect: true, post_traverse: :int],
     cs: [export: true],
     singleq: [ignore: true, export: true],
@@ -88,6 +90,8 @@ defmodule Clr.Air.Base do
     undefined: [export: true, token: :undefined],
     elision: [export: true, token: :...]
   )
+
+  defp float(rest, [value], context, _loc, _bytes), do: {rest, [String.to_float(value)], context}
 
   defp int(rest, [value], context, _loc, _bytes), do: {rest, [String.to_integer(value)], context}
 

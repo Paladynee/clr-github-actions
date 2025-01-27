@@ -3,8 +3,8 @@ defmodule Clr.Air.Literal do
   require Clr.Air
 
   Clr.Air.import(
-    ~w[type lvalue comptime_struct fn_type ptr_type identifier int elision cs space dot lparen rparen langle rangle lbrack rbrack lbrace 
-      rbrace squoted dstring]a
+    ~w[type lvalue comptime_struct fn_type ptr_type identifier float int elision cs space dot lparen rparen langle rangle 
+      lbrack rbrack lbrace rbrace squoted dstring]a
   )
 
   Pegasus.parser_from_string(
@@ -17,7 +17,7 @@ defmodule Clr.Air.Literal do
 
     # these are all of the things that are capable of being interpreted at comptime.
     # TODO: clean this up.
-    convertible <- int / void / undefined / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / type
+    convertible <- float / int / void / undefined / sizeof / alignof / as / string_value / struct_ptr / comptime_struct / enum_value / type
 
     string_value <- dstring (indices)?
     indices <- lbrack int '..' int rbrack

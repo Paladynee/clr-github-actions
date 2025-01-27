@@ -195,9 +195,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   end
 
   defp check_passing_deleted(call, block, _config) do
-
-
-    Enum.reduce(call.args, block, fn {slot, _}, block ->
+    checked = Enum.reduce(call.args, block, fn {slot, _}, block when is_integer(slot) ->
       # TODO: check other types and make sure none of them are deleted too.
       case Block.fetch_up!(block, slot) do
         {{:ptr, _, _, %{deleted: d}}, _} ->
@@ -213,10 +211,11 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
             transferred_function: t.function,
             deleted_loc: t.loc
 
-        {_, block} ->
-          {:cont, block}
+        {_, block} -> block
       end
+      _, block -> block
     end)
+    {:cont, checked}
   end
 end
 

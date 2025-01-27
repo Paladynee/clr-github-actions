@@ -12,6 +12,10 @@ defmodule ClrTest.Air.LiteralTest do
     assert {:literal, ~l"usize", -8} = Literal.parse("<usize, -8>")
   end
 
+  test "float literal" do
+    assert {:literal, ~l"f64", 3.14} = Literal.parse("<f64, 3.14>")
+  end
+
   test "literal with an enum literal" do
     assert {:literal, ~l"Target.Cpu.Arch", {:enum, "x86_64"}} =
              Literal.parse("<Target.Cpu.Arch, .x86_64>")
