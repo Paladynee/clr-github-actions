@@ -37,9 +37,6 @@ defmodule Clr.Function do
   @spec evaluate(term, [Clr.meta()], [Clr.slot() | nil]) ::
           {:future, reference} | {Clr.type(), block_mapper}
   def evaluate(function_name, args_meta, arg_slots) do
-    # TODO: remove the next clause
-    Enum.each(args_meta, &(is_map(&1) or raise("did not get metadata")))
-
     case :ets.lookup(table_name(), {function_name, args_meta}) do
       [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
       [] -> GenServer.call(table_name(), {:evaluate, function_name, args_meta, arg_slots})

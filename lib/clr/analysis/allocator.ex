@@ -159,16 +159,16 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     |> case do
       {:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}}} ->
         raise DoubleFree,
-          previous: Clr.Air.Lvalue.as_string(prev_function),
+          previous: prev_function,
           prev_loc: prev_loc,
-          deletion: Clr.Air.Lvalue.as_string(this_function),
+          deletion: this_function,
           loc: block.loc
 
       {:ptr, :one, _type, %{transferred: %{function: prev_function, loc: prev_loc}}} ->
         raise DoubleFree,
-          previous: Clr.Air.Lvalue.as_string(prev_function),
+          previous: prev_function,
           prev_loc: prev_loc,
-          deletion: Clr.Air.Lvalue.as_string(this_function),
+          deletion: this_function,
           loc: block.loc
 
       {:ptr, :one, _type, %{heap: %{vtable: ^vtable}}} ->
@@ -177,16 +177,16 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
       {:ptr, :one, _type, %{heap: other}} ->
         raise Mismatch,
-          original: Clr.Air.Lvalue.as_string(other.vtable),
-          attempted: Clr.Air.Lvalue.as_string(vtable),
-          function: Clr.Air.Lvalue.as_string(this_function),
+          original: other.vtable,
+          attempted: vtable,
+          function: this_function,
           loc: block.loc
 
       {:ptr, :one, _type, %{stack: %{function: function, loc: loc}}} ->
         raise Mismatch,
-          original: {:stack, Clr.Air.Lvalue.as_string(function), loc},
-          attempted: Clr.Air.Lvalue.as_string(vtable),
-          function: Clr.Air.Lvalue.as_string(this_function),
+          original: {:stack, function, loc},
+          attempted: vtable,
+          function: this_function,
           loc: block.loc
 
       _ ->
@@ -200,15 +200,15 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
       case Block.fetch!(block, slot) do
         {:ptr, _, _, %{deleted: d}} ->
           raise CallDeleted,
-            function: Clr.Air.Lvalue.as_string(block.function),
+            function: block.function,
             loc: block.loc,
             deleted_loc: d.loc
 
         {:ptr, _, _, %{transferred: t}} ->
           raise CallDeleted,
-            function: Clr.Air.Lvalue.as_string(block.function),
+            function: block.function,
             loc: block.loc,
-            transferred_function: Clr.Air.Lvalue.as_string(t.function),
+            transferred_function: t.function,
             deleted_loc: t.loc
 
         _ ->
@@ -226,16 +226,16 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
     case Block.fetch!(block, src_slot) do
       {:ptr, _, _, %{deleted: %{function: function, loc: loc}}} ->
         raise UseAfterFree,
-          del_function: Clr.Air.Lvalue.as_string(function),
+          del_function: function,
           del_loc: loc,
-          function: Clr.Air.Lvalue.as_string(block.function),
+          function: block.function,
           loc: block.loc
 
       {:ptr, _, _, %{transferred: %{function: function, loc: loc}}} ->
         raise UseAfterFree,
-          del_function: Clr.Air.Lvalue.as_string(function),
+          del_function: function,
           del_loc: loc,
-          function: Clr.Air.Lvalue.as_string(block.function),
+          function: block.function,
           loc: block.loc
 
       _ ->

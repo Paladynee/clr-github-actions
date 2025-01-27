@@ -28,7 +28,7 @@ defmodule Clr.Air.Instruction.Mem do
     alias Clr.Block
     alias Clr.Type
 
-    def slot_type(%Alloc{type: type}, _, _block), do: Type.from_air(type)
+    def slot_type(%Alloc{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   Pegasus.parser_from_string(
@@ -50,12 +50,12 @@ defmodule Clr.Air.Instruction.Mem do
 
     require Type
 
-    def slot_type(%{type: type, src: {:lvalue, _}}, _, block), do: {Type.from_air(type), block}
+    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
+      {{:ptr, :one, child, _}, block} = Block.fetch_up!(block, slot)
+      {child, block}
+    end
 
-    def slot_type(%{type: type, src: {:literal, _, _}}, _, block),
-      do: {Type.from_air(type), block}
-
-    def slot_type(%{src: {slot, _}}, _, block), do: Block.fetch_up!(block, slot)
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
   defmodule Store do
@@ -90,7 +90,16 @@ defmodule Clr.Air.Instruction.Mem do
 
     use Clr.Air.Instruction
 
-    def slot_type(_, _, _), do: raise("unimplemented")
+    alias Clr.Block
+
+    def slot_type(%{src: {slot, _}, index: index}, _, block) do
+      {{:struct, list, _}, block} = Block.fetch_up!(block, slot)
+      if type = Enum.at(list, index) do
+        {type, block}
+      else
+        raise "unreachable" 
+      end
+    end
   end
 
   Pegasus.parser_from_string(

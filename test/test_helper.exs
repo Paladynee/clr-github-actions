@@ -5,4 +5,6 @@ Clr.set_checkers([
   Clr.Analysis.StackPointer
 ])
 
+Clr.Zig.Parser.start_link([])
+
 ExUnit.start()

@@ -17,7 +17,10 @@ after
   # analyze is optional because we provide a default implementation.
   @optional_callbacks analyze: 4
 
-  def always, do: [Clr.Air.Instruction.Dbg.Stmt]
+  alias Clr.Air.Instruction.Dbg.Stmt
+  alias Clr.Air.Instruction.Function.Call
+
+  def always, do: [Stmt, Call]
   def when_kept, do: []
 
   @modules Map.new(

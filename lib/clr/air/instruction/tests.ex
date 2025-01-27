@@ -111,6 +111,8 @@ defmodule Clr.Air.Instruction.Tests do
     defstruct ~w[src]a
 
     use Clr.Air.Instruction
+
+    def slot_type(_, _, block), do: {{:bool, %{}}, block}
   end
 
   Pegasus.parser_from_string(

@@ -28,43 +28,52 @@ defmodule Clr.Analysis.Undefined.Use do
     :use_loc
   ]
 
+  alias Clr.Zig.Parser
+
   def message(error) do
-    use_point = Clr.location_string(error.use_function, error.use_loc)
-    src_point = Clr.location_string(error.src_function, error.src_loc)
-    "Use of undefined value in function #{use_point} (value set undefined at #{src_point})"
+    use_point = Parser.format_function(error.use_function, error.use_loc)
+    src_point = Parser.format_function(error.src_function, error.src_loc)
+
+    """
+    Use of undefined value in #{use_point}. 
+    Value was set undefined in #{src_point}
+    """
   end
 end
 
 defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
-  alias Clr.Air.Lvalue
   alias Clr.Analysis.Undefined
   alias Clr.Block
-  import Lvalue
+  alias Clr.Type
 
-  def analyze(%{dst: {src_slot, _}, src: {:literal, _, :undefined}}, _dst_slot, block, _config) do
-    {:cont, Block.put_meta(block, src_slot, undefined: Undefined.meta(block))}
+  def analyze(%{dst: {src_slot, _}, src: {:literal, _, :undefined}}, _dst_slot, block, _config) when is_integer(src_slot) do
+    {:ptr, :one, child, ptr_meta} = Block.fetch!(block, src_slot) 
+
+    new_type = {:ptr, :one, Type.put_meta(child, undefined: Undefined.meta(block)), ptr_meta}
+
+    {:cont, Block.put_type(block, src_slot, new_type)}
   end
 
-  # TODO: figure out other cases.
+  def analyze(_command, _dst_slot, block, _config), do: {:cont, block}
 end
 
 defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Load do
-  alias Clr.Air.Lvalue
   alias Clr.Type
   alias Clr.Analysis.Undefined.Use
   alias Clr.Block
+  alias Clr.Zig.Parser
 
   require Type
 
-  def analyze(%{src: {src_slot, _}}, _dst_slot, block, _config) do
-    case Block.fetch!(block, src_slot) do
+  def analyze(_, slot, block, _config) do
+    case Block.fetch!(block, slot) do
       type when Type.has_refinement(type, :undefined) ->
         src = Type.get_meta(type).undefined
 
         raise Use,
-          src_function: Lvalue.as_string(src.function),
+          src_function: src.function,
           src_loc: src.loc,
-          use_function: Lvalue.as_string(block.function),
+          use_function: block.function,
           use_loc: block.loc
 
       _ ->

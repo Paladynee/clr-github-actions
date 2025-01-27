@@ -69,19 +69,22 @@ defmodule Clr.Block do
   # generally, any control flow instruction or dbg_stmt instruction must be
   # analyzed.
 
-  defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper)
-       when is_map_key(mapper, module) do
-    modulespecs = Map.fetch!(mapper, module)
+  defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
+    #{slot, instruction, block.function, block.slots} |> dbg(limit: 25)
+    {type, block} = Instruction.slot_type(instruction, slot, block)
+    block = put_type(block, slot, type)
 
-    block = put_type(block, slot, Instruction.slot_type(instruction, slot, block))
+    case {mode, is_map_key(mapper, module)} do
+      {:keep, true} ->
+        modulespecs = Map.fetch!(mapper, module)
 
-    case mode do
-      :keep ->
         Enum.reduce_while(modulespecs, block, fn {_, checker}, acc ->
           checker.analyze(instruction, slot, acc, %{})
         end)
 
-      :clobber ->
+      {:clobber, true} ->
+        modulespecs = Map.fetch!(mapper, module)
+
         Enum.reduce_while(modulespecs, block, fn
           {:always, checker}, acc ->
             checker.analyze(instruction, slot, acc, %{})
@@ -89,6 +92,9 @@ defmodule Clr.Block do
           _, acc ->
             acc
         end)
+
+      {_, false} ->
+        block
     end
   end
 

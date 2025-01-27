@@ -17,6 +17,16 @@ defmodule Mix.Tasks.Clr do
     Clr.Air.start_link([])
     # start the analysis server
     Clr.Function.start_link([])
+    # start the parser database
+    Clr.Zig.Parser.start_link([])
+
+    Clr.Zig.Parser.load_parse(file)
+
+    # initialize which checkers to activate
+    Clr.set_checkers([
+      Clr.Analysis.Undefined,
+      Clr.Analysis.StackPointer
+    ])
 
     if System.get_env("DEBUG", "false") == "true" do
       Application.put_env(:clr, :debug_prefix, Path.basename(file, ".zig"))

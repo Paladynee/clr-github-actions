@@ -21,6 +21,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
     # then there do not exist any `br` instructions targeting this `block`.
 
     defstruct [:type, :code, clobbers: []]
+
+    use Clr.Air.Instruction
+
+    # this will need to be updated later.
+    def slot_type(_, _, block), do: {:void, block}
   end
 
   Pegasus.parser_from_string(

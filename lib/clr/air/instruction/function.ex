@@ -21,21 +21,8 @@ defmodule Clr.Air.Instruction.Function do
 
     use Clr.Air.Instruction
 
-    def slot_type(%{type: {:ptr, :one, type, ptr_meta}}, slot, block) do
-      arg_meta =
-        block.args
-        |> Enum.at(slot)
-        |> Kernel.||(raise "unreachable")
-        |> Type.get_meta()
-
-      slot_type =
-        type
-        |> Type.from_air()
-        |> Type.put_meta(arg_meta)
-        |> then(&{:ptr, :one, &1, %{}})
-        |> Type.put_meta(ptr_meta)
-
-      {slot_type, block}
+    def slot_type(_, slot, block) do
+      {Enum.at(block.args, slot) || raise("unreachable"), block}
     end
   end
 
@@ -79,27 +66,27 @@ defmodule Clr.Air.Instruction.Function do
         {:literal, _type, {:function, function_name}} ->
           # we also need the context of the current function.
 
-          {metas_slots, block} =
+          {args_slots, block} =
             Enum.map_reduce(call.args, block, fn
-              {:literal, _type, _}, block ->
-                {{%{}, nil}, block}
+              {:literal, type, _}, block ->
+                {{Type.from_air(type), nil}, block}
 
               {slot, _}, block ->
                 {type, block} = Block.fetch_up!(block, slot)
-                {{Type.get_meta(type), slot}, block}
+                {{type, slot}, block}
             end)
 
-          {args_meta, slots} = Enum.unzip(metas_slots)
+          {args, slots} = Enum.unzip(args_slots)
 
           block.function
           |> merge_name(function_name)
-          |> Function.evaluate(args_meta, slots)
+          |> Function.evaluate(args, slots)
           |> case do
             {:future, ref} ->
-              {:halt, {:future, Block.put_await(block, slot, ref)}}
+              {:halt, Block.put_await(block, slot, ref)}
 
-            {:ok, result} ->
-              {:halt, {result, block}}
+            {:ok, _result} ->
+              {:halt, block}
           end
       end
     end
@@ -162,16 +149,16 @@ defmodule Clr.Air.Instruction.Function do
     def slot_type(_, _, block), do: {:noreturn, block}
 
     def analyze(%{src: {:lvalue, _} = lvalue}, _dst_slot, block, _) do
-      {:halt, :void, Block.put_return(block, {:TypeOf, lvalue})}
+      {:halt, Block.put_return(block, {:TypeOf, lvalue})}
     end
 
     def analyze(%{src: {:literal, type, _}}, _dst_slot, block, _) do
-      {:halt, :void, Block.put_return(block, type)}
+      {:halt, Block.put_return(block, type)}
     end
 
     def analyze(%{src: {slot, _}}, _dst_slot, block, _) do
       {type, block} = Block.fetch_up!(block, slot)
-      {:halt, :void, Block.put_return(block, type)}
+      {:halt, Block.put_return(block, type)}
     end
   end
 

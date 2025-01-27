@@ -1,10 +1,6 @@
 defmodule Clr do
   def debug_prefix, do: Application.get_env(:clr, :debug_prefix)
 
-  def location_string(function, {row, _col}) do
-    "function `#{function}`, row #{row}"
-  end
-
   @spec set_checkers([module]) :: :ok
   def set_checkers(checkers) do
     checkers = checkers ++ [Clr.Air.Instruction]
@@ -29,8 +25,6 @@ defmodule Clr do
       end
 
     Application.put_env(:clr, :instruction_mapper, instruction_mapper)
-
-    :ok
   end
 
   @spec get_checkers() :: [module]

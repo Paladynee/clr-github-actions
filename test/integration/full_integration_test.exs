@@ -3,6 +3,8 @@ defmodule ClrTest.FullIntegrationTest do
 
   @moduletag :integration
 
+  alias Clr.Zig.Parser
+
   @file_colon Path.relative_to_cwd(__ENV__.file) <> ":"
 
   def assert_errors_with(msg, prefix) do
@@ -19,6 +21,10 @@ defmodule ClrTest.FullIntegrationTest do
 
   describe "undefined" do
     test "value used" do
+      "undefined/undefined_value_use.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Undefined value used in function `undefined_value_use.main` at 3:5",
         "undefined/undefined_value_use.zig"
@@ -26,6 +32,10 @@ defmodule ClrTest.FullIntegrationTest do
     end
 
     test "value passed and used" do
+      "undefined/undefined_value_passed.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Undefined value used in function `undefined_value_passed.deref_ptr` at 2:3",
         "undefined/undefined_value_passed.zig"
@@ -35,6 +45,10 @@ defmodule ClrTest.FullIntegrationTest do
 
   describe "stack_ptr_escape" do
     test "escaping parameter pointer" do
+      "stack_ptr_escape/param_ptr_escape.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Stack pointer escape detected in function `param_ptr_escape.escaped_param_ptr` at 2:3",
         "stack_ptr_escape/param_ptr_escape.zig"
