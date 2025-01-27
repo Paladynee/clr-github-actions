@@ -3,6 +3,7 @@ defmodule Clr.Air.Instruction.Function do
   require Clr.Air
   alias Clr.Block
   alias Clr.Type
+  alias Clr.Function
 
   Clr.Air.import(~w[type int cs dquoted lparen rparen argument fn_literal lbrack rbrack slotref]a)
 
@@ -52,10 +53,6 @@ defmodule Clr.Air.Instruction.Function do
     use Clr.Air.Instruction
 
     defstruct [:fn, :args, :opt]
-
-    alias Clr.Block
-    alias Clr.Type
-    alias Clr.Function
 
     def slot_type(%{fn: {:literal, {:fn, _, return, _}, _}}, _, block) do
       {Type.from_air(return), block}
@@ -143,8 +140,6 @@ defmodule Clr.Air.Instruction.Function do
     defstruct [:src, :mode]
 
     use Clr.Air.Instruction
-
-    alias Clr.Block
 
     def slot_type(_, _, block), do: {:noreturn, block}
 

@@ -45,6 +45,9 @@ defmodule Clr.Air.Instruction.ControlFlow do
     {rest, [%Block{type: type, code: codeblock, clobbers: clobbers}], context}
   end
 
+  # realias clr.block
+  alias Clr.Block
+
   defmodule Loop do
     # A labeled block of code that loops forever. The body must be `noreturn`: loops
     # occur through an explicit `repeat` instruction pointing back to this one.
@@ -258,7 +261,6 @@ defmodule Clr.Air.Instruction.ControlFlow do
     defstruct [:src, :error_code, clobbers: [], ptr: false, cold: false]
 
     use Clr.Air.Instruction
-    alias Clr.Block
 
     def slot_type(%{src: {src, _}}, _, block) do
       {{:errorunion, _, payload, _}, block} = Block.fetch_up!(block, src)
@@ -295,7 +297,6 @@ defmodule Clr.Air.Instruction.ControlFlow do
     defstruct [:src, :type, :error_code, clobbers: [], cold: false]
 
     use Clr.Air.Instruction
-    alias Clr.Block
 
     def slot_type(%{src: {src, _}}, _, block) do
       {{:ptr, :one, {:errorunion, _, payload, _}, ptr_meta}, block} =

@@ -16,8 +16,9 @@ after
     alias Clr.Zig.Parser
 
     def message(error) do
-      create = Parser.format_function(error.function, error.src_loc)
-      escape = Parser.format_function(error.function, error.esc_loc)
+      create = Parser.format_location(error.function, error.src_loc)
+      escape = Parser.format_location(error.function, error.esc_loc)
+
       """
       Escape of stack pointer in #{escape}. 
       Value was created in #{create}
@@ -55,10 +56,7 @@ defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Store do
       when src < length(block.args) do
     # TODO: save parameter names.
 
-    {:cont,
-     Block.put_meta(block, loc,
-       stack: %{loc: {:arg, src}, function: block.function, name: "param"}
-     )}
+    {:cont, Block.put_meta(block, loc, stack: %{loc: {:arg, src}, function: block.function})}
   end
 
   def analyze(_, _slot, block, _config), do: {:cont, block}

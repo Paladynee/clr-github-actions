@@ -127,8 +127,6 @@ defmodule ClrTest.Analysis.Instruction.PointerTest do
              )
   end
 
-  alias Clr.Air.Instruction.Pointer.SliceElemPtr
-
   describe "slice_elem_ptr" do
     @tag :skip
     test "returns the internal type"

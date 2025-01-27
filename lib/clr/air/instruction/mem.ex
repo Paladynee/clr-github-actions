@@ -2,6 +2,9 @@ defmodule Clr.Air.Instruction.Mem do
   require Pegasus
 
   alias Clr.Air
+  alias Clr.Block
+  alias Clr.Type
+
   require Air
 
   Air.import(
@@ -25,9 +28,6 @@ defmodule Clr.Air.Instruction.Mem do
 
     use Clr.Air.Instruction
 
-    alias Clr.Block
-    alias Clr.Type
-
     def slot_type(%Alloc{type: type}, _, block), do: {Type.from_air(type), block}
   end
 
@@ -45,14 +45,10 @@ defmodule Clr.Air.Instruction.Mem do
   end
 
   Air.ty_op :load, Load do
-    alias Clr.Block
-    alias Clr.Type
-
     require Type
 
     def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
-      {{:ptr, :one, child, _}, block} = Block.fetch_up!(block, slot)
-      {child, block}
+      Block.fetch_up!(block, slot)
     end
 
     def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
@@ -64,6 +60,21 @@ defmodule Clr.Air.Instruction.Mem do
     use Clr.Air.Instruction
 
     def slot_type(_type, _, block), do: {:void, block}
+
+    def analyze(%{dst: {dst_slot, _}, src: {src_slot, _}}, _src_slot, block, _config)
+        when is_integer(src_slot) do
+      {src_type, block} = Block.fetch_up!(block, src_slot)
+
+      new_block =
+        Block.update_type!(block, dst_slot, fn
+          {:ptr, :one, child, ptr_meta} ->
+            {:ptr, :one, Type.put_meta(child, Type.get_meta(src_type)), ptr_meta}
+        end)
+
+      {:cont, new_block}
+    end
+
+    def analyze(_instruction, _slot, block, _config), do: {:cont, block}
   end
 
   Pegasus.parser_from_string(
@@ -94,10 +105,11 @@ defmodule Clr.Air.Instruction.Mem do
 
     def slot_type(%{src: {slot, _}, index: index}, _, block) do
       {{:struct, list, _}, block} = Block.fetch_up!(block, slot)
+
       if type = Enum.at(list, index) do
         {type, block}
       else
-        raise "unreachable" 
+        raise "unreachable"
       end
     end
   end

@@ -19,8 +19,9 @@ after
 
   alias Clr.Air.Instruction.Dbg.Stmt
   alias Clr.Air.Instruction.Function.Call
+  alias Clr.Air.Instruction.Mem.Store
 
-  def always, do: [Stmt, Call]
+  def always, do: [Stmt, Call, Store]
   def when_kept, do: []
 
   @modules Map.new(

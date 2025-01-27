@@ -22,8 +22,8 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
     test "returns the type of the arg statement", %{block: block} do
       block = %{block | args: [{:u, 8, %{foo: :bar}}], reqs: [%{}]}
 
-      assert {{:ptr, :one, {:u, 8, %{foo: :bar}}, %{}}, _} =
-               Instruction.slot_type(%Arg{type: {:ptr, :one, ~l"u8", []}}, 0, block)
+      assert {{:u, 8, %{foo: :bar}}, _} =
+               Instruction.slot_type(%Arg{type: ~l"u8"}, 0, block)
     end
   end
 

@@ -156,6 +156,9 @@ defmodule Clr.Type do
   def update_meta({a, b, meta}, fun), do: {a, b, fun.(meta)}
   def update_meta({a, b, c, meta}, fun), do: {a, b, c, fun.(meta)}
 
+  @spec delete_meta(t, atom) :: t
+  def delete_meta(type, key), do: update_meta(type, &Map.delete(&1, key))
+
   def make_numbered(class, int) do
     case Integer.parse(int) do
       {num, ""} -> {class, num, %{}}

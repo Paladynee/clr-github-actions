@@ -21,6 +21,10 @@ defmodule Clr.Zig.Parser do
     :ok
   end
 
+  def debug_put(table \\ __MODULE__, lvalue, path, location) do
+    :ets.insert(table, {lvalue, {path, location}})
+  end
+
   def get(table \\ __MODULE__, lvalue) do
     case :ets.lookup(table, lvalue) do
       [{_, {path, location}}] -> {path, location}
@@ -30,21 +34,21 @@ defmodule Clr.Zig.Parser do
 
   def dump(table \\ __MODULE__), do: :ets.tab2list(table)
 
-  def format_function(lvalue, {:arg, index}) do
+  def format_location(lvalue, {:arg, index}) do
     {abs_path, {line, _}} = get(lvalue)
     rel_path = Path.relative_to_cwd(abs_path)
 
     "function #{Lvalue.as_string(lvalue)} (#{rel_path}:#{line}, argument #{index})"
-  catch
+  rescue
     _ -> "function #{Lvalue.as_string(lvalue)} (argument: #{index})"
   end
 
-  def format_function(lvalue, {row, col}) do
+  def format_location(lvalue, {row, col}) do
     {abs_path, {line, _}} = get(lvalue)
     rel_path = Path.relative_to_cwd(abs_path)
 
     "function #{Lvalue.as_string(lvalue)} (#{rel_path}:#{row + line - 1}:#{col})"
-  catch
+  rescue
     _ -> "function #{Lvalue.as_string(lvalue)} {#{row}:#{col}}"
   end
 

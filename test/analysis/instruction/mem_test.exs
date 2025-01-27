@@ -4,6 +4,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
   alias Clr.Air.Instruction
   alias Clr.Air.Function
   alias Clr.Block
+  alias Clr.Type
 
   import Clr.Air.Lvalue
 
@@ -20,7 +21,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
     alias Clr.Air.Instruction.Mem.Alloc
 
     test "correctly makes the type", %{block: block} do
-      assert {:ptr, :one, {:u, 8, %{}}, %{}} =
+      assert {{:ptr, :one, {:u, 8, %{}}, %{}}, _} =
                Instruction.slot_type(%Alloc{type: {:ptr, :one, ~l"u8", []}}, 0, block)
     end
   end
@@ -57,7 +58,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
   describe "store" do
     alias Clr.Air.Instruction.Mem.Store
 
-    test "sets slot_type to the type of the slotref", %{block: block} do
+    test "sets slot_type to void", %{block: block} do
       block = Block.put_type(block, 0, {:u, 8, %{}})
 
       assert {:void, _} =
@@ -66,6 +67,27 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
                  0,
                  block
                )
+    end
+
+    test "when analyzed, moves in all other features from the slot", %{
+      config: config,
+      block: block
+    } do
+      block =
+        block
+        |> Block.put_type(47, {:ptr, :one, {:u, 8, %{}}, %{}})
+        |> Block.put_type(48, {:u, 8, %{foo: :bar}})
+
+      assert {:cont, new_block} =
+               Instruction.analyze(
+                 %Store{dst: {47, :keep}, src: {48, :keep}},
+                 0,
+                 block,
+                 config
+               )
+
+      assert {:ptr, :one, child, _} = Block.fetch!(new_block, 47)
+      assert %{foo: :bar} = Type.get_meta(child)
     end
   end
 

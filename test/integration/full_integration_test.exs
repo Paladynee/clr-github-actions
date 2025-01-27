@@ -43,52 +43,72 @@ defmodule ClrTest.FullIntegrationTest do
     end
   end
 
-  describe "stack_ptr_escape" do
+  describe "stack_pointer" do
     test "escaping parameter pointer" do
-      "stack_ptr_escape/param_ptr_escape.zig"
+      "stack_pointer/param_ptr_escape.zig"
       |> then(&Path.join(__DIR__, &1))
       |> Parser.load_parse()
 
       assert_errors_with(
         "Stack pointer escape detected in function `param_ptr_escape.escaped_param_ptr` at 2:3",
-        "stack_ptr_escape/param_ptr_escape.zig"
+        "stack_pointer/param_ptr_escape.zig"
       )
     end
 
     test "escaping stack variable pointer" do
+      "stack_pointer/stack_ptr_escape.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Stack pointer escape detected in function `stack_ptr_escape.escaped_ptr` at 4:3",
-        "stack_ptr_escape/stack_ptr_escape.zig"
+        "stack_pointer/stack_ptr_escape.zig"
       )
     end
   end
 
-  describe "uaf/df" do
+  describe "allocator" do
     test "use after free" do
+      "allocator/use_after_free.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Use after free detected in function `use_after_free.main` at 4:5",
-        "uaf_df/use_after_free.zig"
+        "allocator/use_after_free.zig"
       )
     end
 
     test "stack free" do
+      "allocator/stack_free.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Stack memory attempted to be freed by `heap.c_allocator_vtable` in `stack_free.main` at 3:18",
-        "uaf_df/stack_free.zig"
+        "allocator/stack_free.zig"
       )
     end
 
     test "double free" do
+      "allocator/double_free.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Double free detected in function `double_free.main` at 4:18",
-        "uaf_df/double_free.zig"
+        "allocator/double_free.zig"
       )
     end
 
     test "mismatched allocator" do
+      "allocator/mismatched_allocator.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
       assert_errors_with(
         "Heap memory allocated by `heap.PageAllocator.vtable` freed by `heap.c_allocator_vtable` in `mismatched_allocator.main` at 3:19",
-        "uaf_df/mismatched_allocator.zig"
+        "allocator/mismatched_allocator.zig"
       )
     end
   end

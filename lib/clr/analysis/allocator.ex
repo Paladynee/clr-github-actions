@@ -11,63 +11,63 @@ after
   defmodule UseAfterFree do
     defexception [:function, :loc, :del_loc, :del_function]
 
-    def message(%{
-          function: function,
-          del_function: function,
-          loc: {row, col},
-          del_loc: {del_row, del_col}
-        }) do
-      "Use after free detected in function `#{function}` at #{row}:#{col}, deleted at #{del_row}:#{del_col}"
-    end
+    alias Clr.Zig.Parser
 
     def message(%{
           function: function,
           del_function: del_function,
-          loc: {row, col},
-          del_loc: {del_row, del_col}
+          loc: loc,
+          del_loc: del_loc
         }) do
-      "Use after free detected in function `#{function}` at #{row}:#{col}, function #{del_function} was passed the pointer at #{del_row}:#{del_col} and deletes it"
+      function = Parser.format_location(function, loc)
+      deletion = Parser.format_location(del_function, del_loc)
+
+      """
+      Use after free detected in #{function}.
+      Pointer was deleted in #{deletion}
+      """
     end
   end
 
   defmodule DoubleFree do
     defexception [:previous, :prev_loc, :deletion, :loc, transferred: false]
 
-    def message(
-          %{
-            previous: function,
-            loc: {row, col},
-            prev_loc: {prev_row, prev_col},
-            transferred: true
-          } =
-            exception
-        ) do
-      "Double free detected in function `#{exception.deletion}` at #{row}:#{col}, function `#{function}` was passed the pointer at #{prev_row}:#{prev_col} and deletes it"
-    end
+    alias Clr.Zig.Parser
 
-    def message(%{
-          previous: function,
-          deletion: function,
-          loc: {row, col},
-          prev_loc: {prev_row, prev_col}
-        }) do
-      "Double free detected in function `#{function}` at #{row}:#{col}, previously deleted at #{prev_row}:#{prev_col}"
-    end
+    def message(exception) do
+      deletion = Parser.format_location(exception.deletion, exception.loc)
+      previous = Parser.format_location(exception.previous, exception.prev_loc)
 
-    def message(%{loc: {row, col}} = exception) do
-      "Double free detected in function `#{exception.deletion}` at #{row}:#{col}, function already deleted by `#{exception.previous}`"
+      """
+      Double free detected in #{deletion}.
+      Previously deleted in #{previous}
+      """
     end
   end
 
   defmodule Mismatch do
     defexception [:original, :attempted, :function, :loc]
+    alias Clr.Zig.Parser
+    alias Clr.Air.Lvalue
 
-    def message(%{original: {:stack, function, {srow, scol}}, loc: {row, col}} = exception) do
-      "Stack memory (of #{function} created at #{srow}:#{scol}) attempted to be freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
+    def message(%{original: {:stack, function, sloc}} = exception) do
+      stack_info = Parser.format_location(function, sloc)
+      delete_info = Parser.format_location(exception.function, exception.loc)
+
+      """
+      Stack memory attempted to be freed by allocator `#{Lvalue.as_string(exception.attempted)} in #{delete_info}.
+      Pointer was created from #{stack_info}
+      """
     end
 
-    def message(%{loc: {row, col}} = exception) do
-      "Heap memory allocated by `#{exception.original}` freed by `#{exception.attempted}` in `#{exception.function}` at #{row}:#{col}"
+    def message(exception) do
+      delete = Parser.format_location(exception.function, exception.loc)
+      original = Lvalue.as_string(exception.original)
+      attempted = Lvalue.as_string(exception.attempted)
+
+      """
+      Heap memory attempted to be freed by `#{attempted}` originally allocated by `#{original}` in #{delete}
+      """
     end
   end
 
@@ -195,23 +195,25 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   end
 
   defp check_passing_deleted(call, block, _config) do
+
+
     Enum.reduce(call.args, block, fn {slot, _}, block ->
       # TODO: check other types and make sure none of them are deleted too.
-      case Block.fetch!(block, slot) do
-        {:ptr, _, _, %{deleted: d}} ->
+      case Block.fetch_up!(block, slot) do
+        {{:ptr, _, _, %{deleted: d}}, _} ->
           raise CallDeleted,
             function: block.function,
             loc: block.loc,
             deleted_loc: d.loc
 
-        {:ptr, _, _, %{transferred: t}} ->
+        {{:ptr, _, _, %{transferred: t}}, _} ->
           raise CallDeleted,
             function: block.function,
             loc: block.loc,
             transferred_function: t.function,
             deleted_loc: t.loc
 
-        _ ->
+        {_, block} ->
           {:cont, block}
       end
     end)

@@ -31,8 +31,8 @@ defmodule Clr.Analysis.Undefined.Use do
   alias Clr.Zig.Parser
 
   def message(error) do
-    use_point = Parser.format_function(error.use_function, error.use_loc)
-    src_point = Parser.format_function(error.src_function, error.src_loc)
+    use_point = Parser.format_location(error.use_function, error.use_loc)
+    src_point = Parser.format_location(error.src_function, error.src_loc)
 
     """
     Use of undefined value in #{use_point}. 
@@ -46,10 +46,19 @@ defimpl Clr.Analysis.Undefined, for: Clr.Air.Instruction.Mem.Store do
   alias Clr.Block
   alias Clr.Type
 
-  def analyze(%{dst: {src_slot, _}, src: {:literal, _, :undefined}}, _dst_slot, block, _config) when is_integer(src_slot) do
-    {:ptr, :one, child, ptr_meta} = Block.fetch!(block, src_slot) 
+  def analyze(%{dst: {slot, _}, src: {:literal, _, :undefined}}, _dst_slot, block, _config)
+      when is_integer(slot) do
+    {:ptr, :one, child, ptr_meta} = Block.fetch!(block, slot)
 
     new_type = {:ptr, :one, Type.put_meta(child, undefined: Undefined.meta(block)), ptr_meta}
+
+    {:cont, Block.put_type(block, slot, new_type)}
+  end
+
+  def analyze(%{dst: {src_slot, _}, src: {:literal, _, _other}}, _dst_slot, block, _config) do
+    {:ptr, :one, child, ptr_meta} = Block.fetch!(block, src_slot)
+
+    new_type = {:ptr, :one, Type.delete_meta(child, :undefined), ptr_meta}
 
     {:cont, Block.put_type(block, src_slot, new_type)}
   end
