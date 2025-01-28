@@ -26,7 +26,8 @@ defmodule Mix.Tasks.Clr do
     Clr.set_checkers([
       Clr.Analysis.Undefined,
       Clr.Analysis.StackPointer,
-      Clr.Analysis.Allocator
+      Clr.Analysis.Allocator,
+      Clr.Analysis.Unit
     ])
 
     if System.get_env("DEBUG", "false") == "true" do

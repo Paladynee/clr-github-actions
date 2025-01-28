@@ -88,7 +88,7 @@ defmodule Clr.Air.Instruction.Function do
       end
     end
 
-    defp merge_name({:lvalue, lvalue}, function_name) do
+    def merge_name({:lvalue, lvalue}, function_name) do
       {:lvalue, List.replace_at(lvalue, -1, function_name)}
     end
   end

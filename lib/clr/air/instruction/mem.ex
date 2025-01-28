@@ -48,7 +48,8 @@ defmodule Clr.Air.Instruction.Mem do
     require Type
 
     def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
-      Block.fetch_up!(block, slot)
+      {{:ptr, :one, type, _}, block} = Block.fetch_up!(block, slot)
+      {type, block}
     end
 
     def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}

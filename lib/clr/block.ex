@@ -71,7 +71,7 @@ defmodule Clr.Block do
   # analyzed.
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
-    {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
+    # {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
     {type, block} = Instruction.slot_type(instruction, slot, block)
     block = put_type(block, slot, type)
 

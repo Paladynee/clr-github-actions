@@ -125,4 +125,13 @@ defmodule ClrTest.FullIntegrationTest do
       )
     end
   end
+
+  describe "units" do
+    test "mismatch" do
+      "units/unit_conflict.zig"
+      |> then(&Path.join(__DIR__, &1))
+      |> Parser.load_parse()
+
+      assert_errors_with("", "units/unit_conflict.zig")
+  end
 end
