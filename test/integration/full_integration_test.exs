@@ -133,5 +133,6 @@ defmodule ClrTest.FullIntegrationTest do
       |> Parser.load_parse()
 
       assert_errors_with("", "units/unit_conflict.zig")
+    end
   end
 end
