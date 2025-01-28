@@ -56,7 +56,7 @@ after
 
       """
       Stack memory attempted to be freed by allocator `#{Lvalue.as_string(exception.attempted)} in #{delete_info}.
-      Pointer was created from #{stack_info}
+      Pointer was created in #{stack_info}
       """
     end
 
@@ -66,7 +66,8 @@ after
       attempted = Lvalue.as_string(exception.attempted)
 
       """
-      Heap memory attempted to be freed by `#{attempted}` originally allocated by `#{original}` in #{delete}
+      Heap memory attempted to be freed by `#{attempted}` in #{delete}.
+      Originally allocated by `#{original}`
       """
     end
   end
@@ -80,7 +81,11 @@ after
           transferred_function: nil,
           deleted_loc: {del_row, del_col}
         }) do
-      "Function `#{function}` at #{row}:#{col} called with a deleted pointer at #{del_row}:#{del_col}"
+
+      """
+      foo.
+      bar.
+      """
     end
 
     def message(%{

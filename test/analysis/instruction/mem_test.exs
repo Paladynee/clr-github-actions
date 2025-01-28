@@ -48,7 +48,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
     end
 
     test "pulls from the slotref when it's a slotref", %{block: block} do
-      block = Block.put_type(block, 0, {:u, 8, %{foo: :bar}})
+      block = Block.put_type(block, 0, {:ptr, :one, {:u, 8, %{foo: :bar}}, %{}})
 
       assert {{:u, 8, %{foo: :bar}}, _} =
                Instruction.slot_type(%Load{type: ~l"u8", src: {0, :keep}}, 0, block)

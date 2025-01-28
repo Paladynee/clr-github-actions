@@ -35,7 +35,7 @@ defmodule Clr.Analysis.Undefined.Use do
     src_point = Parser.format_location(error.src_function, error.src_loc)
 
     """
-    Use of undefined value in #{use_point}. 
+    Use of undefined value in #{use_point}.
     Value was set undefined in #{src_point}
     """
   end

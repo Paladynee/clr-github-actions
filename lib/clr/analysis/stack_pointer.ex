@@ -20,7 +20,7 @@ after
       escape = Parser.format_location(error.function, error.esc_loc)
 
       """
-      Escape of stack pointer in #{escape}. 
+      Escape of stack pointer in #{escape}.
       Value was created in #{create}
       """
     end
