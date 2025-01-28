@@ -73,18 +73,25 @@ after
   end
 
   defmodule CallDeleted do
-    defexception [:function, :loc, :deleted_loc, :transferred_function]
+    defexception [
+      :function,
+      :loc,
+      :deleted_fn,
+      :deleted_loc,
+      :call,
+      :index,
+      :transferred_function
+    ]
 
-    def message(%{
-          function: function,
-          loc: {row, col},
-          transferred_function: nil,
-          deleted_loc: {del_row, del_col}
-        }) do
+    alias Clr.Zig.Parser
+
+    def message(error) do
+      function = Parser.format_location(error.function, error.loc)
+      deletion = Parser.format_location(error.deleted_fn, error.deleted_loc)
 
       """
-      foo.
-      bar.
+      Function call `#{error.call}` in #{function} was passed a deleted pointer (argument #{error.index}).
+      Pointer was deleted in #{deletion}
       """
     end
 
@@ -178,7 +185,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
       {:ptr, :one, _type, %{heap: %{vtable: ^vtable}}} ->
         deleted_info = %{function: this_function, loc: block.loc}
-        {:halt, Block.put_meta(block, src, deleted: deleted_info)}
+        {:halt, chase_deleted(block, 0, src, deleted_info)}
 
       {:ptr, :one, _type, %{heap: other}} ->
         raise Mismatch,
@@ -199,27 +206,69 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     end
   end
 
+  # it's necessary to chase down the deleted pointer to all slots
+  # that have content associated with it; because if it's been "load"ed
+  # from elsewhere, we need to tag those content as deleted as well.
+  # note that the "load" command marks metadata with the `ptr: slot`
+  # information in the default implementation.
+  defp chase_deleted(block, depth, slot, deleted_info) do
+    block
+    |> Block.fetch!(slot)
+    |> unwrap_meta(depth)
+    |> case do
+      %{ptr: ptr} ->
+        chase_deleted(block, depth + 1, ptr, deleted_info)
+
+      _ ->
+        block
+    end
+    |> Block.update_type!(slot, &inject_deleted_meta(&1, depth, deleted_info))
+  end
+
+  defp unwrap_meta(type, 0), do: Type.get_meta(type)
+  defp unwrap_meta({:ptr, :one, child, _}, depth), do: unwrap_meta(child, depth - 1)
+
+  defp inject_deleted_meta(type, 0, deleted_info) do
+    Type.put_meta(type, deleted: deleted_info)
+  end
+
+  defp inject_deleted_meta({:ptr, :one, child, ptr_meta}, depth, deleted_info) do
+    {:ptr, :one, inject_deleted_meta(child, depth - 1, deleted_info), ptr_meta}
+  end
+
   defp check_passing_deleted(call, block, _config) do
-    checked = Enum.reduce(call.args, block, fn {slot, _}, block when is_integer(slot) ->
-      # TODO: check other types and make sure none of them are deleted too.
-      case Block.fetch_up!(block, slot) do
-        {{:ptr, _, _, %{deleted: d}}, _} ->
-          raise CallDeleted,
-            function: block.function,
-            loc: block.loc,
-            deleted_loc: d.loc
+    {:literal, _, {:function, call_name}} = call.fn
 
-        {{:ptr, _, _, %{transferred: t}}, _} ->
-          raise CallDeleted,
-            function: block.function,
-            loc: block.loc,
-            transferred_function: t.function,
-            deleted_loc: t.loc
+    checked = call.args
+    |> Enum.with_index
+    |> Enum.reduce(block, fn
+        {{slot, _}, index}, block when is_integer(slot) ->
+          # TODO: check other types and make sure none of them are deleted too.
+          case Block.fetch_up!(block, slot) do
+            {{:ptr, _, _, %{deleted: d}}, _} ->
+              raise CallDeleted,
+                function: block.function,
+                loc: block.loc,
+                call: call_name,
+                index: index,
+                deleted_fn: d.function,
+                deleted_loc: d.loc
 
-        {_, block} -> block
-      end
-      _, block -> block
-    end)
+            {{:ptr, _, _, %{transferred: t}}, _} ->
+              raise CallDeleted,
+                function: block.function,
+                loc: block.loc,
+                transferred_function: t.function,
+                deleted_loc: t.loc
+
+            {_, block} ->
+              block
+          end
+
+        _, block ->
+          block
+      end)
+
     {:cont, checked}
   end
 end

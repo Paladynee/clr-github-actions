@@ -43,7 +43,7 @@ defmodule Clr.Block do
     mapper = Clr.get_instruction_mapper()
 
     code
-    |> Enum.sort
+    |> Enum.sort()
     |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))

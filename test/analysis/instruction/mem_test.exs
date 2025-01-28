@@ -50,7 +50,10 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
     test "pulls from the slotref when it's a slotref", %{block: block} do
       block = Block.put_type(block, 0, {:ptr, :one, {:u, 8, %{foo: :bar}}, %{}})
 
-      assert {{:u, 8, %{foo: :bar}}, _} =
+      # note that we store the "pointer reference" into the slot metadata
+      # to make it possible to backtrack.
+
+      assert {{:u, 8, %{foo: :bar, ptr: 0}}, _} =
                Instruction.slot_type(%Load{type: ~l"u8", src: {0, :keep}}, 0, block)
     end
   end

@@ -24,6 +24,7 @@ after
 
     def message(error) do
       use_point = Parser.format_location(error.function, error.loc)
+
       """
       Mismatched units found in #{use_point}.
       Left hand side: #{as_string(error.lhs)}
@@ -35,28 +36,35 @@ after
       error
       |> Enum.sort_by(&elem(&1, 1))
       |> Enum.reverse()
-      |> Enum.map(fn 
+      |> Enum.map(fn
         {unit, count} when count > 0 ->
           List.duplicate(["*", unit], count)
+
         {unit, count} ->
           List.duplicate(["/", unit], -count)
       end)
-      |> IO.iodata_to_binary
+      |> IO.iodata_to_binary()
       |> String.trim_leading("*")
     end
   end
-end 
+end
 
 defimpl Clr.Analysis.Unit, for: Call do
   alias Clr.Air
   alias Clr.Block
 
   @impl true
-  def analyze(%{fn: {:literal, _type, {:function, ("set_units" <> _) = function_name}}}, slot, block, _config) do
-    units = block.function
-    |> Call.merge_name(function_name)
-    |> Air.get()
-    |> process_unit_name
+  def analyze(
+        %{fn: {:literal, _type, {:function, "set_units" <> _ = function_name}}},
+        slot,
+        block,
+        _config
+      ) do
+    units =
+      block.function
+      |> Call.merge_name(function_name)
+      |> Air.get()
+      |> process_unit_name
 
     {:halt, Block.put_meta(block, slot, unit: units)}
   end
@@ -68,7 +76,9 @@ defimpl Clr.Analysis.Unit, for: Call do
     Enum.find_value(code, fn
       {_, %Clr.Air.Instruction.Mem.Store{src: {:literal, _, {:substring, substring, _}}}} ->
         parse_substring(substring)
-      _ -> nil
+
+      _ ->
+        nil
     end)
   end
 
@@ -100,14 +110,14 @@ defimpl Clr.Analysis.Unit, for: Binary do
   # note that this function is woefully underimplmented.
   def analyze(%{lhs: {lhs, _}, rhs: {rhs, _}, op: :mul}, slot, block, _config)
       when is_integer(lhs) and is_integer(rhs) do
-
     lhs_unit = get_unit(lhs, block)
     rhs_unit = get_unit(rhs, block)
 
     {:cont, Block.put_meta(block, slot, unit: mul_units(lhs_unit, rhs_unit))}
   end
 
-  def analyze(%{lhs: {lhs, _}, rhs: {rhs, _}, op: :add}, slot, block, _config) when is_integer(lhs) and is_integer(rhs) do
+  def analyze(%{lhs: {lhs, _}, rhs: {rhs, _}, op: :add}, slot, block, _config)
+      when is_integer(lhs) and is_integer(rhs) do
     lhs_unit = get_unit(lhs, block)
     rhs_unit = get_unit(rhs, block)
 
@@ -125,7 +135,7 @@ defimpl Clr.Analysis.Unit, for: Binary do
   defp get_unit(slot, block) do
     block
     |> Block.fetch!(slot)
-    |> Type.get_meta
+    |> Type.get_meta()
     |> Map.get(:unit, %{})
   end
 
