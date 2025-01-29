@@ -60,24 +60,24 @@ defmodule Clr.Air.Instruction.Function do
 
     def analyze(call, slot, block, _config) do
       case call.fn do
-        {:literal, _type, {:function, function_name}} ->
+        {:literal, {:fn, _args, ret_type, _meta}, {:function, function_name}} ->
           # we also need the context of the current function.
 
           {args_slots, block} =
             Enum.map_reduce(call.args, block, fn
-              {:literal, type, _}, block ->
-                {{Type.from_air(type), nil}, block}
+              {:literal, arg_type, _}, block ->
+                {{Type.from_air(arg_type), nil}, block}
 
               {slot, _}, block ->
-                {type, block} = Block.fetch_up!(block, slot)
-                {{type, slot}, block}
+                {arg_type, block} = Block.fetch_up!(block, slot)
+                {{arg_type, slot}, block}
             end)
 
           {args, slots} = Enum.unzip(args_slots)
 
           block.function
           |> merge_name(function_name)
-          |> Function.evaluate(args, slots)
+          |> Function.evaluate(args, slots, Type.from_air(ret_type))
           |> case do
             {:future, ref} ->
               {:halt, Block.put_await(block, slot, ref)}
@@ -144,16 +144,18 @@ defmodule Clr.Air.Instruction.Function do
     def slot_type(_, _, block), do: {:noreturn, block}
 
     def analyze(%{src: {:lvalue, _} = lvalue}, _dst_slot, block, _) do
-      {:halt, Block.put_return(block, {:TypeOf, lvalue})}
+      {:cont, Block.put_return(block, {:TypeOf, lvalue})}
     end
 
     def analyze(%{src: {:literal, type, _}}, _dst_slot, block, _) do
-      {:halt, Block.put_return(block, type)}
+      {:cont, Block.put_return(block, type)}
     end
 
-    def analyze(%{src: {slot, _}}, _dst_slot, block, _) do
-      {type, block} = Block.fetch_up!(block, slot)
-      {:halt, Block.put_return(block, type)}
+    def analyze(%{src: {slot, _}}, _dst_slot, block, _) when is_integer(slot) do
+      block
+      |> Block.fetch!(slot)
+      |> then(&Block.put_return(block, &1))
+      |> then(&{:cont, &1})
     end
   end
 

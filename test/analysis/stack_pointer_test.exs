@@ -11,7 +11,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
   setup do
     block =
       %Function{name: ~l"foo.bar"}
-      |> Block.new([])
+      |> Block.new([], :void)
       |> Map.put(:loc, {47, 47})
       |> Block.put_type(0, {:u, 8, %{}})
 

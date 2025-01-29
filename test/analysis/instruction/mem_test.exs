@@ -11,7 +11,7 @@ defmodule ClrTest.Analysis.Instruction.MemTest do
   setup do
     block =
       %Function{name: ~l"foo.bar"}
-      |> Block.new([])
+      |> Block.new([], :void)
       |> Map.put(:loc, {47, 47})
 
     {:ok, block: block, config: %Instruction{}}

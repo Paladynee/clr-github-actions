@@ -12,7 +12,7 @@ defmodule ClrTest.Analysis.UndefinedTest do
   setup do
     block =
       %Function{name: ~l"foo.bar"}
-      |> Block.new([])
+      |> Block.new([], :void)
       |> Map.put(:loc, {47, 47})
 
     {:ok, config: %Undefined{}, block: block}

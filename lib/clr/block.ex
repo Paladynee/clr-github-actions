@@ -24,7 +24,7 @@ defmodule Clr.Block do
           function: term,
           args: [Clr.type()],
           reqs: [Clr.meta()],
-          return: nil | {Clr.type(), meta :: keyword},
+          return: nil | Clr.type(),
           loc: nil | loc,
           stack: [{loc, term}],
           awaits: %{optional(slot) => reference},
@@ -35,7 +35,7 @@ defmodule Clr.Block do
   def new(function, args, return) do
     # fill requirements with an empty set for each argument.
     reqs = Enum.map(args, fn _ -> %{} end)
-    %__MODULE__{function: function.name, args: args, reqs: reqs}
+    %__MODULE__{function: function.name, args: args, reqs: reqs, return: return}
   end
 
   @spec analyze(t, Clr.Air.codeblock()) :: t
@@ -46,7 +46,6 @@ defmodule Clr.Block do
     |> Enum.sort()
     |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
-    |> dbg(limit: 25)
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
   end
 
@@ -122,10 +121,8 @@ defmodule Clr.Block do
     %{block | reqs: List.update_at(block.reqs, arg, &Enum.into(reqs, &1))}
   end
 
-  def put_return(block, type, meta \\ %{}) do
-    %{block | return: {type, meta}}
-  end
-
+  def put_return(block, type), do: %{block | return: type}
+  
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)

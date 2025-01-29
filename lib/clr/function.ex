@@ -34,19 +34,19 @@ defmodule Clr.Function do
 
   @type block_mapper :: (Block.t() -> Block.t())
 
-  @spec evaluate(term, [Clr.meta()], [Clr.slot() | nil]) ::
+  @spec evaluate(term, [Clr.type()], [Clr.slot() | nil], Clr.type()) ::
           {:future, reference} | {Clr.type(), block_mapper}
-  def evaluate(function_name, args_meta, arg_slots) do
-    case :ets.lookup(table_name(), {function_name, args_meta}) do
+  def evaluate(function_name, args, arg_slots, ret_type) do
+    case :ets.lookup(table_name(), {function_name, args}) do
       [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
-      [] -> GenServer.call(table_name(), {:evaluate, function_name, args_meta, arg_slots})
+      [] -> GenServer.call(table_name(), {:evaluate, function_name, args, arg_slots, ret_type})
     end
   end
 
   @type future :: {:future, reference}
-  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], GenServer.from(), waiters) ::
+  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], Clr.type, GenServer.from(), waiters) ::
           {:reply, future, waiters}
-  defp evaluate_impl(function_name, args, arg_slots, {pid, _ref}, waiters) do
+  defp evaluate_impl(function_name, args, arg_slots, ret_type, {pid, _ref}, waiters) do
     waiter_id_key = {function_name, args}
     table_name = table_name()
 
@@ -105,8 +105,8 @@ defmodule Clr.Function do
     :ets.insert(table_name(), {{function_name, args}, result})
   end
 
-  def handle_call({:evaluate, function_name, args, arg_slots}, from, waiters),
-    do: evaluate_impl(function_name, args, arg_slots, from, waiters)
+  def handle_call({:evaluate, function_name, args, arg_slots, ret_type}, from, waiters),
+    do: evaluate_impl(function_name, args, arg_slots, ret_type, from, waiters)
 
   def handle_info({ref, _result} = response, waiters) when is_reference(ref) do
     function_call =

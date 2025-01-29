@@ -95,14 +95,14 @@ after
       """
     end
 
-    def message(%{
-          function: function,
-          loc: {row, col},
-          transferred_function: transferred_function,
-          deleted_loc: {del_row, del_col}
-        }) do
-      "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
-    end
+    #def message(%{
+    #      function: function,
+    #      loc: {row, col},
+    #      transferred_function: transferred_function,
+    #      deleted_loc: {del_row, del_col}
+    #    }) do
+    #  "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
+    #end
   end
 
   alias Clr.Air.Instruction.Function.Call

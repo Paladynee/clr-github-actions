@@ -15,7 +15,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
   setup do
     block =
       %Function{name: ~l"foo.bar"}
-      |> Block.new([])
+      |> Block.new([], :void)
       |> Map.put(:loc, {47, 47})
 
     {:ok, config: %Allocator{}, block: block}
@@ -86,6 +86,8 @@ defmodule ClrTest.Analysis.AllocatorTest do
       assert :void = Block.fetch!(block, 0)
       assert %{deleted: %{function: ~l"foo.bar", loc: {47, 47}}} = Block.get_meta(block, 47)
     end
+
+    test "it can chase when the slot is known to have a slot that points to it."
 
     test "it raises when the allocator doesn't match", %{config: config, block: block} do
       block =

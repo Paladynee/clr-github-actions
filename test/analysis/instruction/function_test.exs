@@ -10,7 +10,7 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
   setup do
     block =
       %Function{name: ~l"foo.bar"}
-      |> Block.new([])
+      |> Block.new([], :void)
       |> Map.put(:loc, {47, 47})
 
     {:ok, block: block, config: %Instruction{}}
@@ -48,6 +48,12 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
 
     test "returns the type of the ret statement", %{block: block} do
       assert {:noreturn, _} = Instruction.slot_type(%Ret{}, 0, block)
+    end
+
+    test "sets the type on the return slot", %{block: block, config: config} do
+      assert {:cont, %{return: {:u, 8, %{foo: :bar}}}} = block
+      |> Block.put_type(47, {:u, 8, %{foo: :bar}})
+      |> then(&Instruction.analyze(%Ret{src: {47, :keep}}, 0, &1, config))
     end
   end
 

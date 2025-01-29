@@ -12,7 +12,7 @@ defmodule ClrTest.BlockTest do
 
       assert %{slots: ^slots} =
                %Function{name: ~l"foo.bar"}
-               |> Block.new([])
+               |> Block.new([], :void)
                |> Block.put_type(47, {:u, 32, %{}})
     end
 
@@ -21,7 +21,7 @@ defmodule ClrTest.BlockTest do
 
       assert %{slots: ^slots} =
                %Function{name: ~l"foo.bar"}
-               |> Block.new([])
+               |> Block.new([], :void)
                |> Block.put_type(47, {:u, 32, %{}}, foo: :bar)
     end
   end
@@ -32,7 +32,7 @@ defmodule ClrTest.BlockTest do
 
       assert %{slots: ^slots} =
                %Function{name: ~l"foo.bar"}
-               |> Block.new([])
+               |> Block.new([], :void)
                |> Block.put_type(47, {:u, 32, %{}})
                |> Block.put_meta(47, foo: :bar)
     end
@@ -45,7 +45,7 @@ defmodule ClrTest.BlockTest do
 
       assert %{awaits: ^awaits} =
                %Function{name: ~l"foo.bar"}
-               |> Block.new([])
+               |> Block.new([], :void)
                |> Block.put_await(47, ref)
     end
   end
@@ -54,7 +54,7 @@ defmodule ClrTest.BlockTest do
     test "puts a requirement" do
       %{reqs: [%{foo: :bar}]} =
         %Function{name: ~l"foo.bar"}
-        |> Block.new([~l"u8"])
+        |> Block.new([~l"u8"], :void)
         |> Block.put_reqs(0, foo: :bar)
     end
   end
@@ -63,7 +63,7 @@ defmodule ClrTest.BlockTest do
     test "can be used to retrieve a stored type/meta tuple" do
       block =
         %Function{name: ~l"foo.bar"}
-        |> Block.new([])
+        |> Block.new([], :void)
         |> Block.put_type(47, {:u, 32, %{foo: :bar}})
 
       assert {{:u, 32, %{foo: :bar}}, %Block{}} = Block.fetch_up!(block, 47)
@@ -74,7 +74,7 @@ defmodule ClrTest.BlockTest do
 
       block =
         %Function{name: ~l"foo.bar"}
-        |> Block.new([])
+        |> Block.new([], :void)
         |> Block.put_await(47, future)
 
       send(self(), {future, {:ok, {:u, 32, %{}}, &Block.put_type(&1, 48, {:u, 64, %{}})}})
@@ -87,7 +87,7 @@ defmodule ClrTest.BlockTest do
 
       block =
         %Function{name: ~l"foo.bar"}
-        |> Block.new([])
+        |> Block.new([], :void)
         |> Block.put_await(47, future)
 
       send(self(), {future, {:error, %RuntimeError{message: "foobar"}}})
@@ -102,13 +102,13 @@ defmodule ClrTest.BlockTest do
     test "creates a lambda that adds metadata to slots" do
       called_block =
         %Function{name: ~l"foo.bar"}
-        |> Block.new([:t1, :t2])
+        |> Block.new([~l"t1", ~l"t2"], :void)
         |> Block.put_reqs(0, foo: :bar)
         |> Block.put_reqs(1, baz: :quux)
 
       caller_block =
         %Function{name: ~l"bar.baz"}
-        |> Block.new([])
+        |> Block.new([], :void)
         |> Block.put_type(47, {:u, 32, %{}})
         |> Block.put_type(48, {:u, 32, %{}})
 
