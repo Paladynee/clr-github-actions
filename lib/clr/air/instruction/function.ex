@@ -54,9 +54,7 @@ defmodule Clr.Air.Instruction.Function do
 
     defstruct [:fn, :args, :opt]
 
-    def slot_type(%{fn: {:literal, {:fn, _, return, _}, _}}, _, block) do
-      {Type.from_air(return), block}
-    end
+    def slot_type(_, _, block), do: {:future, block}
 
     def analyze(call, slot, block, _config) do
       case call.fn do

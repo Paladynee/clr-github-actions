@@ -44,7 +44,7 @@ defmodule Clr.Function do
   end
 
   @type future :: {:future, reference}
-  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], Clr.type, GenServer.from(), waiters) ::
+  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], Clr.type(), GenServer.from(), waiters) ::
           {:reply, future, waiters}
   defp evaluate_impl(function_name, args, arg_slots, ret_type, {pid, _ref}, waiters) do
     waiter_id_key = {function_name, args}

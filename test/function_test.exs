@@ -27,7 +27,7 @@ defmodule ClrTest.FunctionTest do
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :analyze, fn _, _ -> stub_eval(:result) end)
 
-    {:future, future} = Function.evaluate(:foobar_function, [], [])
+    {:future, future} = Function.evaluate(:foobar_function, [], [], :void)
     assert {:ok, {:result, lambda1}} = Function.await(future)
     # this is the function that can add metadata to slots.
     assert is_function(lambda1, 1)
@@ -40,7 +40,7 @@ defmodule ClrTest.FunctionTest do
 
   test "if content is in the table, it doesn't reevaluate" do
     Function.debug_insert_result(:foobar_function, [], {:result, &empty_lambda/2})
-    {:result, lambda} = Function.evaluate(:foobar_function, [], [])
+    {:result, lambda} = Function.evaluate(:foobar_function, [], [], :void)
     assert is_function(lambda, 1)
   end
 
@@ -53,11 +53,11 @@ defmodule ClrTest.FunctionTest do
       stub_eval(:result)
     end)
 
-    {:future, future1} = Function.evaluate(:foobar_function, [], [])
+    {:future, future1} = Function.evaluate(:foobar_function, [], [], :void)
 
     spawn(fn ->
       Process.put(Clr.Function.TableName, table_name)
-      {:future, future2} = Function.evaluate(:foobar_function, [], [])
+      {:future, future2} = Function.evaluate(:foobar_function, [], [], :void)
       send(this, :registered)
       assert {:ok, {:result, lambda}} = Function.await(future2)
       assert is_function(lambda, 1)
@@ -84,11 +84,11 @@ defmodule ClrTest.FunctionTest do
       stub_eval(:barresult)
     end)
 
-    {:future, foofuture} = Function.evaluate(:foobar_function, [%{foo: :bar}], [1])
+    {:future, foofuture} = Function.evaluate(:foobar_function, [%{foo: :bar}], [1], :void)
 
     Process.sleep(100)
 
-    {:future, barfuture} = Function.evaluate(:foobar_function, [%{bar: :baz}], [1])
+    {:future, barfuture} = Function.evaluate(:foobar_function, [%{bar: :baz}], [1], :void)
 
     assert {:ok, {:fooresult, function1}} = Function.await(foofuture)
     assert is_function(function1, 1)

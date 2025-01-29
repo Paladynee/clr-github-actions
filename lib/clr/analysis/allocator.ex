@@ -95,14 +95,14 @@ after
       """
     end
 
-    #def message(%{
+    # def message(%{
     #      function: function,
     #      loc: {row, col},
     #      transferred_function: transferred_function,
     #      deleted_loc: {del_row, del_col}
     #    }) do
     #  "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
-    #end
+    # end
   end
 
   alias Clr.Air.Instruction.Function.Call
@@ -116,8 +116,6 @@ after
 end
 
 defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
-  alias Clr.Type
-
   import Clr.Air.Lvalue
 
   alias Clr.Analysis.Undefined
@@ -125,12 +123,13 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   alias Clr.Analysis.Allocator.Mismatch
   alias Clr.Analysis.Allocator.CallDeleted
   alias Clr.Block
+  alias Clr.Type
 
   @impl true
   def analyze(call, slot, block, config) do
     case call.fn do
-      {:literal, {:fn, [~l"mem.Allocator" | _], _, _fn_opts}, {:function, "create_" <> _}} ->
-        process_create(call.args, slot, block, config)
+      {:literal, {:fn, [~l"mem.Allocator" | _], type, _fn_opts}, {:function, "create_" <> _}} ->
+        process_create(call.args, type, slot, block, config)
 
       {:literal, {:fn, [~l"mem.Allocator" | _], _, _fn_opts}, {:function, "destroy" <> _}} ->
         process_destroy(call.args, slot, block, config)
@@ -142,19 +141,23 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
   defp process_create(
          [{:literal, ~l"mem.Allocator", struct}],
+         type,
          slot,
          block,
          _config
        ) do
     heapinfo = %{vtable: Map.fetch!(struct, "vtable"), function: block.function, loc: block.loc}
 
+    {:errorunion, e, {:ptr, :one, payload_type, ptr_meta}, err_meta} = Type.from_air(type)
+
     block =
-      Block.update_type!(block, slot, fn
-        {:errorunion, e, {:ptr, :one, type, ptr_meta}, err_meta} ->
-          {:errorunion, e,
-           {:ptr, :one, Type.put_meta(type, undefined: Undefined.meta(block)),
-            Map.put(ptr_meta, :heap, heapinfo)}, err_meta}
-      end)
+      Block.put_type(
+        block,
+        slot,
+        {:errorunion, e,
+         {:ptr, :one, Type.put_meta(payload_type, undefined: Undefined.meta(block)),
+          Map.put(ptr_meta, :heap, heapinfo)}, err_meta}
+      )
 
     {:halt, block}
   end
@@ -239,9 +242,10 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   defp check_passing_deleted(call, block, _config) do
     {:literal, _, {:function, call_name}} = call.fn
 
-    checked = call.args
-    |> Enum.with_index
-    |> Enum.reduce(block, fn
+    checked =
+      call.args
+      |> Enum.with_index()
+      |> Enum.reduce(block, fn
         {{slot, _}, index}, block when is_integer(slot) ->
           # TODO: check other types and make sure none of them are deleted too.
           case Block.fetch_up!(block, slot) do

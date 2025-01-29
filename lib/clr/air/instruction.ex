@@ -6,7 +6,7 @@ defprotocol Clr.Air.Instruction do
   alias Clr.Block
   @type t :: struct
 
-  @callback slot_type(t, arity, Block.t()) :: {Clr.Type.t(), Block.t()}
+  @callback slot_type(t, arity, Block.t()) :: {Clr.Type.t(), Block.t()} | {:future, Block.t()}
   def slot_type(t, arg_index, block)
 after
   defstruct []

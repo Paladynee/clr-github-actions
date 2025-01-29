@@ -139,7 +139,8 @@ defmodule ClrTest.FullIntegrationTest do
 
     test "leaked allocation from function return" do
       assert_errors_with(
-        "", "allocator/leaked_from_function_return.zig"
+        "",
+        "allocator/leaked_from_function_return.zig"
       )
     end
   end

@@ -72,8 +72,11 @@ defmodule Clr.Block do
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
     # {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
-    {type, block} = Instruction.slot_type(instruction, slot, block)
-    block = put_type(block, slot, type)
+    block =
+      case Instruction.slot_type(instruction, slot, block) do
+        {:future, block} -> block
+        {type, block} -> put_type(block, slot, type)
+      end
 
     case {mode, is_map_key(mapper, module)} do
       {:keep, true} ->
@@ -122,7 +125,7 @@ defmodule Clr.Block do
   end
 
   def put_return(block, type), do: %{block | return: type}
-  
+
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)
@@ -150,7 +153,10 @@ defmodule Clr.Block do
   # be noreturn or void.
   def fetch_meta!(block, slot), do: Type.get_meta(fetch!(block, slot))
 
-  def update_type!(block, slot, fun), do: %{block | slots: Map.update!(block.slots, slot, fun)}
+  def update_type!(block, slot, fun) do
+    {type, block} = fetch_up!(block, slot)
+    put_type(block, slot, fun.(type))
+  end
 
   defp await_future(block, slot) do
     block.awaits
@@ -163,8 +169,11 @@ defmodule Clr.Block do
         |> then(lambda)
         |> fetch_up!(slot)
 
-      {:error, exception} ->
+      {:error, exception} when is_exception(exception) ->
         raise exception
+
+      {:error, {exception, stacktrace}} when is_exception(exception) ->
+        reraise exception, stacktrace
     end
   end
 

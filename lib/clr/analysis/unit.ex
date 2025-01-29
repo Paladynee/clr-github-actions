@@ -52,21 +52,40 @@ end
 defimpl Clr.Analysis.Unit, for: Call do
   alias Clr.Air
   alias Clr.Block
+  alias Clr.Type
 
   @impl true
   def analyze(
-        %{fn: {:literal, _type, {:function, "set_units" <> _ = function_name}}},
+        %{fn: {:literal, _, {:function, "set_units" <> _ = function_name}}} = call,
         slot,
         block,
         _config
       ) do
+    # obtain metadata from the call parameter.  This should transition *through* the
+    # call information.
+
     units =
       block.function
       |> Call.merge_name(function_name)
       |> Air.get()
       |> process_unit_name
 
-    {:halt, Block.put_meta(block, slot, unit: units)}
+    return_type =
+      case call.args do
+        [{:literal, type, _}] ->
+          return_type =
+            type
+            |> Type.from_air()
+            |> Type.put_meta(unit: units)
+
+          {:halt, Block.put_type(block, slot, return_type)}
+
+        [{slot, _}] when is_integer(slot) ->
+          {return_type, block} = Block.fetch_up!(block, slot)
+
+          {:halt, Block.put_type(block, slot, return_type, unit: units)}
+          # not sure what to do with lvalues.
+      end
   end
 
   def analyze(_, _, block, _config), do: {:cont, block}

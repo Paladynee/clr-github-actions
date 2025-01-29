@@ -30,8 +30,8 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
   describe "call" do
     alias Clr.Air.Instruction.Function.Call
 
-    test "returns the type of the call statement", %{block: block} do
-      assert {{:u, 8, %{}}, _} =
+    test "does not return the type of the call statement", %{block: block} do
+      assert {:future, _} =
                Instruction.slot_type(
                  %Call{
                    fn: {:literal, {:fn, [], ~l"u8", []}, {:function, "initStatic"}},
@@ -51,9 +51,10 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
     end
 
     test "sets the type on the return slot", %{block: block, config: config} do
-      assert {:cont, %{return: {:u, 8, %{foo: :bar}}}} = block
-      |> Block.put_type(47, {:u, 8, %{foo: :bar}})
-      |> then(&Instruction.analyze(%Ret{src: {47, :keep}}, 0, &1, config))
+      assert {:cont, %{return: {:u, 8, %{foo: :bar}}}} =
+               block
+               |> Block.put_type(47, {:u, 8, %{foo: :bar}})
+               |> then(&Instruction.analyze(%Ret{src: {47, :keep}}, 0, &1, config))
     end
   end
 
