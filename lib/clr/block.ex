@@ -31,8 +31,8 @@ defmodule Clr.Block do
           slots: %{optional(slot) => slot_spec}
         }
 
-  @spec new(Function.t(), [Clr.type()]) :: t
-  def new(function, args) do
+  @spec new(Function.t(), [Clr.type()], Clr.type()) :: t
+  def new(function, args, return) do
     # fill requirements with an empty set for each argument.
     reqs = Enum.map(args, fn _ -> %{} end)
     %__MODULE__{function: function.name, args: args, reqs: reqs}
@@ -46,6 +46,7 @@ defmodule Clr.Block do
     |> Enum.sort()
     |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
+    |> dbg(limit: 25)
     |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
   end
 

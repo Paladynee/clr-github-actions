@@ -44,10 +44,10 @@ defmodule Clr.Function do
   end
 
   @type future :: {:future, reference}
-  @spec evaluate_impl(term, [Clr.meta()], [Clr.slot()], GenServer.from(), waiters) ::
+  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], GenServer.from(), waiters) ::
           {:reply, future, waiters}
-  defp evaluate_impl(function_name, args_meta, arg_slots, {pid, _ref}, waiters) do
-    waiter_id_key = {function_name, args_meta}
+  defp evaluate_impl(function_name, args, arg_slots, {pid, _ref}, waiters) do
+    waiter_id_key = {function_name, args}
     table_name = table_name()
 
     case Map.fetch(waiters, waiter_id_key) do
@@ -69,7 +69,7 @@ defmodule Clr.Function do
             %{return: return} =
               block =
               function
-              |> Block.new(args_meta)
+              |> Block.new(args, ret_type)
               |> analyzer.analyze(function.code)
 
             remapper = Block.call_meta_adder(block)

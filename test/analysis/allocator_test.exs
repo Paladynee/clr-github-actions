@@ -187,7 +187,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
 
       assert_raise CallDeleted, fn ->
         Allocator.analyze(
-          %Call{fn: ~l"some_function", args: [{47, :keep}]},
+          %Call{fn: {:literal, %{}, {:function, "some_function"}}, args: [{47, :keep}]},
           0,
           block,
           config

@@ -133,10 +133,15 @@ defmodule ClrTest.FullIntegrationTest do
 
     @tag :skip
     test "linked list on heap"
-  end
 
-  describe "leak" do
+    # leaks
     test "leaked allocation"
+
+    test "leaked allocation from function return" do
+      assert_errors_with(
+        "", "allocator/leaked_from_function_return.zig"
+      )
+    end
   end
 
   describe "units" do
