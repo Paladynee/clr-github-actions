@@ -11,6 +11,7 @@ defmodule Clr.Block do
               [
                 :loc,
                 :return,
+                ptr: %{},
                 stack: [],
                 awaits: %{},
                 slots: %{}
@@ -24,8 +25,9 @@ defmodule Clr.Block do
           function: term,
           args: [Clr.type()],
           reqs: [Clr.meta()],
-          return: nil | Clr.type(),
           loc: nil | loc,
+          return: nil | Clr.type(),
+          ptr: %{optional(slot) => slot},
           stack: [{loc, term}],
           awaits: %{optional(slot) => reference},
           slots: %{optional(slot) => slot_spec}
@@ -104,12 +106,12 @@ defmodule Clr.Block do
 
   defp analyze_instruction(_, block, _), do: block
 
-  def put_type(block, slot, type, meta \\ nil) do
-    if meta do
-      %{block | slots: Map.put(block.slots, slot, Type.put_meta(type, meta))}
-    else
-      %{block | slots: Map.put(block.slots, slot, type)}
-    end
+  def put_type(block, slot, type) do
+    %{block | slots: Map.put(block.slots, slot, type)}
+  end
+
+  def put_type(block, slot, type, meta) do
+    %{block | slots: Map.put(block.slots, slot, Type.put_meta(type, meta))}
   end
 
   def put_meta(block, slot, meta) do
@@ -122,6 +124,10 @@ defmodule Clr.Block do
 
   def put_reqs(block, arg, reqs) do
     %{block | reqs: List.update_at(block.reqs, arg, &Enum.into(reqs, &1))}
+  end
+
+  def put_ref(block, pointed_slot, pointer_slot) do
+    %{block | ptr: Map.put(block.ptr, pointed_slot, pointer_slot)}
   end
 
   def put_return(block, type), do: %{block | return: type}
@@ -153,9 +159,31 @@ defmodule Clr.Block do
   # be noreturn or void.
   def fetch_meta!(block, slot), do: Type.get_meta(fetch!(block, slot))
 
+  # update the type of a slot using a modifier function.  Check to see
+  # if the block has recorded that any pointers point to this slot.  If
+  # so, chase the pointer and update the type inside the slot which points
+  # to this slot.
   def update_type!(block, slot, fun) do
-    {type, block} = fetch_up!(block, slot)
-    put_type(block, slot, fun.(type))
+    chase_pointer(block, slot, 0, fun)
+  end
+
+  defp chase_pointer(block, slot, depth, fun) do
+    new_block = if chase = block.ptr[slot] do
+      chase_pointer(block, chase, depth + 1, fun)
+    else
+      block
+    end
+
+    new_block
+    |> fetch!(slot)
+    |> deep_update(depth, fun)
+    |> then(&put_type(new_block, slot, &1))
+  end
+
+  defp deep_update(type, 0, fun), do: fun.(type)
+
+  defp deep_update({:ptr, :one, child, ptr_meta}, depth, fun) do
+    {:ptr, :one, deep_update(child, depth - 1, fun), ptr_meta}
   end
 
   defp await_future(block, slot) do

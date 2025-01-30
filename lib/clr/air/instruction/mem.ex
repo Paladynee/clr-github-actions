@@ -47,9 +47,13 @@ defmodule Clr.Air.Instruction.Mem do
   Air.ty_op :load, Load do
     require Type
 
-    def slot_type(%{src: {slot, _}}, _, block) when is_integer(slot) do
-      {{:ptr, :one, type, _}, block} = Block.fetch_up!(block, slot)
-      {Type.put_meta(type, ptr: slot), block}
+    def slot_type(%{src: {src_slot, _}}, this_slot, block) when is_integer(src_slot) do
+      {{:ptr, :one, type, _}, block} =
+        block
+        |> Block.put_ref(this_slot, src_slot)
+        |> Block.fetch_up!(src_slot)
+
+      {type, block}
     end
 
     def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}

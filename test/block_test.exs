@@ -3,6 +3,7 @@ defmodule ClrTest.BlockTest do
 
   alias Clr.Air.Function
   alias Clr.Block
+  alias Clr.Type
 
   import Clr.Air.Lvalue
 
@@ -117,6 +118,42 @@ defmodule ClrTest.BlockTest do
       assert %Block{
                slots: %{47 => {:u, 32, %{foo: :bar}}, 48 => {:u, 32, %{baz: :quux}}}
              } = lambda.(caller_block, [47, 48])
+    end
+  end
+
+  describe "update_type" do
+    setup do
+      {:ok, block: Block.new(%Function{name: ~l"foo.bar"}, [], :void)}
+    end
+
+    test "will update a type in a block", %{block: block} do
+      assert {:u, 32, %{foo: :bar}} =
+               block
+               |> Block.put_type(47, {:u, 32, %{}})
+               |> Block.update_type!(47, &Type.put_meta(&1, foo: :bar))
+               |> Block.fetch!(47)
+    end
+
+    test "will walk a pointer when there's a pointer reference in there", %{block: block} do
+      assert {:ptr, :one, {:u, 32, %{foo: :bar}}, %{}} =
+               block
+               |> Block.put_type(47, {:ptr, :one, {:u, 32, %{}}, %{}})
+               |> Block.put_type(48, {:u, 32, %{}})
+               |> Block.put_ref(48, 47)
+               |> Block.update_type!(48, &Type.put_meta(&1, foo: :bar))
+               |> Block.fetch!(47)
+    end
+
+    test "will walk twice, if that's a thing", %{block: block} do
+      assert {:ptr, :one, {:ptr, :one, {:u, 32, %{foo: :bar}}, %{}}, %{}} =
+               block
+               |> Block.put_type(47, {:ptr, :one, {:ptr, :one, {:u, 32, %{}}, %{}}, %{}})
+               |> Block.put_type(48, {:ptr, :one, {:u, 32, %{}}, %{}})
+               |> Block.put_ref(48, 47)
+               |> Block.put_type(49, {:u, 32, %{}})
+               |> Block.put_ref(49, 48)
+               |> Block.update_type!(49, &Type.put_meta(&1, foo: :bar))
+               |> Block.fetch!(47)
     end
   end
 end
