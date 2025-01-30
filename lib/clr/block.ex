@@ -163,6 +163,8 @@ defmodule Clr.Block do
   # if the block has recorded that any pointers point to this slot.  If
   # so, chase the pointer and update the type inside the slot which points
   # to this slot.
+  #
+  # use of this function is encouraged.
   def update_type!(block, slot, fun) do
     chase_pointer(block, slot, 0, fun)
   end
