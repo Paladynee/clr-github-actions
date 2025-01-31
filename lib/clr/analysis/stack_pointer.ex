@@ -37,6 +37,9 @@ after
 
   @impl true
   def when_kept, do: []
+
+  @impl true
+  def on_call_requirement(_block, type), do: type
 end
 
 defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Alloc do

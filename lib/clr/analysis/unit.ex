@@ -17,6 +17,9 @@ after
   @impl true
   def when_kept, do: [Binary]
 
+  @impl true
+  def on_call_requirement(_block, type), do: type
+
   defmodule Mismatched do
     defexception [:lhs, :rhs, :function, :loc]
 

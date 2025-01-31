@@ -21,8 +21,14 @@ after
   alias Clr.Air.Instruction.Function.Call
   alias Clr.Air.Instruction.Mem.Store
 
+  @impl true
   def always, do: [Stmt, Call, Store]
+
+  @impl true
   def when_kept, do: []
+
+  @impl true
+  def on_call_requirement(_block, type), do: type
 
   @modules Map.new(
              ~w[assembly vector casts dbg control_flow pointer maths tests atomics function mem],

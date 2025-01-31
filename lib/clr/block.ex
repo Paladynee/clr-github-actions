@@ -216,7 +216,12 @@ defmodule Clr.Block do
   # slots from a call slots in a block, generated from the requirements of the "called" block.
   # note: the requirements are stored in the `args` field.  The return value does
   # not need to be emplaced with this function, it should be done elsewhere.
-  def make_call_resolver(%{args: reqs}) do
+  def make_call_resolver(%{args: reqs} = block) do
+    checkers = Clr.get_checkers
+    reqs = Enum.map(reqs, fn req ->
+      Enum.reduce(checkers, req, &(&1.on_call_requirement(block, &2)))
+    end)
+
     fn block, slots ->
       for {slot, req} <- Enum.zip(slots, reqs), slot, reduce: block do
         block -> update_type!(block, slot, fn _ -> req end)

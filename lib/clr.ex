@@ -1,6 +1,8 @@
 defmodule Clr do
   def debug_prefix, do: Application.get_env(:clr, :debug_prefix)
 
+  @type loc :: {non_neg_integer, non_neg_integer}
+
   @spec set_checkers([module]) :: :ok
   def set_checkers(checkers) do
     checkers = checkers ++ [Clr.Air.Instruction]

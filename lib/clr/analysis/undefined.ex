@@ -18,6 +18,9 @@ after
 
   @impl true
   def when_kept, do: []
+
+  @impl true
+  def on_call_requirement(_block, type), do: type
 end
 
 defmodule Clr.Analysis.Undefined.Use do

@@ -12,6 +12,9 @@ defmodule Clr.Analysis do
   # and if any changes are to be made, the `analyze` function should alter them
   # in there.
   @callback analyze(Instruction.t(), Type.slot(), Block.t(), t) :: {:cont | :halt, Block.t()}
+
+  # transforms or augments annotations when a call comes back.
+  @callback on_call_requirement(Block.t, Type.t, Clr.loc) :: Type.t
   @callback always() :: [module]
   @callback when_kept() :: [module]
 end

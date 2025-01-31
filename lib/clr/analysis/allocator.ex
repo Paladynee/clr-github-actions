@@ -8,39 +8,45 @@ defprotocol Clr.Analysis.Allocator do
 after
   defstruct []
 
-  defmodule UseAfterFree do
-    defexception [:function, :loc, :del_loc, :del_function]
+  alias Clr.Air.Lvalue
+  alias Clr.Type
 
+  def transferred_msg(error) do
+    if function = Map.get(error, :transferred) do
+      "\nPointer was transferred to #{Lvalue.as_string(function)}"
+    end
+  end
+
+  defmodule UseAfterFree do
+    defexception [:function, :loc, :del_loc, :del_function, :transferred]
+
+    alias Clr.Analysis.Allocator
     alias Clr.Zig.Parser
 
-    def message(%{
-          function: function,
-          del_function: del_function,
-          loc: loc,
-          del_loc: del_loc
-        }) do
-      function = Parser.format_location(function, loc)
-      deletion = Parser.format_location(del_function, del_loc)
+    def message(error) do
+      function = Parser.format_location(error.function, error.loc)
+      deletion = Parser.format_location(error.del_function, error.del_loc)
 
       """
       Use after free detected in #{function}.
-      Pointer was deleted in #{deletion}
+      Pointer was deleted in #{deletion}#{Allocator.transferred_msg(error)}
       """
     end
   end
 
   defmodule DoubleFree do
-    defexception [:previous, :prev_loc, :deletion, :loc, transferred: false]
+    defexception [:previous, :prev_loc, :deletion, :loc, :transferred]
 
+    alias Clr.Analysis.Allocator
     alias Clr.Zig.Parser
 
-    def message(exception) do
-      deletion = Parser.format_location(exception.deletion, exception.loc)
-      previous = Parser.format_location(exception.previous, exception.prev_loc)
+    def message(error) do
+      deletion = Parser.format_location(error.deletion, error.loc)
+      previous = Parser.format_location(error.previous, error.prev_loc)
 
       """
       Double free detected in #{deletion}.
-      Previously deleted in #{previous}
+      Previously deleted in #{previous}#{Allocator.transferred_msg(error)}
       """
     end
   end
@@ -80,10 +86,11 @@ after
       :deleted_loc,
       :call,
       :index,
-      :transferred_function
+      :transferred
     ]
 
     alias Clr.Zig.Parser
+    alias Clr.Analysis.Allocator
 
     def message(error) do
       function = Parser.format_location(error.function, error.loc)
@@ -91,18 +98,9 @@ after
 
       """
       Function call `#{error.call}` in #{function} was passed a deleted pointer (argument #{error.index}).
-      Pointer was deleted in #{deletion}
+      Pointer was deleted in #{deletion}#{Allocator.transferred_msg(error)}
       """
     end
-
-    # def message(%{
-    #      function: function,
-    #      loc: {row, col},
-    #      transferred_function: transferred_function,
-    #      deleted_loc: {del_row, del_col}
-    #    }) do
-    #  "Function `#{function}` at #{row}:#{col} called with a pointer that was transferred to `#{transferred_function}` at #{del_row}:#{del_col}"
-    # end
   end
 
   alias Clr.Air.Instruction.Function.Call
@@ -113,6 +111,16 @@ after
 
   @impl true
   def when_kept, do: []
+
+  @impl true
+  def on_call_requirement(block, type) do
+    case Type.get_meta(type) do
+      %{deleted: _} ->
+        Type.put_meta(type, transferred: block.function)
+      _ ->
+        type
+    end
+  end
 end
 
 defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
@@ -172,19 +180,13 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     block
     |> Block.fetch!(src)
     |> case do
-      {:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}}} ->
+      {:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}} = meta} ->
         raise DoubleFree,
           previous: prev_function,
           prev_loc: prev_loc,
           deletion: this_function,
-          loc: block.loc
-
-      {:ptr, :one, _type, %{transferred: %{function: prev_function, loc: prev_loc}}} ->
-        raise DoubleFree,
-          previous: prev_function,
-          prev_loc: prev_loc,
-          deletion: this_function,
-          loc: block.loc
+          loc: block.loc,
+          transferred: Map.get(meta, :transferred)
 
       {:ptr, :one, _type, %{heap: %{vtable: ^vtable}}} ->
         deleted_info = %{function: this_function, loc: block.loc}
@@ -219,21 +221,15 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
         {{slot, _}, index}, block when is_integer(slot) ->
           # TODO: check other types and make sure none of them are deleted too.
           case Block.fetch_up!(block, slot) do
-            {{:ptr, _, _, %{deleted: d}}, _} ->
+            {{:ptr, _, _, %{deleted: d} = meta}, _} ->
               raise CallDeleted,
                 function: block.function,
                 loc: block.loc,
                 call: call_name,
                 index: index,
                 deleted_fn: d.function,
-                deleted_loc: d.loc
-
-            {{:ptr, _, _, %{transferred: t}}, _} ->
-              raise CallDeleted,
-                function: block.function,
-                loc: block.loc,
-                transferred_function: t.function,
-                deleted_loc: t.loc
+                deleted_loc: d.loc,
+                transferred: Map.get(meta, :transferred)
 
             {_, block} ->
               block
@@ -247,25 +243,20 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   end
 end
 
+# NB: there are many other instructions that need to have this implementation.
 defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
   alias Clr.Analysis.Allocator.UseAfterFree
   alias Clr.Block
 
   def analyze(%{src: {src_slot, _}}, _slot, block, _config) do
     case Block.fetch!(block, src_slot) do
-      {:ptr, _, _, %{deleted: %{function: function, loc: loc}}} ->
+      {:ptr, _, _, %{deleted: %{function: function, loc: loc}} = meta} ->
         raise UseAfterFree,
           del_function: function,
           del_loc: loc,
           function: block.function,
-          loc: block.loc
-
-      {:ptr, _, _, %{transferred: %{function: function, loc: loc}}} ->
-        raise UseAfterFree,
-          del_function: function,
-          del_loc: loc,
-          function: block.function,
-          loc: block.loc
+          loc: block.loc,
+          transferred: Map.get(meta, :transferred)
 
       _ ->
         {:cont, block}

@@ -123,6 +123,7 @@ defmodule ClrTest.FullIntegrationTest do
         """
         Double free detected in function free_after_transfer.main (test/integration/allocator/free_after_transfer.zig:10:18).
         Previously deleted in function free_after_transfer.function_deletes (test/integration/allocator/free_after_transfer.zig:4:18)
+        Pointer was transferred to free_after_transfer.function_deletes
         """,
         "allocator/free_after_transfer.zig"
       )
