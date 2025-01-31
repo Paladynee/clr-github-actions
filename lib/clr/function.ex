@@ -66,17 +66,16 @@ defmodule Clr.Function do
 
             function = Clr.Air.get(function_name)
 
-            %{return: return} =
-              block =
+            %{return: return} = block =
               function
               |> Block.new(args, ret_type)
               |> analyzer.analyze(function.code)
 
-            remapper = Block.call_meta_adder(block)
+            resolver = Block.make_call_resolver(block)
 
-            :ets.insert(table_name, {waiter_id_key, {return, remapper}})
+            :ets.insert(table_name, {waiter_id_key, {block, resolver}})
 
-            {:ok, return, &remapper.(&1, arg_slots)}
+            {:ok, return, &resolver.(&1, arg_slots)}
           end)
 
         future_info = {future.pid, future.ref}

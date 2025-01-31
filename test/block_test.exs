@@ -99,7 +99,7 @@ defmodule ClrTest.BlockTest do
     end
   end
 
-  describe "call_meta_adder/1" do
+  describe "make_call_resolver/1" do
     test "creates a lambda that adds metadata to slots" do
       called_block =
         %Function{name: ~l"foo.bar"}
@@ -113,7 +113,7 @@ defmodule ClrTest.BlockTest do
         |> Block.put_type(47, {:u, 32, %{}})
         |> Block.put_type(48, {:u, 32, %{}})
 
-      lambda = Block.call_meta_adder(called_block)
+      lambda = Block.make_call_resolver(called_block)
 
       assert %Block{
                slots: %{47 => {:u, 32, %{foo: :bar}}, 48 => {:u, 32, %{baz: :quux}}}

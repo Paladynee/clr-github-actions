@@ -6,7 +6,7 @@ defmodule Clr.Block do
   alias Clr.Function
   alias Clr.Type
 
-  @enforce_keys ~w[function args reqs]a
+  @enforce_keys ~w[function args]a
   defstruct @enforce_keys ++
               [
                 :loc,
@@ -24,7 +24,6 @@ defmodule Clr.Block do
   @type t :: %__MODULE__{
           function: term,
           args: [Clr.type()],
-          reqs: [Clr.meta()],
           loc: nil | loc,
           return: nil | Clr.type(),
           ptr: %{optional(slot) => slot},
@@ -35,9 +34,7 @@ defmodule Clr.Block do
 
   @spec new(Function.t(), [Clr.type()], Clr.type()) :: t
   def new(function, args, return) do
-    # fill requirements with an empty set for each argument.
-    reqs = Enum.map(args, fn _ -> %{} end)
-    %__MODULE__{function: function.name, args: args, reqs: reqs, return: return}
+    %__MODULE__{function: function.name, args: args, return: return}
   end
 
   @spec analyze(t, Clr.Air.codeblock()) :: t
@@ -48,24 +45,14 @@ defmodule Clr.Block do
     |> Enum.sort()
     |> Enum.reduce(block, &analyze_instruction(&1, &2, mapper))
     |> flush_awaits
-    |> then(&Map.replace!(&1, :reqs, transfer_requirements(&1.reqs, &1)))
+    |> transfer_requirements()
   end
 
-  defp transfer_requirements(reqs, block) do
-    reqs
-    |> Enum.with_index()
-    |> Enum.map(fn {req, slot} ->
-      case fetch_up!(block, slot) do
-        {type, _} ->
-          case Type.get_meta(type) do
-            %{deleted: info} ->
-              Map.put(req, :transferred, info)
-
-            _ ->
-              req
-          end
-      end
-    end)
+  defp transfer_requirements(block) do
+    # after all instructions have been analyzed, go ahead and transfer any
+    # type modifications back to the "args" field.
+    requirements = for {_, index} <- Enum.with_index(block.args), do: block.slots[index]
+    %{block | args: requirements}
   end
 
   # instructions that are always subject to analysis.
@@ -223,17 +210,17 @@ defmodule Clr.Block do
     end)
   end
 
-  @type call_meta_adder_fn :: (Block.t(), [Clr.slot() | nil] -> Block.t())
-  @spec call_meta_adder(t) :: call_meta_adder_fn
-  # this function produces a lambda that can be used to add metadata to
-  # slots in a block, generated from the requirements of the "called" block.
-  def call_meta_adder(%{reqs: reqs}) do
-    fn caller_fn, slots ->
-      slots
-      |> Enum.zip(reqs)
-      |> Enum.reduce(caller_fn, fn {slot, req_list}, caller_fn ->
-        if slot, do: put_meta(caller_fn, slot, req_list), else: caller_fn
-      end)
+  @type make_call_resolver_fn :: (Block.t(), [Clr.slot() | nil] -> Block.t())
+  @spec make_call_resolver(t) :: make_call_resolver_fn
+  # this function produces a lambda that can be used to update the metadata of
+  # slots from a call slots in a block, generated from the requirements of the "called" block.
+  # note: the requirements are stored in the `args` field.  The return value does
+  # not need to be emplaced with this function, it should be done elsewhere.
+  def make_call_resolver(%{args: reqs}) do
+    fn block, slots ->
+      for {slot, req} <- Enum.zip(slots, reqs), slot, reduce: block do
+        block -> update_type!(block, slot, fn _ -> req end)
+      end
     end
   end
 end
