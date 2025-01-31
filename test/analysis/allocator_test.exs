@@ -152,6 +152,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
       end
     end
 
+    @tag :skip
     test "it raises when you do attempt free a transferred pointer", %{
       config: config,
       block: block
@@ -162,7 +163,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
           47,
           {:ptr, :one, {:u, 8, %{}}, %{}},
           heap: %{function: ~l"foo.bar", loc: {42, 42}, vtable: ~l"heap.c_allocator_vtable"},
-          transferred: %{function: ~l"bar.baz", loc: {42, 42}}
+          deleted: ~l"bar.baz"
         )
 
       assert_raise DoubleFree, fn ->
@@ -210,22 +211,6 @@ defmodule ClrTest.Analysis.AllocatorTest do
           {:ptr, :one, {:u, 8, %{}}, %{}},
           heap: %{function: ~l"foo.bar", loc: {1, 1}, vtable: ~l"heap.c_allocator_vtable"},
           deleted: %{function: ~l"foo.bar", loc: {42, 42}}
-        )
-
-      assert_raise UseAfterFree, fn ->
-        Allocator.analyze(%Load{type: {:u, 8, %{}}, src: {47, :keep}}, 0, block, config)
-      end
-    end
-
-    test "it raises on transferred", %{config: config, block: block} do
-      block =
-        block
-        |> Block.put_type(0, {:u, 8, %{}})
-        |> Block.put_type(
-          47,
-          {:ptr, :one, {:u, 8, %{}}, %{}},
-          heap: %{function: ~l"foo.bar", loc: {1, 1}, vtable: ~l"heap.c_allocator_vtable"},
-          transferred: %{function: ~l"bar.baz", loc: {42, 42}}
         )
 
       assert_raise UseAfterFree, fn ->

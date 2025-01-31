@@ -20,7 +20,7 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
     alias Clr.Air.Instruction.Function.Arg
 
     test "returns the type of the arg statement", %{block: block} do
-      block = %{block | args: [{:u, 8, %{foo: :bar}}], reqs: [%{}]}
+      block = %{block | args: [{:u, 8, %{foo: :bar}}]}
 
       assert {{:u, 8, %{foo: :bar}}, _} =
                Instruction.slot_type(%Arg{type: ~l"u8"}, 0, block)

@@ -51,15 +51,6 @@ defmodule ClrTest.BlockTest do
     end
   end
 
-  describe "the put_reqs/3 function" do
-    test "puts a requirement" do
-      %{reqs: [%{foo: :bar}]} =
-        %Function{name: ~l"foo.bar"}
-        |> Block.new([~l"u8"], :void)
-        |> Block.put_reqs(0, foo: :bar)
-    end
-  end
-
   describe "the fetch_up! function" do
     test "can be used to retrieve a stored type/meta tuple" do
       block =
@@ -102,10 +93,11 @@ defmodule ClrTest.BlockTest do
   describe "make_call_resolver/1" do
     test "creates a lambda that adds metadata to slots" do
       called_block =
-        %Function{name: ~l"foo.bar"}
-        |> Block.new([~l"t1", ~l"t2"], :void)
-        |> Block.put_reqs(0, foo: :bar)
-        |> Block.put_reqs(1, baz: :quux)
+        Block.new(
+          %Function{name: ~l"foo.bar"},
+          [{:u, 32, %{foo: :bar}}, {:u, 32, %{baz: :quux}}],
+          :void
+        )
 
       caller_block =
         %Function{name: ~l"bar.baz"}

@@ -22,7 +22,7 @@ defmodule ClrTest.FunctionTest do
     {:ok, table: table_name}
   end
 
-  defp stub_eval(type), do: %Block{function: ~l"foo.bar", return: type, args: [], reqs: []}
+  defp stub_eval(type), do: %Block{function: ~l"foo.bar", return: type, args: []}
 
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :analyze, fn _, _ -> stub_eval(:result) end)
@@ -31,7 +31,7 @@ defmodule ClrTest.FunctionTest do
     assert {:ok, {:result, lambda1}} = Function.await(future)
     # this is the function that can add metadata to slots.
     assert is_function(lambda1, 1)
-    assert {:result, lambda2} = Function.debug_get_table(:foobar_function, [])
+    assert {%{return: :result}, lambda2} = Function.debug_get_table(:foobar_function, [])
     # this is a lambda that takes a block and 
     assert is_function(lambda2, 2)
   end
@@ -96,8 +96,8 @@ defmodule ClrTest.FunctionTest do
     assert is_function(function2, 1)
 
     assert [
-             {{:foobar_function, [%{bar: :baz}]}, {:barresult, _}},
-             {{:foobar_function, [%{foo: :bar}]}, {:fooresult, _}}
+             {{:foobar_function, [%{bar: :baz}]}, {%Block{return: :barresult}, _}},
+             {{:foobar_function, [%{foo: :bar}]}, {%Block{return: :fooresult}, _}}
            ] = Enum.sort(Function.debug_get_table())
   end
 end

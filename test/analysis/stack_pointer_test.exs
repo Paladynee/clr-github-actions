@@ -30,7 +30,7 @@ defmodule ClrTest.Analysis.StackPointerTest do
   alias Clr.Air.Instruction.Mem.Store
 
   test "when you store something that is an argument", %{config: config, block: block} do
-    block = %{block | args: [{:u, 8, %{}}], reqs: [%{}], slots: %{2 => {:u, 8, %{}}}}
+    block = %{block | args: [{:u, 8, %{}}], slots: %{2 => {:u, 8, %{}}}}
 
     assert {:cont, block} =
              StackPointer.analyze(

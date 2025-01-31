@@ -14,7 +14,7 @@ defmodule Clr.Analysis do
   @callback analyze(Instruction.t(), Type.slot(), Block.t(), t) :: {:cont | :halt, Block.t()}
 
   # transforms or augments annotations when a call comes back.
-  @callback on_call_requirement(Block.t, Type.t, Clr.loc) :: Type.t
+  @callback on_call_requirement(Block.t(), Type.t()) :: Type.t()
   @callback always() :: [module]
   @callback when_kept() :: [module]
 end

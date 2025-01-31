@@ -117,6 +117,7 @@ after
     case Type.get_meta(type) do
       %{deleted: _} ->
         Type.put_meta(type, transferred: block.function)
+
       _ ->
         type
     end

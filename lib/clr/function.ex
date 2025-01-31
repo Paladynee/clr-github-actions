@@ -66,7 +66,8 @@ defmodule Clr.Function do
 
             function = Clr.Air.get(function_name)
 
-            %{return: return} = block =
+            %{return: return} =
+              block =
               function
               |> Block.new(args, ret_type)
               |> analyzer.analyze(function.code)

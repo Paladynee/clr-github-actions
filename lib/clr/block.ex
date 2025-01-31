@@ -109,10 +109,6 @@ defmodule Clr.Block do
     %{block | awaits: Map.put(block.awaits, slot, reference)}
   end
 
-  def put_reqs(block, arg, reqs) do
-    %{block | reqs: List.update_at(block.reqs, arg, &Enum.into(reqs, &1))}
-  end
-
   def put_ref(block, pointed_slot, pointer_slot) do
     %{block | ptr: Map.put(block.ptr, pointed_slot, pointer_slot)}
   end
@@ -157,11 +153,12 @@ defmodule Clr.Block do
   end
 
   defp chase_pointer(block, slot, depth, fun) do
-    new_block = if chase = block.ptr[slot] do
-      chase_pointer(block, chase, depth + 1, fun)
-    else
-      block
-    end
+    new_block =
+      if chase = block.ptr[slot] do
+        chase_pointer(block, chase, depth + 1, fun)
+      else
+        block
+      end
 
     new_block
     |> fetch!(slot)
@@ -217,10 +214,12 @@ defmodule Clr.Block do
   # note: the requirements are stored in the `args` field.  The return value does
   # not need to be emplaced with this function, it should be done elsewhere.
   def make_call_resolver(%{args: reqs} = block) do
-    checkers = Clr.get_checkers
-    reqs = Enum.map(reqs, fn req ->
-      Enum.reduce(checkers, req, &(&1.on_call_requirement(block, &2)))
-    end)
+    checkers = Clr.get_checkers()
+
+    reqs =
+      Enum.map(reqs, fn req ->
+        Enum.reduce(checkers, req, & &1.on_call_requirement(block, &2))
+      end)
 
     fn block, slots ->
       for {slot, req} <- Enum.zip(slots, reqs), slot, reduce: block do
