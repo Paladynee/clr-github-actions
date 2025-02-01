@@ -14,7 +14,8 @@ defmodule Clr.Block do
                 ptr: %{},
                 stack: [],
                 awaits: %{},
-                slots: %{}
+                slots: %{},
+                priv: %{}
               ]
 
   @type loc :: {row :: non_neg_integer, col :: non_neg_integer}
@@ -29,7 +30,8 @@ defmodule Clr.Block do
           ptr: %{optional(slot) => slot},
           stack: [{loc, term}],
           awaits: %{optional(slot) => reference},
-          slots: %{optional(slot) => slot_spec}
+          slots: %{optional(slot) => slot_spec},
+          priv: %{optional(module) => map}
         }
 
   @spec new(Function.t(), [Clr.type()], Clr.type()) :: t
@@ -60,7 +62,7 @@ defmodule Clr.Block do
   # analyzed.
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
-    # {slot, instruction, block.function, block.slots} |> dbg(limit: 25)
+    # {slot, instruction, block} |> dbg(limit: 25)
     block =
       case Instruction.slot_type(instruction, slot, block) do
         {:future, block} -> block
@@ -115,10 +117,26 @@ defmodule Clr.Block do
 
   def put_return(block, type), do: %{block | return: type}
 
+  def put_priv(block, module, key, value) do
+    %{block | priv: Map.update(block.priv, module, %{key => value}, &Map.put(&1, key, value))}
+  end
+
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)
     |> Type.get_meta()
+  end
+
+  def get_priv(block, module), do: Map.get(block.priv, module)
+
+  def get_priv(block, module, key) do
+    block.priv
+    |> Map.fetch!(module)
+    |> Map.get(key)
+  end
+
+  def update_priv(block, module, key, fun) do
+    %{block | priv: Map.update!(block.priv, module, &Map.update!(&1, key, fun))}
   end
 
   # used to fetch the type and update the block type.  If it's a future,

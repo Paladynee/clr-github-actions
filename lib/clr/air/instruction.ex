@@ -10,6 +10,7 @@ defprotocol Clr.Air.Instruction do
   def slot_type(t, arg_index, block)
 after
   defstruct []
+  @behaviour Clr.Analysis
   @type config :: %__MODULE__{}
 
   @callback analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
@@ -79,6 +80,7 @@ after
     end
   end
 
+  @impl true
   @spec analyze(struct, non_neg_integer, Block.t(), config) :: Block.t()
   def analyze(%module{} = struct, slot, block, config) do
     if function_exported?(module, :analyze, 4) do

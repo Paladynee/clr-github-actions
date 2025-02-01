@@ -46,15 +46,21 @@ defmodule ClrTest.Analysis.Instruction.FunctionTest do
   describe "ret" do
     alias Clr.Air.Instruction.Function.Ret
 
-    test "returns the type of the ret statement", %{block: block} do
-      assert {:noreturn, _} = Instruction.slot_type(%Ret{}, 0, block)
-    end
-
-    test "sets the type on the return slot", %{block: block, config: config} do
-      assert {:cont, %{return: {:u, 8, %{foo: :bar}}}} =
+    test "returns the type of the ret statement, and sets it in the block", %{block: block} do
+      assert {:noreturn, %{return: {:u, 8, %{foo: :bar}}}} =
                block
                |> Block.put_type(47, {:u, 8, %{foo: :bar}})
-               |> then(&Instruction.analyze(%Ret{src: {47, :keep}}, 0, &1, config))
+               |> then(&Instruction.slot_type(%Ret{src: {47, :clobber}}, 0, &1))
+    end
+
+    test "uses typeof if it's an lvalue", %{block: block} do
+      assert {:noreturn, %{return: {:TypeOf, ~l"foo.bar"}}} =
+               Instruction.slot_type(%Ret{src: ~l"foo.bar"}, 0, block)
+    end
+
+    test "uses the literal type if it's a literal", %{block: block} do
+      assert {:noreturn, %{return: {:u, 8, %{}}}} =
+               Instruction.slot_type(%Ret{src: {:literal, ~l"u8", ~l"bar.baz"}}, 0, block)
     end
   end
 

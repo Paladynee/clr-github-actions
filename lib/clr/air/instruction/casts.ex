@@ -21,7 +21,16 @@ defmodule Clr.Air.Instruction.Casts do
 
   # Reinterpret the memory representation of a value as a different type.
   # Uses the `ty_op` field.
-  Air.ty_op(:bitcast, Bitcast)
+  Air.ty_op :bitcast, Bitcast do
+    # a common pattern is to bitcast the return value of a function to infer the error union from
+    # the function signature instead of the result type.  If this bitcast is just for error unions,
+    # go ahead and pull all of the metadata.
+    def slot_type(%{type: {:errorunion, _, _}, src: {slot, _}}, _, block) when is_integer(slot) do
+      Block.fetch_up!(block, slot)
+    end
+
+    def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
+  end
 
   # Converts a pointer to its address. Result type is always `usize`.
   # Pointer type size may be any, including slice.

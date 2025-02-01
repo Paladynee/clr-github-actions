@@ -136,7 +136,14 @@ defmodule ClrTest.FullIntegrationTest do
     test "linked list on heap"
 
     # leaks
-    test "leaked allocation"
+    test "leaked allocation" do
+      assert_errors_with(
+        """
+        Function return at function leaks.main (test/integration/allocator/leaks.zig:5:3) leaked memory allocated in function leaks.main (test/integration/allocator/leaks.zig:4:23)
+        """,
+        "allocator/leaks.zig"
+      )
+    end
 
     test "leaked allocation from function return" do
       assert_errors_with(

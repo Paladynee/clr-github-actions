@@ -73,22 +73,21 @@ defimpl Clr.Analysis.Unit, for: Call do
       |> Air.get()
       |> process_unit_name
 
-    return_type =
-      case call.args do
-        [{:literal, type, _}] ->
-          return_type =
-            type
-            |> Type.from_air()
-            |> Type.put_meta(unit: units)
+    case call.args do
+      [{:literal, type, _}] ->
+        return_type =
+          type
+          |> Type.from_air()
+          |> Type.put_meta(unit: units)
 
-          {:halt, Block.put_type(block, slot, return_type)}
+        {:halt, Block.put_type(block, slot, return_type)}
 
-        [{slot, _}] when is_integer(slot) ->
-          {return_type, block} = Block.fetch_up!(block, slot)
+      [{slot, _}] when is_integer(slot) ->
+        {return_type, block} = Block.fetch_up!(block, slot)
 
-          {:halt, Block.put_type(block, slot, return_type, unit: units)}
-          # not sure what to do with lvalues.
-      end
+        {:halt, Block.put_type(block, slot, return_type, unit: units)}
+        # not sure what to do with lvalues.
+    end
   end
 
   def analyze(_, _, block, _config), do: {:cont, block}

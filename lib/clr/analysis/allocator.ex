@@ -103,11 +103,27 @@ after
     end
   end
 
+  defmodule Leaks do
+    defexception [:function, :loc, :alloc_function, :alloc_loc]
+
+    alias Clr.Zig.Parser
+
+    def message(error) do
+      return_location = Parser.format_location(error.function, error.loc)
+      alloc_location = Parser.format_location(error.alloc_function, error.alloc_loc)
+
+      """
+      Function return at #{return_location} leaked memory allocated in #{alloc_location}
+      """
+    end
+  end
+
   alias Clr.Air.Instruction.Function.Call
+  alias Clr.Air.Instruction.Function.Ret
   alias Clr.Air.Instruction.Mem.Load
 
   @impl true
-  def always, do: [Call, Load]
+  def always, do: [Call, Load, Ret]
 
   @impl true
   def when_kept, do: []
@@ -127,10 +143,11 @@ end
 defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   import Clr.Air.Lvalue
 
-  alias Clr.Analysis.Undefined
+  alias Clr.Analysis.Allocator
   alias Clr.Analysis.Allocator.DoubleFree
   alias Clr.Analysis.Allocator.Mismatch
   alias Clr.Analysis.Allocator.CallDeleted
+  alias Clr.Analysis.Undefined
   alias Clr.Block
   alias Clr.Type
 
@@ -160,13 +177,14 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     {:errorunion, e, {:ptr, :one, payload_type, ptr_meta}, err_meta} = Type.from_air(type)
 
     block =
-      Block.put_type(
-        block,
+      block
+      |> Block.put_type(
         slot,
         {:errorunion, e,
          {:ptr, :one, Type.put_meta(payload_type, undefined: Undefined.meta(block)),
           Map.put(ptr_meta, :heap, heapinfo)}, err_meta}
       )
+      |> Block.put_priv(Allocator, slot, heapinfo)
 
     {:halt, block}
   end
@@ -242,6 +260,53 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
 
     {:cont, checked}
   end
+end
+
+defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Ret do
+  alias Clr.Block
+  alias Clr.Type
+
+  def analyze(_, _slot, block, _config) do
+    # retrieve all of the private data for the block
+    return_meta =
+      if ptr = unwrap_pointer(block.return) do
+        Type.get_meta(ptr)
+      end
+
+    block
+    |> Block.get_priv(Clr.Analysis.Allocator)
+    |> Enum.each(fn {index, deleted_info} ->
+      # first check to see if the block slot is deleted.
+      block
+      |> Block.fetch!(index)
+      |> unwrap_pointer()
+      |> Type.get_meta()
+      |> case do
+        %{deleted: _} ->
+          :ok
+
+        %{transferred: _} ->
+          :ok
+
+        ^return_meta ->
+          :ok
+
+        _ ->
+          raise Clr.Analysis.Allocator.Leaks,
+            function: block.function,
+            loc: block.loc,
+            alloc_function: deleted_info.function,
+            alloc_loc: deleted_info.loc
+      end
+    end)
+
+    {:cont, block}
+  end
+
+  defp unwrap_pointer({:ptr, _, _, _} = ptr), do: ptr
+  defp unwrap_pointer({:errorunion, _, {:ptr, _, _, _} = ptr, _}), do: ptr
+  defp unwrap_pointer({:optional, {:ptr, _, _, _}, ptr, _}), do: ptr
+  defp unwrap_pointer(_), do: nil
 end
 
 # NB: there are many other instructions that need to have this implementation.

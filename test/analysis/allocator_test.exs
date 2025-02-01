@@ -58,6 +58,14 @@ defmodule ClrTest.Analysis.AllocatorTest do
                    vtable: ~l"heap.c_allocator_vtable"
                  }
                }}, %{}} = Block.fetch!(block, 0)
+
+      assert %{
+               0 => %{
+                 function: ~l"foo.bar",
+                 loc: {47, 47},
+                 vtable: ~l"heap.c_allocator_vtable"
+               }
+             } = Block.get_priv(block, Allocator)
     end
   end
 

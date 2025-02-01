@@ -139,21 +139,19 @@ defmodule Clr.Air.Instruction.Function do
 
     use Clr.Air.Instruction
 
-    def slot_type(_, _, block), do: {:noreturn, block}
-
-    def analyze(%{src: {:lvalue, _} = lvalue}, _dst_slot, block, _) do
-      {:cont, Block.put_return(block, {:TypeOf, lvalue})}
+    def slot_type(%{src: {:lvalue, _} = lvalue}, _dst_slot, block) do
+      {:noreturn, Block.put_return(block, {:TypeOf, lvalue})}
     end
 
-    def analyze(%{src: {:literal, type, _}}, _dst_slot, block, _) do
-      {:cont, Block.put_return(block, type)}
+    def slot_type(%{src: {:literal, type, _}}, _dst_slot, block) do
+      {:noreturn, Block.put_return(block, Type.from_air(type))}
     end
 
-    def analyze(%{src: {slot, _}}, _dst_slot, block, _) when is_integer(slot) do
+    def slot_type(%{src: {slot, _}}, _dst_slot, block) when is_integer(slot) do
       block
       |> Block.fetch!(slot)
       |> then(&Block.put_return(block, &1))
-      |> then(&{:cont, &1})
+      |> then(&{:noreturn, &1})
     end
   end
 

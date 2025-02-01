@@ -148,4 +148,7 @@ defmodule ClrTest.BlockTest do
                |> Block.fetch!(47)
     end
   end
+
+  @tag :skip
+  test "get and set priv data"
 end

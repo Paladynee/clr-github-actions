@@ -28,12 +28,17 @@ defmodule ClrTest.Analysis.Instruction.CastsTest do
                )
     end
 
-    test "transfers type metadata", %{block: block} do
-      block = Block.put_type(block, 0, {:usize, %{foo: :bar}})
+    test "transfers type metadata if it's an errorunion type", %{block: block} do
+      block =
+        Block.put_type(
+          block,
+          0,
+          {:errorunion, [], {:ptr, :one, {:usize, %{foo: :bar}}, %{bar: :baz}}, %{}}
+        )
 
-      assert {{:ptr, :one, {:u, 8, %{}}, %{foo: :bar}}, _} =
+      assert {{:errorunion, [], {:ptr, :one, {:usize, %{foo: :bar}}, %{bar: :baz}}, %{}}, _} =
                Instruction.slot_type(
-                 %Bitcast{type: {:ptr, :one, ~l"u8", []}, src: {0, :keep}},
+                 %Bitcast{type: {:errorunion, [], {:ptr, :one, ~l"u8", []}}, src: {0, :keep}},
                  0,
                  block
                )
