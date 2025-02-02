@@ -29,6 +29,17 @@ defmodule Clr.Air.Instruction.Casts do
       Block.fetch_up!(block, slot)
     end
 
+    # another common pattern ins to bitcast a pointer to a const pointer.  For the same reason,
+    # just pull all of the metadata from the slot.
+    def slot_type(%{type: {:ptr, :one, _, opts}, src: {slot, _}}, _, block)
+        when is_integer(slot) do
+      if opts[:const] do
+        Block.fetch_up!(block, slot)
+      else
+        {Type.from_air(:ptr), block}
+      end
+    end
+
     def slot_type(%{type: type}, _, block), do: {Type.from_air(type), block}
   end
 

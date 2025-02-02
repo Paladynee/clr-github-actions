@@ -261,10 +261,11 @@ defmodule Clr.Air.Instruction.ControlFlow do
     defstruct [:src, :error_code, clobbers: [], ptr: false, cold: false]
 
     use Clr.Air.Instruction
+    alias Clr.Type
 
     def slot_type(%{src: {src, _}}, _, block) do
       {{:errorunion, _, payload, _}, block} = Block.fetch_up!(block, src)
-      {payload, block}
+      {Type.put_meta(payload, unwrapped: src), block}
     end
   end
 

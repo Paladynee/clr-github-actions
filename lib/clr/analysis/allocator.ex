@@ -26,28 +26,28 @@ after
 
     def message(error) do
       function = Parser.format_location(error.function, error.loc)
-      deletion = Parser.format_location(error.del_function, error.del_loc)
+      free_info = Parser.format_location(error.del_function, error.del_loc)
 
       """
       Use after free detected in #{function}.
-      Pointer was deleted in #{deletion}#{Allocator.transferred_msg(error)}
+      Pointer was freed in #{free_info}#{Allocator.transferred_msg(error)}
       """
     end
   end
 
   defmodule DoubleFree do
-    defexception [:previous, :prev_loc, :deletion, :loc, :transferred]
+    defexception [:previous, :prev_loc, :free_info, :loc, :transferred]
 
     alias Clr.Analysis.Allocator
     alias Clr.Zig.Parser
 
     def message(error) do
-      deletion = Parser.format_location(error.deletion, error.loc)
+      free_info = Parser.format_location(error.free_info, error.loc)
       previous = Parser.format_location(error.previous, error.prev_loc)
 
       """
-      Double free detected in #{deletion}.
-      Previously deleted in #{previous}#{Allocator.transferred_msg(error)}
+      Double free detected in #{free_info}.
+      Previously freed in #{previous}#{Allocator.transferred_msg(error)}
       """
     end
   end
@@ -79,7 +79,7 @@ after
     end
   end
 
-  defmodule CallDeleted do
+  defmodule CallFreed do
     defexception [
       :function,
       :loc,
@@ -95,11 +95,27 @@ after
 
     def message(error) do
       function = Parser.format_location(error.function, error.loc)
-      deletion = Parser.format_location(error.deleted_fn, error.deleted_loc)
+      free_info = Parser.format_location(error.deleted_fn, error.deleted_loc)
 
       """
-      Function call `#{error.call}` in #{function} was passed a deleted pointer (argument #{error.index}).
-      Pointer was deleted in #{deletion}#{Allocator.transferred_msg(error)}
+      Function call `#{error.call}` in #{function} was passed a freed pointer (argument #{error.index}).
+      Pointer was freed in #{free_info}#{Allocator.transferred_msg(error)}
+      """
+    end
+  end
+
+  defmodule ReturnsFreed do
+    defexception [:function, :loc, :free_function, :free_loc]
+
+    alias Clr.Zig.Parser
+
+    def message(error) do
+      function = Parser.format_location(error.function, error.loc)
+      free_info = Parser.format_location(error.free_function, error.free_loc)
+
+      """
+      Function return in #{function} returned a freed pointer.
+      Pointer was freed at #{free_info}
       """
     end
   end
@@ -122,9 +138,10 @@ after
   alias Clr.Air.Instruction.Function.Call
   alias Clr.Air.Instruction.Function.Ret
   alias Clr.Air.Instruction.Mem.Load
+  alias Clr.Air.Instruction.ControlFlow.Try
 
   @impl true
-  def always, do: [Call, Load, Ret]
+  def always, do: [Call, Load, Ret, Try]
 
   @impl true
   def when_kept, do: []
@@ -132,7 +149,7 @@ after
   @impl true
   def on_call_requirement(block, type) do
     case Type.get_meta(type) do
-      %{deleted: _} ->
+      %{freed: _} ->
         Type.put_meta(type, transferred: block.function)
 
       _ ->
@@ -143,13 +160,13 @@ after
   @impl true
   def finalizer(caller, slot, %{return: return}) do
     case return do
-      {:errorunion, _, {:ptr, :one, _, %{heap: heapinfo}} = ptr, _} ->
+      {:errorunion, _, {:ptr, :one, _, %{heap: heapinfo}}, _} ->
         Block.put_priv(caller, __MODULE__, slot, heapinfo)
 
-      {:optional, {:ptr, :one, _, %{heap: heapinfo}} = ptr, _} ->
+      {:optional, {:ptr, :one, _, %{heap: heapinfo}}, _} ->
         Block.put_priv(caller, __MODULE__, slot, heapinfo)
 
-      {:ptr, :one, _, %{heap: heapinfo}} = ptr ->
+      {:ptr, :one, _, %{heap: heapinfo}} ->
         Block.put_priv(caller, __MODULE__, slot, heapinfo)
 
       _ ->
@@ -164,7 +181,7 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
   alias Clr.Analysis.Allocator
   alias Clr.Analysis.Allocator.DoubleFree
   alias Clr.Analysis.Allocator.Mismatch
-  alias Clr.Analysis.Allocator.CallDeleted
+  alias Clr.Analysis.Allocator.CallFreed
   alias Clr.Analysis.Undefined
   alias Clr.Block
   alias Clr.Type
@@ -217,17 +234,17 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
     block
     |> Block.fetch!(src)
     |> case do
-      {:ptr, :one, _type, %{deleted: %{function: prev_function, loc: prev_loc}} = meta} ->
+      {:ptr, :one, _type, %{freed: %{function: prev_function, loc: prev_loc}} = meta} ->
         raise DoubleFree,
           previous: prev_function,
           prev_loc: prev_loc,
-          deletion: this_function,
+          free_info: this_function,
           loc: block.loc,
           transferred: Map.get(meta, :transferred)
 
       {:ptr, :one, _type, %{heap: %{vtable: ^vtable}}} ->
         deleted_info = %{function: this_function, loc: block.loc}
-        {:halt, Block.update_type!(block, src, &Type.put_meta(&1, deleted: deleted_info))}
+        {:halt, Block.update_type!(block, src, &Type.put_meta(&1, freed: deleted_info))}
 
       {:ptr, :one, _type, %{heap: other}} ->
         raise Mismatch,
@@ -256,10 +273,10 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Call do
       |> Enum.with_index()
       |> Enum.reduce(block, fn
         {{slot, _}, index}, block when is_integer(slot) ->
-          # TODO: check other types and make sure none of them are deleted too.
+          # TODO: check other types and make sure none of them are freed too.
           case Block.fetch_up!(block, slot) do
-            {{:ptr, _, _, %{deleted: d} = meta}, _} ->
-              raise CallDeleted,
+            {{:ptr, _, _, %{freed: d} = meta}, _} ->
+              raise CallFreed,
                 function: block.function,
                 loc: block.loc,
                 call: call_name,
@@ -284,23 +301,37 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Function.Ret do
   alias Clr.Block
   alias Clr.Type
 
-  def analyze(_, _slot, block, _config) do
+  def analyze(instr, _slot, block, _config) do
     # retrieve all of the private data for the block
     return_meta =
       if ptr = unwrap_pointer(block.return) do
         Type.get_meta(ptr)
       end
 
+    # NOTE: negative with statement
+    with %{src: {src_slot, _}} when is_integer(src_slot) <- instr,
+         ptr_type =
+           block
+           |> Block.fetch!(src_slot)
+           |> unwrap_pointer(),
+         {:ptr, _, _, %{freed: freed_meta}} <- ptr_type do
+      raise Clr.Analysis.Allocator.ReturnsFreed,
+        function: block.function,
+        loc: block.loc,
+        free_function: freed_meta.function,
+        free_loc: freed_meta.loc
+    end
+
     block
     |> Block.get_priv(Clr.Analysis.Allocator)
     |> Enum.each(fn {index, deleted_info} ->
-      # first check to see if the block slot is deleted.
+      # first check to see if the block slot is freed.
       block
       |> Block.fetch!(index)
       |> unwrap_pointer()
       |> Type.get_meta()
       |> case do
-        %{deleted: _} ->
+        %{freed: _} ->
           :ok
 
         %{transferred: _} ->
@@ -334,13 +365,33 @@ defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.Mem.Load do
 
   def analyze(%{src: {src_slot, _}}, _slot, block, _config) do
     case Block.fetch!(block, src_slot) do
-      {:ptr, _, _, %{deleted: %{function: function, loc: loc}} = meta} ->
+      {:ptr, _, _, %{freed: %{function: function, loc: loc}} = meta} ->
         raise UseAfterFree,
           del_function: function,
           del_loc: loc,
           function: block.function,
           loc: block.loc,
           transferred: Map.get(meta, :transferred)
+
+      _ ->
+        {:cont, block}
+    end
+  end
+end
+
+defimpl Clr.Analysis.Allocator, for: Clr.Air.Instruction.ControlFlow.Try do
+  alias Clr.Block
+
+  def analyze(%{src: {src_slot, _}}, this_slot, block, _config) do
+    # checks to see if the source slot is tracked by the allocator.  If it is, then
+    # move tracking to the new slot.
+
+    case Block.get_priv(block, Clr.Analysis.Allocator) do
+      %{^src_slot => heapinfo} ->
+        block
+        |> Block.delete_priv(Clr.Analysis.Allocator, src_slot)
+        |> Block.put_priv(Clr.Analysis.Allocator, this_slot, heapinfo)
+        |> then(&{:cont, &1})
 
       _ ->
         {:cont, block}

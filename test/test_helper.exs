@@ -8,4 +8,8 @@ Clr.set_checkers([
 
 Clr.Zig.Parser.start_link([])
 
+if System.get_env("DEBUG", "false") != "true" do
+  Logger.configure(level: :warning)
+end
+
 ExUnit.start()

@@ -5,7 +5,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
   alias Clr.Analysis.Allocator.Mismatch
   alias Clr.Analysis.Allocator.UseAfterFree
   alias Clr.Analysis.Allocator.DoubleFree
-  alias Clr.Analysis.Allocator.CallDeleted
+  alias Clr.Analysis.Allocator.CallFreed
   alias Clr.Air.Function
   alias Clr.Air.Instruction.Function.Call
   alias Clr.Block
@@ -74,7 +74,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
       {:ok, block: Block.put_type(block, 0, :void)}
     end
 
-    test "it marks as deleted in the basic case", %{config: config, block: block} do
+    test "it marks as freed in the basic case", %{config: config, block: block} do
       block =
         Block.put_type(
           block,
@@ -92,7 +92,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
                )
 
       assert :void = Block.fetch!(block, 0)
-      assert %{deleted: %{function: ~l"foo.bar", loc: {47, 47}}} = Block.get_meta(block, 47)
+      assert %{freed: %{function: ~l"foo.bar", loc: {47, 47}}} = Block.get_meta(block, 47)
     end
 
     test "it can chase when the slot is known to have a slot that points to it."
@@ -147,7 +147,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
           47,
           {:ptr, :one, {:u, 8, %{}}, %{}},
           heap: %{function: ~l"foo.bar", loc: {42, 42}, vtable: ~l"heap.c_allocator_vtable"},
-          deleted: %{function: ~l"foo.bar", loc: {42, 42}}
+          freed: %{function: ~l"foo.bar", loc: {42, 42}}
         )
 
       assert_raise DoubleFree, fn ->
@@ -171,7 +171,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
           47,
           {:ptr, :one, {:u, 8, %{}}, %{}},
           heap: %{function: ~l"foo.bar", loc: {42, 42}, vtable: ~l"heap.c_allocator_vtable"},
-          deleted: ~l"bar.baz"
+          freed: ~l"bar.baz"
         )
 
       assert_raise DoubleFree, fn ->
@@ -184,7 +184,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
       end
     end
 
-    test "when you attempt to pass a pointer into a function that has already been deleted", %{
+    test "when you attempt to pass a pointer into a function that has already been freed", %{
       config: config,
       block: block
     } do
@@ -193,10 +193,10 @@ defmodule ClrTest.Analysis.AllocatorTest do
           block,
           47,
           {:ptr, :one, {:u, 8, %{}}, %{}},
-          deleted: %{function: ~l"foo.bar", loc: {42, 42}}
+          freed: %{function: ~l"foo.bar", loc: {42, 42}}
         )
 
-      assert_raise CallDeleted, fn ->
+      assert_raise CallFreed, fn ->
         Allocator.analyze(
           %Call{fn: {:literal, %{}, {:function, "some_function"}}, args: [{47, :keep}]},
           0,
@@ -207,10 +207,10 @@ defmodule ClrTest.Analysis.AllocatorTest do
     end
   end
 
-  describe "when you attempt to use a pointer that has been deleted" do
+  describe "when you attempt to use a pointer that has been freed" do
     alias Clr.Air.Instruction.Mem.Load
 
-    test "it raises on deleted", %{config: config, block: block} do
+    test "it raises on freed", %{config: config, block: block} do
       block =
         block
         |> Block.put_type(0, {:u, 8, %{}})
@@ -218,7 +218,7 @@ defmodule ClrTest.Analysis.AllocatorTest do
           47,
           {:ptr, :one, {:u, 8, %{}}, %{}},
           heap: %{function: ~l"foo.bar", loc: {1, 1}, vtable: ~l"heap.c_allocator_vtable"},
-          deleted: %{function: ~l"foo.bar", loc: {42, 42}}
+          freed: %{function: ~l"foo.bar", loc: {42, 42}}
         )
 
       assert_raise UseAfterFree, fn ->

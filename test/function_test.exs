@@ -18,7 +18,7 @@ defmodule ClrTest.FunctionTest do
 
     Mox.allow(AnalyzerMock, self(), server)
     Process.put(Clr.Function.TableName, table_name)
-    Clr.Air.put(%Clr.Air.Function{name: :foobar_function})
+    Clr.Air.put(%Clr.Air.Function{name: ~l"foobar"})
     {:ok, table: table_name}
   end
 
@@ -27,20 +27,19 @@ defmodule ClrTest.FunctionTest do
   test "we can make a single evaluation request" do
     Mox.expect(AnalyzerMock, :analyze, fn _, _ -> stub_eval(:result) end)
 
-    {:future, future} = Function.evaluate(:foobar_function, [], [], :void)
+    {:future, future} = Function.evaluate(~l"foobar", 1, [], [], :void)
     assert {:ok, {:result, lambda1}} = Function.await(future)
     # this is the function that can add metadata to slots.
     assert is_function(lambda1, 1)
-    assert {%{return: :result}, lambda2} = Function.debug_get_table(:foobar_function, [])
-    # this is a lambda that takes a block and 
-    assert is_function(lambda2, 2)
+    assert {%{return: :result}, lambda2} = Function.debug_get_table(~l"foobar", [])
+    assert is_function(lambda2, 3)
   end
 
   def empty_lambda(block, _args), do: block
 
   test "if content is in the table, it doesn't reevaluate" do
-    Function.debug_insert_result(:foobar_function, [], {:result, &empty_lambda/2})
-    {:result, lambda} = Function.evaluate(:foobar_function, [], [], :void)
+    Function.debug_insert_result(~l"foobar", [], {:result, &empty_lambda/2})
+    {:result, lambda} = Function.evaluate(~l"foobar", 1, [], [], :void)
     assert is_function(lambda, 1)
   end
 
@@ -48,16 +47,17 @@ defmodule ClrTest.FunctionTest do
     this = self()
 
     Mox.expect(AnalyzerMock, :analyze, fn _, _ ->
+      Process.sleep(50)
       send(this, {:unblock, self()})
       assert_receive :unblock
       stub_eval(:result)
     end)
 
-    {:future, future1} = Function.evaluate(:foobar_function, [], [], :void)
+    {:future, future1} = Function.evaluate(~l"foobar", 1, [], [], :void)
 
     spawn(fn ->
       Process.put(Clr.Function.TableName, table_name)
-      {:future, future2} = Function.evaluate(:foobar_function, [], [], :void)
+      {:future, future2} = Function.evaluate(~l"foobar", 1, [], [], :void)
       send(this, :registered)
       assert {:ok, {:result, lambda}} = Function.await(future2)
       assert is_function(lambda, 1)
@@ -84,11 +84,11 @@ defmodule ClrTest.FunctionTest do
       stub_eval(:barresult)
     end)
 
-    {:future, foofuture} = Function.evaluate(:foobar_function, [%{foo: :bar}], [1], :void)
+    {:future, foofuture} = Function.evaluate(~l"foobar", 1, [%{foo: :bar}], [1], :void)
 
     Process.sleep(100)
 
-    {:future, barfuture} = Function.evaluate(:foobar_function, [%{bar: :baz}], [1], :void)
+    {:future, barfuture} = Function.evaluate(~l"foobar", 1, [%{bar: :baz}], [1], :void)
 
     assert {:ok, {:fooresult, function1}} = Function.await(foofuture)
     assert is_function(function1, 1)
@@ -96,8 +96,8 @@ defmodule ClrTest.FunctionTest do
     assert is_function(function2, 1)
 
     assert [
-             {{:foobar_function, [%{bar: :baz}]}, {%Block{return: :barresult}, _}},
-             {{:foobar_function, [%{foo: :bar}]}, {%Block{return: :fooresult}, _}}
+             {{~l"foobar", [%{bar: :baz}]}, {%Block{return: :barresult}, _}},
+             {{~l"foobar", [%{foo: :bar}]}, {%Block{return: :fooresult}, _}}
            ] = Enum.sort(Function.debug_get_table())
   end
 end

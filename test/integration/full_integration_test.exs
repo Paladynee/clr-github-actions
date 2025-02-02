@@ -72,7 +72,7 @@ defmodule ClrTest.FullIntegrationTest do
       assert_errors_with(
         """
         Use after free detected in function use_after_free.main (test/integration/allocator/use_after_free.zig:7:5).
-        Pointer was deleted in function use_after_free.main (test/integration/allocator/use_after_free.zig:6:18)
+        Pointer was freed in function use_after_free.main (test/integration/allocator/use_after_free.zig:6:18)
         """,
         "allocator/use_after_free.zig"
       )
@@ -92,7 +92,7 @@ defmodule ClrTest.FullIntegrationTest do
       assert_errors_with(
         """
         Double free detected in function double_free.main (test/integration/allocator/double_free.zig:6:18).
-        Previously deleted in function double_free.main (test/integration/allocator/double_free.zig:5:18)
+        Previously freed in function double_free.main (test/integration/allocator/double_free.zig:5:18)
         """,
         "allocator/double_free.zig"
       )
@@ -108,23 +108,31 @@ defmodule ClrTest.FullIntegrationTest do
       )
     end
 
-    test "call with deleted" do
+    test "call with freed" do
       assert_errors_with(
         """
-        Function call `do_nothing` in function call_with_deleted.main (test/integration/allocator/call_with_deleted.zig:10:23) was passed a deleted pointer (argument 0).
-        Pointer was deleted in function call_with_deleted.main (test/integration/allocator/call_with_deleted.zig:9:18)
+        Function call `do_nothing` in function call_with_freed.main (test/integration/allocator/call_with_freed.zig:10:23) was passed a deleted pointer (argument 0).
+        Pointer was freed in function call_with_freed.main (test/integration/allocator/call_with_freed.zig:9:18)
         """,
-        "allocator/call_with_deleted.zig"
+        "allocator/call_with_freed.zig"
       )
     end
 
-    test "return deleted"
+    test "return a freed pointer" do
+      assert_errors_with(
+        """
+        Function return in function returns_freed.returns_freed (test/integration/allocator/returns_freed.zig:6:5) returned a freed pointer.
+        Pointer was freed at function returns_freed.returns_freed (test/integration/allocator/returns_freed.zig:5:18)
+        """,
+        "allocator/returns_freed.zig"
+      )
+    end
 
     test "free_after_transfer" do
       assert_errors_with(
         """
         Double free detected in function free_after_transfer.main (test/integration/allocator/free_after_transfer.zig:10:18).
-        Previously deleted in function free_after_transfer.function_deletes (test/integration/allocator/free_after_transfer.zig:4:18)
+        Previously freed in function free_after_transfer.function_deletes (test/integration/allocator/free_after_transfer.zig:4:18)
         Pointer was transferred to free_after_transfer.function_deletes
         """,
         "allocator/free_after_transfer.zig"

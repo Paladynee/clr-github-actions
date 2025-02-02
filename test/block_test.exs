@@ -109,7 +109,7 @@ defmodule ClrTest.BlockTest do
 
       assert %Block{
                slots: %{47 => {:u, 32, %{foo: :bar}}, 48 => {:u, 32, %{baz: :quux}}}
-             } = lambda.(caller_block, [47, 48])
+             } = lambda.(caller_block, 1, [47, 48])
     end
   end
 

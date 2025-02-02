@@ -131,6 +131,10 @@ defmodule Clr.Block do
     %{block | awaits: Map.delete(block.awaits, slot)}
   end
 
+  def delete_priv(block, module, key) do
+    %{block | priv: Map.update!(block.priv, module, &Map.delete(&1, key))}
+  end
+
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)

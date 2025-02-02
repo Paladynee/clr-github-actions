@@ -65,7 +65,7 @@ defmodule Clr.Function do
           waiters
         ) ::
           {:reply, future, waiters}
-  defp evaluate_impl(function_name, at, args, arg_slots, ret_type, {pid, _ref}, waiters) do
+  defp evaluate_impl(function_name, at, args, arg_slots, ret_type, {req_pid, _ref}, waiters) do
     waiter_id_key = {function_name, args}
     table_name = table_name()
 
@@ -76,7 +76,7 @@ defmodule Clr.Function do
         )
 
         {:reply, {:future, future_ref},
-         Map.replace!(waiters, waiter_id_key, {future_info, [pid | pids]})}
+         Map.replace!(waiters, waiter_id_key, {future_info, [req_pid | pids]})}
 
       :error ->
         # we might be doing a dependency injection to the analyzer module.
@@ -110,8 +110,7 @@ defmodule Clr.Function do
         )
 
         future_info = {future.pid, future.ref}
-
-        {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {future_info, [pid]})}
+        {:reply, {:future, future.ref}, Map.put(waiters, waiter_id_key, {future_info, [req_pid]})}
     end
   end
 
@@ -152,7 +151,7 @@ defmodule Clr.Function do
           # forward the result to the pids
           Enum.each(pids, fn pid ->
             Logger.debug(
-              "sending result of to #{Lvalue.as_string(name)} to #{inspect(pid)}, ref: #{inspect(ref)}"
+              "sending result to #{Lvalue.as_string(name)} to #{inspect(pid)}, ref: #{inspect(ref)}"
             )
 
             send(pid, response)
