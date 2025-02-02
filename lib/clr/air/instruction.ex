@@ -31,6 +31,9 @@ after
   @impl true
   def on_call_requirement(_block, type), do: type
 
+  @impl true
+  def finalizer(caller, _, _), do: caller
+
   @modules Map.new(
              ~w[assembly vector casts dbg control_flow pointer maths tests atomics function mem],
              fn instruction ->

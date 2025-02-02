@@ -9,6 +9,7 @@ after
   defstruct []
 
   alias Clr.Air.Lvalue
+  alias Clr.Block
   alias Clr.Type
 
   def transferred_msg(error) do
@@ -136,6 +137,23 @@ after
 
       _ ->
         type
+    end
+  end
+
+  @impl true
+  def finalizer(caller, slot, %{return: return}) do
+    case return do
+      {:errorunion, _, {:ptr, :one, _, %{heap: heapinfo}} = ptr, _} ->
+        Block.put_priv(caller, __MODULE__, slot, heapinfo)
+
+      {:optional, {:ptr, :one, _, %{heap: heapinfo}} = ptr, _} ->
+        Block.put_priv(caller, __MODULE__, slot, heapinfo)
+
+      {:ptr, :one, _, %{heap: heapinfo}} = ptr ->
+        Block.put_priv(caller, __MODULE__, slot, heapinfo)
+
+      _ ->
+        caller
     end
   end
 end

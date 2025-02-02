@@ -17,4 +17,5 @@ defmodule Clr.Analysis do
   @callback on_call_requirement(Block.t(), Type.t()) :: Type.t()
   @callback always() :: [module]
   @callback when_kept() :: [module]
+  @callback finalizer(caller :: Block.t(), Type.slot(), called :: Block.t()) :: Block.t()
 end

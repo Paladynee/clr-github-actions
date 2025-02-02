@@ -75,7 +75,7 @@ defmodule Clr.Air.Instruction.Function do
 
           block.function
           |> merge_name(function_name)
-          |> Function.evaluate(args, slots, Type.from_air(ret_type))
+          |> Function.evaluate(slot, args, slots, Type.from_air(ret_type))
           |> case do
             {:future, ref} ->
               {:halt, Block.put_await(block, slot, ref)}

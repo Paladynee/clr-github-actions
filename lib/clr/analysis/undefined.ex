@@ -21,6 +21,9 @@ after
 
   @impl true
   def on_call_requirement(_block, type), do: type
+
+  @impl true
+  def finalizer(caller, _, _), do: caller
 end
 
 defmodule Clr.Analysis.Undefined.Use do

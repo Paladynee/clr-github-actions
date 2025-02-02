@@ -6,6 +6,8 @@ defmodule Clr.Block do
   alias Clr.Function
   alias Clr.Type
 
+  require Logger
+
   @enforce_keys ~w[function args]a
   defstruct @enforce_keys ++
               [
@@ -62,7 +64,11 @@ defmodule Clr.Block do
   # analyzed.
 
   defp analyze_instruction({{slot, mode}, %module{} = instruction}, block, mapper) do
-    # {slot, instruction, block} |> dbg(limit: 25)
+    Logger.debug(
+      "#{inspect(self())} executing slot #{slot} of #{Clr.Air.Lvalue.as_string(block.function)} (#{inspect(module)})",
+      ansi_color: :green
+    )
+
     block =
       case Instruction.slot_type(instruction, slot, block) do
         {:future, block} -> block
@@ -121,13 +127,17 @@ defmodule Clr.Block do
     %{block | priv: Map.update(block.priv, module, %{key => value}, &Map.put(&1, key, value))}
   end
 
+  def delete_await(block, slot) do
+    %{block | awaits: Map.delete(block.awaits, slot)}
+  end
+
   def get_meta(block, slot) do
     block.slots
     |> Map.fetch!(slot)
     |> Type.get_meta()
   end
 
-  def get_priv(block, module), do: Map.get(block.priv, module)
+  def get_priv(block, module), do: Map.get(block.priv, module, %{})
 
   def get_priv(block, module, key) do
     block.priv
@@ -199,7 +209,8 @@ defmodule Clr.Block do
         block
         |> put_type(slot, type)
         |> then(lambda)
-        |> fetch_up!(slot)
+        |> delete_await(slot)
+        |> then(&{fetch!(&1, slot), &1})
 
       {:error, exception} when is_exception(exception) ->
         raise exception
@@ -225,24 +236,29 @@ defmodule Clr.Block do
     end)
   end
 
-  @type make_call_resolver_fn :: (Block.t(), [Clr.slot() | nil] -> Block.t())
+  @type make_call_resolver_fn :: (Block.t(), Clr.slot(), [Clr.slot() | nil] -> Block.t())
   @spec make_call_resolver(t) :: make_call_resolver_fn
   # this function produces a lambda that can be used to update the metadata of
   # slots from a call slots in a block, generated from the requirements of the "called" block.
   # note: the requirements are stored in the `args` field.  The return value does
   # not need to be emplaced with this function, it should be done elsewhere.
-  def make_call_resolver(%{args: reqs} = block) do
+  def make_call_resolver(%{args: reqs} = called) do
     checkers = Clr.get_checkers()
 
     reqs =
       Enum.map(reqs, fn req ->
-        Enum.reduce(checkers, req, & &1.on_call_requirement(block, &2))
+        Enum.reduce(checkers, req, & &1.on_call_requirement(called, &2))
       end)
 
-    fn block, slots ->
-      for {slot, req} <- Enum.zip(slots, reqs), slot, reduce: block do
-        block -> update_type!(block, slot, fn _ -> req end)
-      end
+    fn caller, this_slot, call_slots ->
+      caller =
+        for {slot, req} <- Enum.zip(call_slots, reqs), slot, reduce: caller do
+          caller -> update_type!(caller, slot, fn _ -> req end)
+        end
+
+      # next, for each checker, call any sort of finalizing operation that
+      # should be done.
+      Enum.reduce(checkers, caller, & &1.finalizer(&2, this_slot, called))
     end
   end
 end

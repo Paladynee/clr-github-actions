@@ -8,6 +8,9 @@ defmodule Clr.Function do
 
   use GenServer
 
+  require Logger
+
+  alias Clr.Air.Lvalue
   alias Clr.Block
 
   def start_link(opts) do
@@ -34,24 +37,44 @@ defmodule Clr.Function do
 
   @type block_mapper :: (Block.t() -> Block.t())
 
-  @spec evaluate(term, [Clr.type()], [Clr.slot() | nil], Clr.type()) ::
+  @spec evaluate(term, Clr.slot(), [Clr.type()], [Clr.slot() | nil], Clr.type()) ::
           {:future, reference} | {Clr.type(), block_mapper}
-  def evaluate(function_name, args, arg_slots, ret_type) do
+  def evaluate(function_name, at, args, arg_slots, ret_type) do
+    Logger.debug(
+      "evaluation of #{Lvalue.as_string(function_name)} requested by #{inspect(self())}."
+    )
+
     case :ets.lookup(table_name(), {function_name, args}) do
-      [{_, {result, remapper}}] -> {result, &remapper.(&1, arg_slots)}
-      [] -> GenServer.call(table_name(), {:evaluate, function_name, args, arg_slots, ret_type})
+      [{_, {result, resolver}}] ->
+        Logger.debug("evaluation of #{Lvalue.as_string(function_name)} found in table.")
+        {result, &resolver.(&1, at, arg_slots)}
+
+      [] ->
+        GenServer.call(table_name(), {:evaluate, function_name, at, args, arg_slots, ret_type})
     end
   end
 
   @type future :: {:future, reference}
-  @spec evaluate_impl(term, [Clr.type()], [Clr.slot()], Clr.type(), GenServer.from(), waiters) ::
+  @spec evaluate_impl(
+          term,
+          Clr.slot(),
+          [Clr.type()],
+          [Clr.slot()],
+          Clr.type(),
+          GenServer.from(),
+          waiters
+        ) ::
           {:reply, future, waiters}
-  defp evaluate_impl(function_name, args, arg_slots, ret_type, {pid, _ref}, waiters) do
+  defp evaluate_impl(function_name, at, args, arg_slots, ret_type, {pid, _ref}, waiters) do
     waiter_id_key = {function_name, args}
     table_name = table_name()
 
     case Map.fetch(waiters, waiter_id_key) do
-      {:ok, {{_pid, future_ref} = future_info, pids}} ->
+      {:ok, {{pid, future_ref} = future_info, pids}} ->
+        Logger.debug(
+          "evaluation of function #{Lvalue.as_string(function_name)} running on #{inspect(pid)}, ref: #{inspect(future_ref)}"
+        )
+
         {:reply, {:future, future_ref},
          Map.replace!(waiters, waiter_id_key, {future_info, [pid | pids]})}
 
@@ -62,6 +85,7 @@ defmodule Clr.Function do
         # do the evaluation here.  Response is obtained as a Task.async response.
         future =
           Task.async(fn ->
+            Logger.debug("evaluation of #{Lvalue.as_string(function_name)} started.")
             if !Clr.debug_prefix(), do: Logger.disable(self())
 
             function = Clr.Air.get(function_name)
@@ -76,8 +100,14 @@ defmodule Clr.Function do
 
             :ets.insert(table_name, {waiter_id_key, {block, resolver}})
 
-            {:ok, return, &resolver.(&1, arg_slots)}
+            Logger.debug("evaluation of #{Lvalue.as_string(function_name)} completed.")
+
+            {:ok, return, &resolver.(&1, at, arg_slots)}
           end)
+
+        Logger.debug(
+          "evaluation of function #{Lvalue.as_string(function_name)} running on #{inspect(future.pid)}, ref: #{inspect(future.ref)}"
+        )
 
         future_info = {future.pid, future.ref}
 
@@ -94,6 +124,8 @@ defmodule Clr.Function do
 
   @spec await(reference) :: {:ok, {Clr.type(), block_mapper}}
   def await(ref) when is_reference(ref) do
+    Logger.debug("awaiting result of #{inspect(ref)} on #{inspect(self())}")
+
     receive do
       {^ref, {:ok, type, lambda}} when is_function(lambda, 1) -> {:ok, {type, lambda}}
       {^ref, {:error, _} = error} -> error
@@ -105,20 +137,27 @@ defmodule Clr.Function do
     :ets.insert(table_name(), {{function_name, args}, result})
   end
 
-  def handle_call({:evaluate, function_name, args, arg_slots, ret_type}, from, waiters),
-    do: evaluate_impl(function_name, args, arg_slots, ret_type, from, waiters)
+  def handle_call({:evaluate, function_name, at, args, arg_slots, ret_type}, from, waiters),
+    do: evaluate_impl(function_name, at, args, arg_slots, ret_type, from, waiters)
 
   def handle_info({ref, _result} = response, waiters) when is_reference(ref) do
     function_call =
       Enum.find_value(waiters, fn
-        {function_call, {{_task_pid, ^ref}, pids}} ->
+        {{name, _} = function_call, {{_task_pid, ^ref}, pids}} ->
           # clean up the DOWN message
           receive do
             {:DOWN, ^ref, :process, _, _reason} -> :ok
           end
 
           # forward the result to the pids
-          Enum.each(pids, &send(&1, response))
+          Enum.each(pids, fn pid ->
+            Logger.debug(
+              "sending result of to #{Lvalue.as_string(name)} to #{inspect(pid)}, ref: #{inspect(ref)}"
+            )
+
+            send(pid, response)
+          end)
+
           function_call
 
         _ ->
@@ -142,7 +181,12 @@ defmodule Clr.Function do
     {:noreply, Map.delete(waiters, function_call)}
   end
 
-  def handle_info(_, waiters), do: {:noreply, waiters}
+  def handle_info({:EXIT, _pid, _}, waiters), do: {:noreply, waiters}
+
+  def handle_info(info, waiters) do
+    Logger.warning("unexpected message received by function server: #{inspect(info)}")
+    {:noreply, waiters}
+  end
 
   # common utility functions
   def table_name do

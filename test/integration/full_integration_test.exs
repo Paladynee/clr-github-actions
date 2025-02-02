@@ -118,6 +118,8 @@ defmodule ClrTest.FullIntegrationTest do
       )
     end
 
+    test "return deleted"
+
     test "free_after_transfer" do
       assert_errors_with(
         """
@@ -147,7 +149,9 @@ defmodule ClrTest.FullIntegrationTest do
 
     test "leaked allocation from function return" do
       assert_errors_with(
-        "",
+        """
+        Function return at function leaked_from_function_return.main (test/integration/allocator/leaked_from_function_return.zig:9:3) leaked memory allocated in function leaked_from_function_return.allocate_for_me (test/integration/allocator/leaked_from_function_return.zig:4:22)
+        """,
         "allocator/leaked_from_function_return.zig"
       )
     end

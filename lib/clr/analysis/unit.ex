@@ -20,6 +20,9 @@ after
   @impl true
   def on_call_requirement(_block, type), do: type
 
+  @impl true
+  def finalizer(caller, _, _), do: caller
+
   defmodule Mismatched do
     defexception [:lhs, :rhs, :function, :loc]
 

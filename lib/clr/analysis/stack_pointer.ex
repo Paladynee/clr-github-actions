@@ -40,6 +40,9 @@ after
 
   @impl true
   def on_call_requirement(_block, type), do: type
+
+  @impl true
+  def finalizer(caller, _, _), do: caller
 end
 
 defimpl Clr.Analysis.StackPointer, for: Clr.Air.Instruction.Mem.Alloc do

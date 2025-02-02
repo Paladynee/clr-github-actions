@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Clr do
     # TODO: start_functions should come with their intended CLR information
     if function.name in start_functions do
       # we don't actually care what the return values of these guys are.
-      Clr.Function.evaluate(function.name, [], [], nil)
+      _ = Clr.Function.evaluate(function.name, nil, [], [], nil)
     end
   end
 end
