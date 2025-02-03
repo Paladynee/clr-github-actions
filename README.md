@@ -101,7 +101,7 @@ intermediate might require more analysis, for example, if a polymorphic function
 to be reified multiple times depending on the passed type with separate code paths.
 
 Moreover, since AIR is typed, we can extend the types flowing through AIR with
-metadata, which is `refinement typing`.
+metadata, which is a form of *refinement typing*.
 
 Let's take a look at a basic example of Zig AIR:
 
@@ -156,8 +156,8 @@ Stepping through:
 - 7: block
 - 8: branch if slot 4
 - 9: (slot 4 true) break out of block 7
-- 5: call the defaultPanic function
-- 6: unreachable
+- 5: (slot 4 false) call the defaultPanic function
+- 6: (slot 4 false) unreachable
 - 10: set this slot to the extracted 0th field of slot 2 (that's the add ten result)
 - 11: we are on line 2, column 4
 - 12: return the contents of slot 10.
