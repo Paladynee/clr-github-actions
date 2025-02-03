@@ -9,7 +9,12 @@ defmodule Mix.Tasks.Clr do
     defstruct active: false, name: nil, await_refs: [], so_far: [], start_functions: []
   end
 
-  @zig "/home/ityonemo/code/zig/zig-out/bin/zig"
+  zig_build = System.get_env("ZIG_BUILD", "/home/ityonemo/code/zig/zig-out/bin/zig")
+  if !System.find_executable(zig_build) do
+    raise "you need to set ZIG_BUILD to a path to a zig executable"
+  end
+
+  @zig zig_build
 
   def run([cmd, file]) do
     Process.flag(:trap_exit, true)
