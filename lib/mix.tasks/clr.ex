@@ -13,6 +13,9 @@ defmodule Mix.Tasks.Clr do
 
   def run([cmd, file]) do
     Process.flag(:trap_exit, true)
+    if Mix.env() != :test do
+      Logger.configure(level: :info)
+    end
     # start the AIR server
     Clr.Air.start_link([])
     # start the analysis server
