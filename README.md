@@ -9,6 +9,7 @@
 for Zig
 
 discuss on hn: https://news.ycombinator.com/item?id=42923829
+
 discuss on lobste.rs:  https://lobste.rs/s/9sitsj/clr_checker_for_lifetimes_other
 
 ## TL;DR
