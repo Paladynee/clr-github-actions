@@ -8,6 +8,8 @@
 
 for Zig
 
+discuss on lobste.rs:  https://lobste.rs/s/9sitsj/clr_checker_for_lifetimes_other
+
 ## TL;DR
 This repository is a proof-of-concept implementation of borrow checking (and other goodies) for Zig, done
 by analyzing zig's "AIR" intermediate representation.
