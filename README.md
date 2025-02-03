@@ -243,7 +243,7 @@ conditional and not frequently triggered in your release environment.
 
 Here's a very simplified example of stack pointer escape:
 
-```
+```zig
 fn escaped_ptr() *u32 {
   var foo: u32 = 0;
   foo += 1;
