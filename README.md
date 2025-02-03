@@ -87,9 +87,9 @@ on Zig intermediates and achieve a higher degree of safety than that which zig p
 
 The Zig compilation pipeline is as follows:
 
-1. Zig Code
-2. Zig ZIR (per-file intermediate representation)
-3. Zig AIR (function by function, reified for polymorphic functions)
+1. Zig Code / AST
+2. Zig ZIR (untyped, per-file intermediate representation)
+3. Zig AIR (typed, per-function IR, reified for polymorphic functions)
 4. Compiler targets
 
 I decided that Zig AIR would be the correct level to perform analysis.  AIR is very good
@@ -99,6 +99,9 @@ which themselves might produce intermediate representations to optimize code.  O
 code might be too specialized to conveniently do static analysis; and a earlier level of 
 intermediate might require more analysis, for example, if a polymorphic function needs
 to be reified multiple times depending on the passed type with separate code paths.
+
+Moreover, since AIR is typed, we can extend the types flowing through AIR with
+metadata, which is `refinement typing`.
 
 Let's take a look at a basic example of Zig AIR:
 
