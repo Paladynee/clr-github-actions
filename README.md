@@ -104,7 +104,7 @@ Let's take a look at a basic example of Zig AIR:
 
 for the following zig code (in the `foobar` namespace):
 
-```
+```zig
 fn add_10(x: anytype) @TypeOf(x) {
    return x + 10;
 }
