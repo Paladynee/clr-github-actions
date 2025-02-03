@@ -8,10 +8,11 @@
 
 for Zig
 
+discuss on hn: https://news.ycombinator.com/item?id=42923829
 discuss on lobste.rs:  https://lobste.rs/s/9sitsj/clr_checker_for_lifetimes_other
 
 ## TL;DR
-This repository is a proof-of-concept implementation of borrow checking (and other goodies) for Zig, done
+This repository is an incomplete proof-of-concept implementation of borrow checking (and other goodies) for Zig, done
 by analyzing zig's "AIR" intermediate representation.
 
 ## Q&A:
