@@ -42,7 +42,7 @@ jobs:
       run: mix release  # Adjust if you have a custom command
 
     - name: Upload Release Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: clr-release
         path: _build/prod/rel/clr  # Update this to your release output directory
